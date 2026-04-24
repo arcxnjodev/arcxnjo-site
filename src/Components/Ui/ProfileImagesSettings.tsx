@@ -1,31 +1,10 @@
 import { useFormik } from "formik";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { userSliceType } from "../../Store/userSlice";
-
-type userDataType = {
-  id: string;
-  email: string;
-  username: string;
-  socialMedia: {
-    instagram: string;
-    x: string;
-    youtube: string;
-    twitch: string;
-    kick: string;
-    discord: string;
-    linkedIn: string;
-  };
-  profileImage: string;
-  profileBanner: string;
-};
 
 export const ProfileImagesSettings = () => {
-  const { email } = useSelector((store: { user: userSliceType }) => store.user);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [uploading, setUploading] = useState(false);
 
   const onSubmit = async () => {
     setLoading(true);
