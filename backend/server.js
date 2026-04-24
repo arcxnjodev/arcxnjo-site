@@ -17,11 +17,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Configuração do banco de dados
 const pool = new Pool({
-  user: 'postgres',
-  password: 'l4b4reda0789', // Altere para sua senha
-  host: 'localhost',
-  port: 5432,
-  database: 'guns_clone'
+  connectionString: 'postgresql://neondb_owner:L4b4reda0789@@ep-cool-forest-123456.us-east-2.aws.neon.tech/neondb?sslmode=require'
 });
 
 // Configuração de upload
