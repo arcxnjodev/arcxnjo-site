@@ -17,7 +17,7 @@ export const Login = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.post("https://app.arcxnjo.com.br/api/login", {
+      const response = await axios.post("https://api.arcxnjo.com.br/api/login", {
         email: values.email,
         password: values.password,
       });

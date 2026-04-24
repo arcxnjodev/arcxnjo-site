@@ -16,30 +16,30 @@ export const Register = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const onSubmit = async () => {
-    setLoading(true);
-    setMessage("");
+  setLoading(true);
+  setMessage("");
+  
+  try {
+    await axios.post("https://api.arcxnjo.com.br/api/register", {
+      email: values.email,
+      username: values.username,
+      password: values.password,
+    });
     
-    try {
-      await axios.post("https://app.arcxnjo.com.br/api/register", {
-        email: values.email,
-        username: values.username,
-        password: values.password,
-      });
-      
-      setIsSuccess(true);
-      setMessage("Successfully registered! Redirecting to login...");
-      
-      setTimeout(() => {
-        navigate("/login?email=" + values.email);
-      }, 2000);
-      
-    } catch (error: any) {
-      setMessage(error.response?.data?.error || "Registration failed");
-      setIsSuccess(false);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setIsSuccess(true);
+    setMessage("Successfully registered! Redirecting to login...");
+    
+    setTimeout(() => {
+      navigate("/login?email=" + values.email);
+    }, 2000);
+    
+  } catch (error: any) {
+    setMessage(error.response?.data?.error || "Registration failed");
+    setIsSuccess(false);
+  } finally {
+    setLoading(false);
+  }
+};
   
   const { values, errors, handleSubmit, handleChange } = useFormik({
     initialValues: {
