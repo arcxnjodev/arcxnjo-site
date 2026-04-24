@@ -1,4 +1,3 @@
-import { NavLink } from "react-router-dom";
 import Logo from "../../assets/images/logo.webp";
 import { useDispatch } from "react-redux";
 import { exitUser } from "../../Store/userSlice";
