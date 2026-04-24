@@ -4,11 +4,28 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { userSliceType } from "../../Store/userSlice";
 
+type userDataType = {
+  id: string;
+  email: string;
+  username: string;
+  socialMedia: {
+    instagram: string;
+    x: string;
+    youtube: string;
+    twitch: string;
+    kick: string;
+    discord: string;
+    linkedIn: string;
+  };
+  profileImage: string;
+  profileBanner: string;
+};
+
 export const ProfileImagesSettings = () => {
+  const { email } = useSelector((store: { user: userSliceType }) => store.user);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
-  const { email } = useSelector((store: { user: userSliceType }) => store.user);
 
   const onSubmit = async () => {
     setLoading(true);
@@ -18,7 +35,7 @@ export const ProfileImagesSettings = () => {
       const token = localStorage.getItem("token");
       
       await axios.put(
-        "http://localhost:3001/api/profile/images",
+        `${import.meta.env.VITE_API_URL}/api/profile/images`,
         {
           profileImage: values.profileImage,
           bannerImage: values.bannerImage,
@@ -38,37 +55,7 @@ export const ProfileImagesSettings = () => {
     }
   };
 
-  const handleFileUpload = async (file: File, type: 'profile' | 'banner') => {
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post("http://localhost:3001/api/upload", formData, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data"
-        }
-      });
-      
-      if (type === 'profile') {
-        setFieldValue('profileImage', response.data.url);
-      } else {
-        setFieldValue('bannerImage', response.data.url);
-      }
-      
-      setMessage("✅ File uploaded successfully!");
-      setTimeout(() => setMessage(""), 3000);
-      
-    } catch (error: any) {
-      setMessage("❌ Upload failed: " + (error.response?.data?.error || error.message));
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const { values, handleSubmit, handleChange, setFieldValue, setValues } = useFormik({
+  const { values, handleSubmit, handleChange, setValues } = useFormik({
     initialValues: {
       profileImage: "",
       bannerImage: "",
@@ -76,23 +63,23 @@ export const ProfileImagesSettings = () => {
     onSubmit,
   });
 
-  const fetchUserData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:3001/api/profile/me", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setValues({
-        profileImage: response.data.profile_image || "",
-        bannerImage: response.data.banner_image || "",
-      });
-    } catch (error) {
-      console.error("Erro ao buscar dados:", error);
-    }
-  };
-
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/profile/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setValues({
+          profileImage: response.data.profile_image || "",
+          bannerImage: response.data.banner_image || "",
+        });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    
     fetchUserData();
   }, []);
 
@@ -107,7 +94,7 @@ export const ProfileImagesSettings = () => {
       )}
       
       <form onSubmit={handleSubmit}>
-        <p className="text-white font-medium">Profile Picture (URL or upload)</p>
+        <p className="text-white font-medium">Profile Picture (URL)</p>
         <input
           type="text"
           name="profileImage"
@@ -117,20 +104,7 @@ export const ProfileImagesSettings = () => {
           onChange={handleChange}
         />
         
-        <div className="my-2">
-          <label className="text-white text-sm">Or upload an image:</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files?.[0]) handleFileUpload(e.target.files[0], 'profile');
-            }}
-            className="w-full text-white text-sm mt-1"
-            disabled={uploading}
-          />
-        </div>
-        
-        <p className="text-white font-medium mt-4">Banner Image (URL or upload)</p>
+        <p className="text-white font-medium mt-4">Banner Image (URL)</p>
         <input
           type="text"
           name="bannerImage"
@@ -140,25 +114,12 @@ export const ProfileImagesSettings = () => {
           onChange={handleChange}
         />
         
-        <div className="my-2">
-          <label className="text-white text-sm">Or upload a banner:</label>
-          <input
-            type="file"
-            accept="image/*,video/*"
-            onChange={(e) => {
-              if (e.target.files?.[0]) handleFileUpload(e.target.files[0], 'banner');
-            }}
-            className="w-full text-white text-sm mt-1"
-            disabled={uploading}
-          />
-        </div>
-        
         <button
           type="submit"
-          disabled={loading || uploading}
+          disabled={loading}
           className="bg-purple-900 w-full p-3 rounded-md my-4 text-white hover:bg-purple-800 transition disabled:opacity-50"
         >
-          {loading ? "Saving..." : uploading ? "Uploading..." : "Save"}
+          {loading ? "Saving..." : "Save"}
         </button>
       </form>
     </div>

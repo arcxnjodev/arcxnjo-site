@@ -9,25 +9,10 @@ import kick from "../assets/images/kick.avif";
 import discord from "../assets/images/discord.png";
 import linkedIn from "../assets/images/linkedin.png";
 
-type userDataType = {
-  id: string;
-  email: string;
-  username: string;
-  socialMedia: {
-    instagram: string;
-    x: string;
-    youtube: string;
-    twitch: string;
-    kick: string;
-    discord: string;
-    linkedIn: string;
-  };
-  profileImage: string;
-  profileBanner: string;
-};
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 export const UserPanel = () => {
-  const [userData, setUserData] = useState<userDataType | null>(null);
+  const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,7 +20,7 @@ export const UserPanel = () => {
 
   const getData = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/profile/${username}`);
+      const response = await axios.get(`${API_URL}/api/profile/${username}`);
       setUserData(response.data);
       setLoading(false);
     } catch (error) {
@@ -65,7 +50,7 @@ export const UserPanel = () => {
     );
   }
 
-  const profile = userData.profile;
+  const profile = userData.profile || {};
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">

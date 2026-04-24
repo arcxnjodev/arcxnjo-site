@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_profiles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  profile_image TEXT,
+  banner_image TEXT,
+  banner_type TEXT DEFAULT 'image',
+  theme_color TEXT DEFAULT '#5865F2',
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
