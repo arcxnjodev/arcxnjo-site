@@ -1,12 +1,8 @@
 import { useFormik } from "formik";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { userSliceType } from "../../Store/userSlice";
 
 export const SocialMediaSettings = () => {
-  // Linha removida porque 'email' não está sendo usado
-  // const { email } = useSelector((store: { user: userSliceType }) => store.user);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
