@@ -5,7 +5,8 @@ import { useSelector } from "react-redux";
 import { userSliceType } from "../../Store/userSlice";
 
 export const SocialMediaSettings = () => {
-  const { email } = useSelector((store: { user: userSliceType }) => store.user);
+  // Linha removida porque 'email' não está sendo usado
+  // const { email } = useSelector((store: { user: userSliceType }) => store.user);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
