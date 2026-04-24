@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "id": "f6d1",
+      "email": "sobsjordan@gmail.com",
+      "username": "macacao",
+      "password": "l4b4reda0789"
+    }
+  ],
+  "userPanels": [
+    {
+      "id": "3fd4",
+      "email": "sobsjordan@gmail.com",
+      "username": "macacao",
+      "socialMedia": {
+        "instagram": "4rcanjo__",
+        "x": "",
+        "youtube": "Arcanjo092",
+        "twitch": "",
+        "kick": "",
+        "discord": "acxr7",
+        "linkedIn": ""
+      },
+      "profileImage": "https://cdn-icons-png.flaticon.com/512/219/219986.png",
+      "profileBanner": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRY984MJTzYPr8mvWl_k0R9CioIsR9Jq_cjvw&s"
+    }
+  ]
+}
