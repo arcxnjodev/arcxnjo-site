@@ -4,11 +4,11 @@ export const Sidebar = () => {
   return (
     <div className="relative h-screen w-full overflow-hidden">
       {/* GIF DE FUNDO */}
-      <img
-        src="/gifs/meu-fundo.gif"
-        alt="Background"
-        className="absolute top-0 left-0 w-full h-full object-cover"
-      />
+    <img
+    src="/images/fundo.jpg"
+    alt="Background"
+    className="absolute top-0 left-0 w-full h-full object-cover brightness-50 contrast-125"
+  />
 
       {/* Overlay escuro (opcional, para texto ficar legível) */}
       <div className="absolute top-0 left-0 w-full h-full bg-black/60"></div>
