@@ -9,16 +9,16 @@ export const Header = () => {
         <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
           <img src={Logo} className="w-8 h-8 md:w-10 md:h-10 object-contain" alt="ARCXNJO" />
           <span className="text-purple-400 font-bold text-xl md:text-2xl">
-            Arcxnjo.com
+            ARCXNJO
           </span>
         </Link>
 
         <div>
           <ul className="flex items-center gap-2 md:gap-5">
             <li>
-              <a href="#" className="py-2 px-3 md:px-4 rounded-lg hover:bg-white/10 transition text-sm md:text-base text-white">
+              <Link to="/pricing" className="py-2 px-3 md:px-4 rounded-lg hover:bg-white/10 transition text-sm md:text-base text-white">
                 Pricing
-              </a>
+              </Link>
             </li>
             <li>
               <Link to="/login" className="py-2 px-3 md:px-4 rounded-lg hover:bg-white/10 transition text-sm md:text-base text-white">
