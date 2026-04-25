@@ -9,7 +9,7 @@ export const Header = () => {
         <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
           <img src={Logo} className="w-8 h-8 md:w-10 md:h-10 object-contain" alt="ARCXNJO" />
           <span className="text-purple-400 font-bold text-xl md:text-2xl">
-            ARCXNJO
+            Arcxnjo.com
           </span>
         </Link>
 
