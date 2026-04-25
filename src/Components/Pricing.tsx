@@ -184,8 +184,8 @@ export const Pricing = () => {
               <p>badges+</p>
             </div>
           </div>
-          <Link to="/register" className="bg-purple-600 rounded-lg px-4 py-2 inline-block text-center">
-            Get Started
+          <Link to="/checkout/pro" className="bg-purple-600 rounded-lg px-4 py-2 inline-block text-center">
+            Subscribe Now
           </Link>
         </div>
       </div>
