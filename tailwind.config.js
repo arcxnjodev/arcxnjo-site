@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       backgroundImage: {
-        'main': "url('./assets/images/gradient_background.png')",
+        'main': "url('./assets/images/')",
       },
       backgroundColor:{
         "menu":"#141215",
