@@ -282,6 +282,36 @@ app.put('/api/profile/images', authenticateToken, async (req, res) => {
   }
 });
 
+// Stripe checkout
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { plan } = req.body;
+  
+  // Substitua pelo seu price_id real do Stripe
+  const prices = {
+    pro: 'price_1TQEmCFZHG4s8oGGg2gPBn5T',  // ← COLOQUE SEU PRICE_ID AQUI
+  };
+  
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price: prices[plan],
+        quantity: 1,
+      }],
+      mode: 'subscription',
+      success_url: `${process.env.FRONTEND_URL}/success`,
+      cancel_url: `${process.env.FRONTEND_URL}/pricing`,
+    });
+    
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Erro ao criar sessão:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Rota para upload de arquivos
 app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
   const fileUrl = `http://localhost:3001/uploads/${req.file.filename}`;
