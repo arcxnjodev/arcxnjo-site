@@ -22,7 +22,7 @@ export const Login = () => {
         password: values.password,
       });
       const { token, user } = response.data;
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", response.data.token);
       localStorage.setItem("email", user.email);
       dispatch(loginUser(user.email));
       navigate("/panel");
