@@ -18,15 +18,8 @@ export const Checkout = () => {
       });
       
       const session = await response.json();
-      const stripe: any = await stripePromise;
-      
-      const result = await stripe.redirectToCheckout({
-        sessionId: session.id
-      });
-      
-      if (result.error) {
-        console.error('Erro:', result.error);
-      }
+      const stripe = await stripePromise;
+      await stripe.redirectToCheckout({ sessionId: session.id });
     } catch (error) {
       console.error('Erro:', error);
     } finally {
