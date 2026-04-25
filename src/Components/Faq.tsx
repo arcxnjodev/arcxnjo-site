@@ -16,7 +16,7 @@ export const Faq = () => {
               aria-expanded="true"
               aria-controls="accordion-collapse-body-1"
             >
-              <span>What is Banana.com?</span>
+              <span>What is ARCXNJO?</span>
               <svg
                 data-accordion-icon
                 className="w-3 h-3 rotate-180 shrink-0"
@@ -42,7 +42,7 @@ export const Faq = () => {
           >
             <div className="p-5 border dark:border-gray-700 dark:bg-gray-900">
               <p className="mb-2 text-white dark:text-gray-400">
-                Banana.com is a platform that provides modern, feature-rich bio links as well as secure file hosting services.
+                ARCXNJO is a platform that provides modern, feature-rich bio links as well as secure file hosting services.
               </p>
             </div>
           </div>
@@ -57,7 +57,7 @@ export const Faq = () => {
               aria-expanded="true"
               aria-controls="accordion-collapse-body-2"
             >
-              <span>Is Banana.com free to use?</span>
+              <span>Is ARCXNJO free to use?</span>
               <svg
                 data-accordion-icon
                 className="w-3 h-3 rotate-180 shrink-0"
@@ -83,7 +83,7 @@ export const Faq = () => {
           >
             <div className="p-5 border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
               <p className="mb-2 text-white dark:text-gray-400">
-                Yes, Banana.com is completely free to use. However, we also offer a Premium package with exclusive features.
+                Yes, ARCXNJO is completely free to use. However, we also offer a Premium package with exclusive features.
               </p>
             </div>
           </div>
@@ -98,7 +98,7 @@ export const Faq = () => {
               aria-expanded="true"
               aria-controls="accordion-collapse-body-3"
             >
-              <span>What can I do with Banana.com?</span>
+              <span>What can I do with ARCXNJO?</span>
               <svg
                 data-accordion-icon
                 className="w-3 h-3 rotate-180 shrink-0"
@@ -124,7 +124,7 @@ export const Faq = () => {
           >
             <div className="p-5 border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
               <p className="mb-2 text-white dark:text-gray-400">
-                With Banana.com, you can connect all your social media links in one place, making it easy to share your online presence with others.
+                With ARCXNJO, you can connect all your social media links in one place, making it easy to share your online presence with others.
               </p>
             </div>
           </div>
@@ -139,7 +139,7 @@ export const Faq = () => {
               aria-expanded="true"
               aria-controls="accordion-collapse-body-4"
             >
-              <span>How long does it take to create a Banana.com profile?</span>
+              <span>How long does it take to create a ARCXNJO profile?</span>
               <svg
                 data-accordion-icon
                 className="w-3 h-3 rotate-180 shrink-0"
@@ -165,7 +165,7 @@ export const Faq = () => {
           >
             <div className="p-5 border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
               <p className="mb-2 text-white dark:text-gray-400">
-                Creating your Banana.com profile is quick and easy. Just create an account and start customizing your profile right away.
+                Creating your ARCXNJO profile is quick and easy. Just create an account and start customizing your profile right away.
               </p>
             </div>
           </div>

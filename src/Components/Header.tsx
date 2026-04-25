@@ -7,7 +7,7 @@ export const Header = () => {
         <div className="text-white bg-menu flex items-center justify-between px-5 w-[70%] rounded-full h-[80px] shadow-2xl">
           <div className="flex items-center gap-3 ">
             <img src={Logo} className="w-[50px]" />
-            <h1 className="text-2xl">Banana.com</h1>
+            <h1 className="text-2xl">ARCXNJO</h1>
           </div>
           <div>
             <ul className="flex items-center gap-5">

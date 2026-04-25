@@ -3,7 +3,7 @@ export const Pricing = () => {
     <div className="text-white w-full flex flex-col items-center mt-[100px] pb-[200px]">
       <div>
         <h3 className="text-3xl">Unlock more with our exclusive offers</h3>
-        <p className="text-center text-lg">Take your creativity to the next level with Banana.com.</p>
+        <p className="text-center text-lg">Take your creativity to the next level with ARCXNJO.</p>
       </div>
       <div className="mt-[50px] flex items-end gap-6">
 
