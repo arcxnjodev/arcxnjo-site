@@ -6,3 +6,47 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Tema escuro global - FORÇA CORES ESCURAS */
+body, html, #root {
+  background-color: #000000 !important;
+  color: #e0e0e0 !important;
+}
+
+/* Remove gradientes claros */
+.bg-gradient-to-r, .bg-gradient-to-br, .bg-gradient-to-tl {
+  background-image: none !important;
+  background-color: #0a0a0a !important;
+}
+
+/* Cards e containers escuros */
+.bg-gray-800, .bg-gray-900, .bg-slate-800, .bg-slate-900 {
+  background-color: #0a0a0a !important;
+}
+
+/* Fundo do menu/navbar */
+.bg-menu, .bg-gray-700, .bg-gray-600 {
+  background-color: #0a0a0a !important;
+}
+
+/* Inputs escuros */
+input, textarea, select {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #333333 !important;
+}
+
+/* Botões escuros */
+button {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+/* Links */
+a {
+  color: #a855f7 !important; /* roxo suave */
+}
+
+a:hover {
+  color: #c084fc !important;
+}
