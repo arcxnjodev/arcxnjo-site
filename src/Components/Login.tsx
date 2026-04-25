@@ -44,7 +44,7 @@ export const Login = () => {
       <div className="text-white w-[400px] bg-slate-900 rounded-xl flex flex-col items-center p-10">
         <div className="flex flex-col items-center">
           <img src={Logo} className="w-1/4 inline-block mb-3" />
-          <p className="font-semibold text-lg">Sign in to your Banana.com account</p>
+          <p className="font-semibold text-lg">Sign in to your ARCXNJO account</p>
         </div>
         {error && <div className="mt-4 p-2 rounded text-center w-full bg-red-600">{error}</div>}
         <div className="w-[300px] mt-6">
