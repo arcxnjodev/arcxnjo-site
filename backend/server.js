@@ -9,12 +9,7 @@ const fs = require('fs');
 
 const app = express();
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'https://arcxnjo.com.br',
-    'https://www.arcxnjo.com.br'
-  ],
+  origin: '*',
   credentials: true
 }));
 app.use(express.json());
