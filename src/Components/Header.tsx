@@ -9,21 +9,21 @@ export const Header = () => {
         {/* Logo e nome */}
         <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
           <img src={Logo} className="w-8 h-8 md:w-10 md:h-10 object-contain" alt="ARCXNJO" />
-          <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <span className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
             ARCXNJO
-          </h1>
+          </span>
         </Link>
 
         {/* Menu de navegação */}
         <div>
           <ul className="flex items-center gap-2 md:gap-5">
             <li>
-              <a href="#" className="py-2 px-3 md:px-4 rounded-lg hover:bg-white/10 transition text-sm md:text-base">
+              <a href="#" className="py-2 px-3 md:px-4 rounded-lg hover:bg-white/10 transition text-sm md:text-base text-purple-400">
                 Pricing
               </a>
             </li>
             <li>
-              <Link to="/login" className="py-2 px-3 md:px-4 rounded-lg hover:bg-white/10 transition text-sm md:text-base">
+              <Link to="/login" className="py-2 px-3 md:px-4 rounded-lg hover:bg-white/10 transition text-sm md:text-base text-purple-400">
                 Login
               </Link>
             </li>
