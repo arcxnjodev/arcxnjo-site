@@ -1,29 +1,40 @@
-import Logo from "../assets/images/logo.png";
+import Logo from "../assets/images/logo.webp";
 import { Link } from "react-router-dom";
+
 export const Header = () => {
   return (
-    <>
-      <div className="flex fixed w-full justify-center top-5 z-50">
-        <div className="text-white bg-menu flex items-center justify-between px-5 w-[70%] rounded-full h-[80px] shadow-2xl">
-          <div className="flex items-center gap-3 ">
-            <img src={Logo} className="w-[50px]" />
-            <h1 className="text-2xl">ARCXNJO</h1>
-          </div>
-          <div>
-            <ul className="flex items-center gap-5">
-              <li className="py-2 px-4 rounded-lg hover:bg-stone-400 transition-all">
-                <a href="#">Pricing</a>
-              </li>
-              <li className="py-2 px-4 rounded-lg hover:bg-stone-400 transition-all">
-                <Link to="/login">Login</Link>
-              </li>
-              <li className="py-2 px-4 rounded-lg transition-all bg-purple-700 border-purple-900 border-4 border-solid">
-                <Link to="/register">Sign Up</Link>
-              </li>
-            </ul>
-          </div>
+    <div className="fixed w-full flex justify-center top-5 z-50">
+      <div className="text-white bg-gray-900/90 backdrop-blur-md flex items-center justify-between px-5 w-[90%] md:w-[70%] rounded-full h-[70px] md:h-[80px] shadow-2xl border border-white/10">
+        
+        {/* Logo e nome */}
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
+          <img src={Logo} className="w-8 h-8 md:w-10 md:h-10 object-contain" alt="ARCXNJO" />
+          <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            ARCXNJO
+          </h1>
+        </Link>
+
+        {/* Menu de navegação */}
+        <div>
+          <ul className="flex items-center gap-2 md:gap-5">
+            <li>
+              <a href="#" className="py-2 px-3 md:px-4 rounded-lg hover:bg-white/10 transition text-sm md:text-base">
+                Pricing
+              </a>
+            </li>
+            <li>
+              <Link to="/login" className="py-2 px-3 md:px-4 rounded-lg hover:bg-white/10 transition text-sm md:text-base">
+                Login
+              </Link>
+            </li>
+            <li>
+              <Link to="/register" className="py-2 px-3 md:px-4 rounded-lg transition bg-purple-600 hover:bg-purple-700 text-white text-sm md:text-base">
+                Sign Up
+              </Link>
+            </li>
+          </ul>
         </div>
       </div>
-    </>
+    </div>
   );
 };
