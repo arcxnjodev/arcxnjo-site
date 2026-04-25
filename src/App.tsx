@@ -3,6 +3,7 @@ import { AdminPanel } from "./Components/AdminPanel";
 import { Home } from "./Components/Home";
 import { Login } from "./Components/Login";
 import { Register } from "./Components/Register";
+import { Pricing } from "./Components/Pricing";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UserPanel } from "./Components/UserPanel";
 
@@ -16,6 +17,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/panel" element={<AdminPanel />} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="*" element={<UserPanel />} />
       </Routes>
     </BrowserRouter>
