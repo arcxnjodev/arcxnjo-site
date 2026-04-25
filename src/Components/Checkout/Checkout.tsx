@@ -18,14 +18,22 @@ export const Checkout = () => {
       });
       
       const session = await response.json();
-      const stripe: any = await stripePromise;
+      const stripe = await stripePromise;
       
-      const result = await stripe.redirectToCheckout({
+      // Verificação se stripe não é null
+      if (!stripe) {
+        console.error('Stripe não carregou corretamente');
+        setLoading(false);
+        return;
+      }
+      
+      // Usando type assertion para contornar o erro do TypeScript
+      const result = await (stripe as any).redirectToCheckout({
         sessionId: session.id
       });
       
       if (result.error) {
-        console.error('Erro:', result.error);
+        console.error('Erro no redirecionamento:', result.error);
       }
     } catch (error) {
       console.error('Erro:', error);
