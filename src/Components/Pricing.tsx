@@ -68,7 +68,7 @@ export const Pricing = () => {
         <div className="bg-gray-900 p-5 rounded-xl flex flex-col gap-4 w-[370px] bg-main">
           <p className="text-xl">Pro</p>
           <span className="flex items-center gap-1">
-            <p className="font-bold text-2xl">$9.99</p> <p className="font-extralight">/Month</p>
+            <p className="font-bold text-2xl">$2.99</p> <p className="font-extralight">/Month</p>
           </span>
           <p className="font-extralight">
             Perfect plan for discovering your creativity and unlocking more features.
@@ -177,7 +177,7 @@ export const Pricing = () => {
                   d="m10 13.6l5.9-5.9q.275-.275.7-.275t.7.275q.275.275.275.7t-.275.7l-6.6 6.6q-.3.3-.7.3t-.7-.3l-2.6-2.6q-.275-.275-.275-.7t.275-.7q.275-.275.7-.275t.7.275z"
                 ></path>
               </svg>
-              <p>Metadata & SEO Customization</p>
+              <p>badges+</p>
             </div>
           </div>
           <button className="bg-purple-700 rounded-lg px-4 py-2">Get Started</button>

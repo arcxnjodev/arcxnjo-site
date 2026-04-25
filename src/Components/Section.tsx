@@ -5,8 +5,7 @@ export const Section = () => {
     <div className="bg-main w-[70%] rounded-xl text-white p-[55px] mx-auto">
       <h1 className="text-5xl">Everything you need is here.</h1>
       <p className="text-lg">
-        Join over 280,000 people using Banana.com and become <br />
-        part of our large community
+       Join the people who use Arcxnjo.com and become part of our great community.
       </p>
       <UiFastRegister />
     </div>
