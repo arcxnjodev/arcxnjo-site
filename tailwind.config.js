@@ -1,5 +1,3 @@
-import BananaBackground from "../assets/images/banana.webp"
-
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -10,14 +8,19 @@ export default {
   theme: {
     extend: {
       backgroundImage: {
-        'main': "url('./assets/images/')",
+        'main': "url('/src/assets/images/gradient_background.png')",
       },
-      backgroundColor:{
-        "menu":"#141215",
+      backgroundColor: {
+        "menu": "#141215",
+        "purple-soft": "#7e22ce",
+        "purple-dark": "#4c1d95",
+        "surface-dark": "#0f0f13",
+      },
+      colors: {
+        "purple-primary": "#a855f7",
+        "purple-secondary": "#9333ea",
       }
     }
   },
-  plugins: [
-  ],
+  plugins: [],
 }
-
