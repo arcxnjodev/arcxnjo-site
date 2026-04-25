@@ -57,7 +57,7 @@ export const Register = () => {
       <div className="text-white w-[400px] bg-slate-900 rounded-xl flex flex-col items-center p-10">
         <div className="flex flex-col items-center">
           <img src={Logo} className="w-1/4 inline-block mb-3" />
-          <p className="font-semibold text-lg">Create your ARCXNJO account</p>
+          <p className="font-semibold text-lg">Create your ARCXNJO.COM account</p>
         </div>
         
         {message && (
