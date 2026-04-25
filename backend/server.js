@@ -200,8 +200,15 @@ app.get('/api/profile/:username', async (req, res) => {
 });
 
 // Rota para buscar perfil do usuário logado
+// Rota para buscar perfil do usuário logado
 app.get('/api/profile/me', authenticateToken, async (req, res) => {
   try {
+    // Buscar username do usuário
+    const userResult = await pool.query(
+      'SELECT username FROM users WHERE id = $1',
+      [req.userId]
+    );
+    
     const profileResult = await pool.query(
       'SELECT * FROM user_profiles WHERE user_id = $1',
       [req.userId]
@@ -218,6 +225,7 @@ app.get('/api/profile/me', authenticateToken, async (req, res) => {
     });
     
     res.json({
+      username: userResult.rows[0]?.username || '',
       ...profileResult.rows[0],
       socialMedia
     });
