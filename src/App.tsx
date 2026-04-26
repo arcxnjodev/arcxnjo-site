@@ -7,8 +7,6 @@ import { Pricing } from "./Components/Pricing";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UserPanel } from "./Components/UserPanel";
 
-export const db = "http://localhost:3000/";
-
 function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true }}>
