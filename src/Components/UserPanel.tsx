@@ -131,19 +131,37 @@ export const UserPanel = () => {
     ([, url]) => url && url.trim() !== ""
   );
 
+  const isVideoBackground =
+    data.profile.banner_type === "video" && data.profile.banner_video;
+
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-3xl overflow-hidden bg-gray-900 border border-white/10 shadow-2xl">
-        <div
-          className="h-40 bg-cover bg-center"
-          style={{
-            backgroundImage: data.profile.banner_image
-              ? `url(${data.profile.banner_image})`
-              : "linear-gradient(135deg, #111827, #7c3aed)",
-          }}
-        />
+        <div className="relative h-40 overflow-hidden bg-gradient-to-br from-gray-900 to-purple-700">
+          {isVideoBackground ? (
+            <video
+              src={data.profile.banner_video}
+              className="absolute inset-0 w-full h-full object-cover"
+              muted
+              loop
+              autoPlay
+              playsInline
+            />
+          ) : data.profile.banner_image ? (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${data.profile.banner_image})`,
+              }}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-purple-700" />
+          )}
 
-        <div className="px-6 pb-8 text-center -mt-14">
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
+
+        <div className="px-6 pb-8 text-center -mt-14 relative z-10">
           <img
             src={data.profile.profile_image || "/favicon.png"}
             alt={data.username}
