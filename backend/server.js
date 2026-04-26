@@ -334,6 +334,22 @@ app.put('/api/profile/images', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/api/profile/bio', authenticateToken, async (req, res) => {
+  const { bio } = req.body;
+
+  try {
+    await pool.query(
+      'UPDATE user_profiles SET bio = $1 WHERE user_id = $2',
+      [bio || '', req.userId]
+    );
+
+    res.json({ message: 'Bio updated successfully!' });
+  } catch (error) {
+    console.error('Error updating bio:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Rota para upload de arquivos
 app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
   const fileUrl = `http://localhost:3001/uploads/${req.file.filename}`;
