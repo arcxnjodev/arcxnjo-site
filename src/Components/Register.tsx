@@ -122,7 +122,7 @@ export const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-purple-700 text-black w-full rounded-lg p-2 mt-5 border-purple-950 border-4 border-solid disabled:opacity-50 hover:bg-purple-600 transition"
+              className="bg-purple-700 text-black font-bold w-full rounded-lg p-2 mt-5 border-purple-950 border-4 border-solid disabled:opacity-50 hover:bg-purple-600 transition"
             >
               {loading ? "Creating account..." : "Sign Up"}
             </button>
