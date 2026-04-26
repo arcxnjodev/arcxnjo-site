@@ -88,9 +88,15 @@ export const AdminPanel = () => {
       <header className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-10">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg"></div>
-            <span className="text-white font-bold text-xl">ARCXNJO</span>
-          </div>
+  <a href="/" className="flex items-center hover:opacity-80 transition">
+    <span
+      className="text-white text-xl md:text-2xl font-bold tracking-[0.25em]"
+      style={{ fontFamily: "Orbitron, sans-serif" }}
+    >
+      ARC<span className="text-purple-500">X</span>NJO
+    </span>
+  </a>
+</div>
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-gray-800 px-3 py-1.5 rounded-full">
