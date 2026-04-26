@@ -15,7 +15,7 @@ export const UiFastRegister = () => {
           onChange={(e)=>setUsername(e.target.value)}
         />
       </div>
-      <Link to={{pathname:"/register",search:"?username="+username}} className="bg-purple-700 py-3 px-4 text-white rounded-lg outline outline-purple-950 ml-5 text-lg hover:outline-purple-500 transition-all">
+      <Link to={{pathname:"/register",search:"?username="+username}} className="bg-purple-700 py-3 px-4 text-black font-bold rounded-lg outline outline-purple-950 ml-5 text-lg hover:outline-purple-500 transition-all">
         Sign Up
       </Link>
     </div>
