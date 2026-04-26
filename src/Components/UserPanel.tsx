@@ -156,7 +156,7 @@ export const UserPanel = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-purple-950" />
       )}
 
-      <div className="absolute inset-0 bg-black/35" />
+      <div className="absolute inset-0 bg-black/25 backdrop-blur-md border border-white/15" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.25),transparent_45%)]" />
 
       <div className="relative z-10 w-full max-w-md rounded-3xl bg-black/15 backdrop-blur-sm border border-white/15 shadow-2xl px-6 py-8 text-center">
@@ -166,7 +166,7 @@ export const UserPanel = () => {
           className="w-28 h-28 rounded-full mx-auto border-4 border-white/20 object-cover bg-black shadow-lg"
         />
 
-        <h1 className="mt-4 text-3xl font-bold">@{data.username}</h1>
+        <h1 className="mt-4 text-3xl font-bold text-white drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]">@{data.username}</h1>
 
         {data.profile.bio && (
           <p className="text-gray-300 mt-2 text-sm whitespace-pre-line">
