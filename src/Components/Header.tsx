@@ -5,9 +5,12 @@ export const Header = () => {
     <div className="fixed w-full flex justify-center top-5 z-50">
       <div className="text-white bg-gray-900/90 backdrop-blur-md flex items-center justify-between px-5 w-[90%] md:w-[70%] rounded-full h-[70px] md:h-[80px] shadow-2xl border border-white/10">
         
-         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition">
-  <span className="bg-gradient-to-r from-white via-purple-400 to-white bg-clip-text text-transparent font-extrabold text-xl md:text-2xl tracking-[0.15em]">
-    ARCXNJO
+         <Link to="/" className="flex items-center hover:opacity-80 transition">
+  <span
+    className="text-white text-xl md:text-2xl font-bold tracking-[0.25em]"
+    style={{ fontFamily: "Orbitron, sans-serif" }}
+  >
+    ARC<span className="text-purple-500">X</span>NJO
   </span>
 </Link>
 
