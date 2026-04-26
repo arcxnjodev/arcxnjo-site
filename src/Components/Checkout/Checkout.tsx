@@ -1,8 +1,5 @@
 import { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import { useParams } from 'react-router-dom';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 export const Checkout = () => {
   const { plan } = useParams();
@@ -18,22 +15,12 @@ export const Checkout = () => {
       });
       
       const session = await response.json();
-      const stripe = await stripePromise;
       
-      // Verificação se stripe não é null
-      if (!stripe) {
-        console.error('Stripe não carregou corretamente');
-        setLoading(false);
-        return;
-      }
-      
-      // Usando type assertion para contornar o erro do TypeScript
-      const result = await (stripe as any).redirectToCheckout({
-        sessionId: session.id
-      });
-      
-      if (result.error) {
-        console.error('Erro no redirecionamento:', result.error);
+      // Redirecionar diretamente para o URL do Stripe
+      if (session.url) {
+        window.location.href = session.url;
+      } else {
+        console.error('Sessão do Stripe não tem URL');
       }
     } catch (error) {
       console.error('Erro:', error);
