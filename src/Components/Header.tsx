@@ -7,7 +7,11 @@ export const Header = () => {
       <div className="text-white bg-gray-900/90 backdrop-blur-md flex items-center justify-between px-5 w-[90%] md:w-[70%] rounded-full h-[70px] md:h-[80px] shadow-2xl border border-white/10">
         
         <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
-          <img src={Logo} className="w-8 h-8 md:w-10 md:h-10 object-contain" alt="ARCXNJO" />
+          <img
+            src="/arcxnjo-logo.png"
+            alt="ARCXNJO"
+            className="h-10 md:h-12 w-auto object-contain"
+          />
           <span className="text-purple-400 font-bold text-xl md:text-2xl">
             ARCXNJO
           </span>
