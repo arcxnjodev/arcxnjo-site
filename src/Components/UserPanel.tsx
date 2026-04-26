@@ -1,109 +1,109 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import instagram from "../assets/images/instagram.png";
-import twitter from "../assets/images/x.png";
-import youtube from "../assets/images/youtube.png";
-import twitch from "../assets/images/twitch.png";
-import kick from "../assets/images/kick.avif";
-import discord from "../assets/images/discord.png";
-import linkedIn from "../assets/images/linkedin.png";
+import { useLocation } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+type ProfileData = {
+  username: string;
+  profile: {
+    profile_image?: string;
+    banner_image?: string;
+    banner_video?: string;
+    banner_type?: string;
+    theme_color?: string;
+  };
+  socialMedia: Record<string, string>;
+  stats: {
+    profile_views: number;
+  };
+};
 
 export const UserPanel = () => {
-  const [userData, setUserData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
   const location = useLocation();
-  const username = location.pathname.substring(1, location.pathname.length);
+  const username = location.pathname.replace("/", "");
 
-  const getData = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/profile/${username}`);
-      setUserData(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Erro ao buscar perfil:", error);
-      setLoading(false);
-      setTimeout(() => navigate("/"), 2000);
-    }
-  };
+  const [data, setData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getData();
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/profile/${username}`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Profile not found.");
+        }
+
+        setData(result);
+      } catch (error) {
+        console.error(error);
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (username) {
+      fetchProfile();
+    }
   }, [username]);
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen bg-black flex items-center justify-center text-white">
+        Loading profile...
       </div>
     );
   }
 
-  if (!userData) {
+  if (!data) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
-        <h1 className="text-red-600 text-lg p-4">User not found. Redirecting...</h1>
+      <div className="min-h-screen bg-black flex items-center justify-center text-white">
+        Profile not found.
       </div>
     );
   }
-
-  const profile = userData.profile || {};
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
-      {profile?.banner_image && (
-        <img src={profile.banner_image} className="absolute top-0 left-0 w-full h-full object-cover opacity-50" />
-      )}
-      <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60"></div>
-      <div className="relative z-10 bg-opacity-80 bg-gray-800 w-[500px] min-h-[350px] flex flex-col items-center rounded-xl p-6 shadow-2xl border border-purple-500 backdrop-blur-sm">
-        <div className="mt-8">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <div className="w-full max-w-md rounded-3xl overflow-hidden bg-gray-900 border border-white/10 shadow-2xl">
+        <div
+          className="h-40 bg-cover bg-center"
+          style={{
+            backgroundImage: data.profile.banner_image
+              ? `url(${data.profile.banner_image})`
+              : "linear-gradient(135deg, #111827, #7c3aed)",
+          }}
+        />
+
+        <div className="px-6 pb-8 text-center -mt-14">
           <img
-            src={profile?.profile_image || "https://cdn-icons-png.flaticon.com/512/219/219986.png"}
-            className="rounded-full w-[100px] h-[100px] object-cover border-4 border-purple-500"
+            src={data.profile.profile_image || "/favicon.png"}
+            alt={data.username}
+            className="w-28 h-28 rounded-full mx-auto border-4 border-gray-900 object-cover bg-black"
           />
-        </div>
-        <div>
-          <h1 className="text-white text-2xl font-bold mt-2">{userData.username}</h1>
-        </div>
-        <div className="flex gap-3 mt-4 flex-wrap justify-center">
-          {userData.socialMedia?.instagram && (
-            <a href={"https://www.instagram.com/" + userData.socialMedia.instagram} target="_blank">
-              <img src={instagram} className="w-10 hover:scale-110 transition" />
-            </a>
-          )}
-          {userData.socialMedia?.x && (
-            <a href={"https://www.x.com/" + userData.socialMedia.x} target="_blank">
-              <img src={twitter} className="w-10 hover:scale-110 transition" />
-            </a>
-          )}
-          {userData.socialMedia?.youtube && (
-            <a href={"https://www.youtube.com/@" + userData.socialMedia.youtube} target="_blank">
-              <img src={youtube} className="w-10 hover:scale-110 transition" />
-            </a>
-          )}
-          {userData.socialMedia?.twitch && (
-            <a href={"https://www.twitch.tv/" + userData.socialMedia.twitch} target="_blank">
-              <img src={twitch} className="w-10 hover:scale-110 transition" />
-            </a>
-          )}
-          {userData.socialMedia?.kick && (
-            <a href={"https://www.kick.com/" + userData.socialMedia.kick} target="_blank">
-              <img src={kick} className="w-10 hover:scale-110 transition" />
-            </a>
-          )}
-          {userData.socialMedia?.discord && (
-            <a href={"https://discord.gg/" + userData.socialMedia.discord} target="_blank">
-              <img src={discord} className="w-10 hover:scale-110 transition" />
-            </a>
-          )}
-          {userData.socialMedia?.linkedIn && (
-            <a href={"https://www.linkedin.com/in/" + userData.socialMedia.linkedIn} target="_blank">
-              <img src={linkedIn} className="w-10 hover:scale-110 transition" />
-            </a>
-          )}
+
+          <h1 className="mt-4 text-2xl font-bold">@{data.username}</h1>
+
+          <p className="text-gray-400 mt-1">
+            {data.stats?.profile_views || 0} views
+          </p>
+
+          <div className="mt-6 space-y-3">
+            {Object.entries(data.socialMedia).map(([platform, url]) => (
+              <a
+                key={platform}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="block w-full rounded-xl bg-purple-600 hover:bg-purple-700 transition py-3 font-semibold text-black"
+              >
+                {platform.toUpperCase()}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </div>
