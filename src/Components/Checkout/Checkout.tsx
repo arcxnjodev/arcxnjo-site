@@ -13,17 +13,17 @@ export const Checkout = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan }),
       });
-      
+
       const session = await response.json();
-      
-      // Redirecionar diretamente para o URL do Stripe
+
+      // Redireciona o navegador para a URL do checkout do Stripe
       if (session.url) {
         window.location.href = session.url;
       } else {
-        console.error('Sessão do Stripe não tem URL');
+        console.error('A sessão do Stripe não retornou uma URL.');
       }
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('Erro ao criar sessão de checkout:', error);
     } finally {
       setLoading(false);
     }
