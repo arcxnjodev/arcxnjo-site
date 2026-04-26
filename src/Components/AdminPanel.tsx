@@ -10,26 +10,48 @@ export const AdminPanel = () => {
   const { email } = useSelector((store: { user: userSliceType }) => store.user);
   const [activeTab, setActiveTab] = useState("profile");
   const [username, setUsername] = useState<string>("");
+  const [bio, setBio] = useState<string>("");
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
-  // Buscar o username do usuário logado
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
+
         const response = await axios.get(`${API_URL}/api/profile/me`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
-        // O back-end retorna o username no campo 'username' (ou similar)
-        setUsername(response.data.username || email?.split("@")[0] || "usuário");
+
+        setUsername(response.data.username || email?.split("@")[0] || "user");
+        setBio(response.data.bio || "");
       } catch (error) {
-        console.error("Erro ao buscar dados do usuário:", error);
-        setUsername(email?.split("@")[0] || "usuário");
+        console.error("Error fetching user data:", error);
+        setUsername(email?.split("@")[0] || "user");
       }
     };
+
     fetchUserData();
-  }, [email]);
+  }, [email, API_URL]);
+
+  const handleSaveBio = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        `${API_URL}/api/profile/bio`,
+        { bio },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert("Bio updated successfully!");
+    } catch (error) {
+      console.error("Error updating bio:", error);
+      alert("Failed to update bio. Please try again.");
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -45,17 +67,48 @@ export const AdminPanel = () => {
 
   const ProfilePreview = () => {
     const displayName = username || email?.split("@")[0] || "user";
+
     return (
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl">
+        <div className="flex items-start gap-4">
+          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl shrink-0">
             {displayName.charAt(0).toUpperCase()}
           </div>
-          <div>
+
+          <div className="w-full">
             <h3 className="text-xl font-bold">{displayName}</h3>
             <p className="text-white/70 text-sm">{email}</p>
+
+            <div className="mt-4">
+              <label className="block text-sm font-semibold mb-2">
+                Bio
+              </label>
+
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Write a short bio..."
+                className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 resize-none outline-none focus:border-white/40"
+                rows={3}
+                maxLength={160}
+              />
+
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs text-white/60">
+                  {bio.length}/160
+                </span>
+
+                <button
+                  onClick={handleSaveBio}
+                  className="bg-black/40 hover:bg-black/60 px-4 py-2 rounded-lg text-sm font-semibold transition"
+                >
+                  Save Bio
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+
         <div className="mt-4 pt-4 border-t border-white/20">
           <p className="text-sm">Your public profile is at:</p>
           <code className="text-sm bg-black/30 px-2 py-1 rounded mt-1 inline-block break-all">
@@ -68,13 +121,13 @@ export const AdminPanel = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      {/* Header */}
       <header className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-10">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg"></div>
             <span className="text-white font-bold text-xl">ARCXNJO</span>
           </div>
+
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-gray-800 px-3 py-1.5 rounded-full">
               <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-xs font-bold">
@@ -82,6 +135,7 @@ export const AdminPanel = () => {
               </div>
               <span className="text-white text-sm">{username || email?.split("@")[0]}</span>
             </div>
+
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 text-gray-400 hover:text-white transition"
@@ -93,10 +147,8 @@ export const AdminPanel = () => {
         </div>
       </header>
 
-      {/* Main */}
       <div className="container mx-auto px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
           <aside className="lg:w-64 space-y-2">
             {tabs.map((tab) => (
               <button
@@ -112,6 +164,7 @@ export const AdminPanel = () => {
                 <span>{tab.label}</span>
               </button>
             ))}
+
             <div className="pt-4 mt-4 border-t border-gray-700">
               <a
                 href={`https://www.arcxnjo.com.br/${username}`}
@@ -125,11 +178,10 @@ export const AdminPanel = () => {
             </div>
           </aside>
 
-          {/* Content */}
           <main className="flex-1 space-y-6">
             {activeTab === "profile" && <ProfilePreview />}
-            {activeTab === "social" && tabs.find(t => t.id === "social")?.component}
-            {activeTab === "images" && tabs.find(t => t.id === "images")?.component}
+            {activeTab === "social" && tabs.find((t) => t.id === "social")?.component}
+            {activeTab === "images" && tabs.find((t) => t.id === "images")?.component}
           </main>
         </div>
       </div>
