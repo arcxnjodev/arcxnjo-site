@@ -111,22 +111,42 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 app.post('/api/create-checkout-session', async (req, res) => {
   const { plan } = req.body;
-  const priceId = plan === 'pro' ? process.env.STRIPE_PRICE_PRO_ID : process.env.STRIPE_PRICE_FREE_ID;
+
+  const prices = {
+    pro: process.env.STRIPE_PRICE_PRO_ID,
+  };
+
+  const priceId = prices[plan];
+
+  if (!priceId) {
+    return res.status(400).json({
+      error: 'Invalid plan.',
+    });
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
       mode: 'subscription',
       success_url: `${process.env.FRONTEND_URL}/success`,
       cancel_url: `${process.env.FRONTEND_URL}/pricing`,
     });
 
-    // É ESSENCIAL QUE ESTA LINHA ESTEJA PRESENTE E CORRETA
-    res.json({ url: session.url });
+    return res.json({
+      url: session.url,
+    });
   } catch (error) {
-    console.error('Erro ao criar sessão:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Stripe checkout error:', error);
+
+    return res.status(500).json({
+      error: error.message || 'Failed to create checkout session.',
+    });
   }
 });
 
