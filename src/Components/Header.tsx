@@ -26,7 +26,7 @@ export const Header = () => {
               </Link>
             </li>
             <li>
-              <Link to="/register" className="py-2 px-3 md:px-4 rounded-lg transition bg-purple-600 hover:bg-purple-700 text-black font-bold text-sm md:text-base">
+              <Link to="/register" className="py-2 px-3 md:px-4 rounded-lg transition bg-purple-600 hover:bg-purple-700 !text-black font-bold text-sm md:text-base">
                 Sign Up
               </Link>
             </li>
