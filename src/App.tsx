@@ -6,6 +6,7 @@ import { Register } from "./Components/Register";
 import { Pricing } from "./Components/Pricing";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UserPanel } from "./Components/UserPanel";
+import { Checkout } from "./Components/Checkout";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/panel" element={<AdminPanel />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="*" element={<UserPanel />} />
+        <Route path="/checkout/:plan" element={<Checkout />} />
       </Routes>
     </BrowserRouter>
   );
