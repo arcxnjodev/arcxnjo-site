@@ -51,7 +51,28 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const allowedFileTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'video/mp4',
+  'video/webm',
+];
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (allowedFileTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Allowed: JPG, PNG, WEBP, GIF, MP4, WEBM.'));
+    }
+  },
+});
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -374,11 +395,24 @@ app.put('/api/profile/bio', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
-  const fileUrl = `${process.env.API_URL || 'http://localhost:3001'}/uploads/${
-    req.file.filename
-  }`;
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded.' });
+    }
 
-  return res.json({ url: fileUrl });
+    const baseUrl = process.env.API_URL || `${req.protocol}://${req.get('host')}`;
+
+    const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
+
+    return res.json({
+      url: fileUrl,
+      mimetype: req.file.mimetype,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message || 'Upload failed.',
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3001;
