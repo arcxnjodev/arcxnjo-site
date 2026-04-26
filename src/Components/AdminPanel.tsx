@@ -65,60 +65,6 @@ export const AdminPanel = () => {
     { id: "images", label: "Images", icon: <FaImage />, component: <ProfileImagesSettings /> },
   ];
 
-  const ProfilePreview = () => {
-    const displayName = username || email?.split("@")[0] || "user";
-
-    return (
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
-        <div className="flex items-start gap-4">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl shrink-0">
-            {displayName.charAt(0).toUpperCase()}
-          </div>
-
-          <div className="w-full">
-            <h3 className="text-xl font-bold">{displayName}</h3>
-            <p className="text-white/70 text-sm">{email}</p>
-
-            <div className="mt-4">
-              <label className="block text-sm font-semibold mb-2">
-                Bio
-              </label>
-
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Write a short bio..."
-                className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 resize-none outline-none focus:border-white/40"
-                rows={3}
-                maxLength={160}
-              />
-
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-white/60">
-                  {bio.length}/160
-                </span>
-
-                <button
-                  onClick={handleSaveBio}
-                  className="bg-black/40 hover:bg-black/60 px-4 py-2 rounded-lg text-sm font-semibold transition"
-                >
-                  Save Bio
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-white/20">
-          <p className="text-sm">Your public profile is at:</p>
-          <code className="text-sm bg-black/30 px-2 py-1 rounded mt-1 inline-block break-all">
-            https://www.arcxnjo.com.br/{displayName}
-          </code>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
       <header className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-10">
