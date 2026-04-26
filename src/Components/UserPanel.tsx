@@ -1,9 +1,20 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import {
+  FaDiscord,
+  FaGlobe,
+  FaInstagram,
+  FaLinkedin,
+  FaTwitch,
+  FaTwitter,
+  FaYoutube,
+  FaGithub,
+  FaTiktok,
+  FaKickstarterK,
+} from "react-icons/fa";
 
 type ProfileData = {
   username: string;
-
   profile: {
     profile_image?: string;
     banner_image?: string;
@@ -16,6 +27,20 @@ type ProfileData = {
   stats: {
     profile_views: number;
   };
+};
+
+const socialIcons: Record<string, React.ElementType> = {
+  instagram: FaInstagram,
+  x: FaTwitter,
+  twitter: FaTwitter,
+  youtube: FaYoutube,
+  twitch: FaTwitch,
+  kick: FaKickstarterK,
+  discord: FaDiscord,
+  linkedin: FaLinkedin,
+  github: FaGithub,
+  tiktok: FaTiktok,
+  website: FaGlobe,
 };
 
 export const UserPanel = () => {
@@ -68,6 +93,10 @@ export const UserPanel = () => {
     );
   }
 
+  const socialEntries = Object.entries(data.socialMedia).filter(
+    ([, url]) => url && url.trim() !== ""
+  );
+
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-3xl overflow-hidden bg-gray-900 border border-white/10 shadow-2xl">
@@ -88,28 +117,38 @@ export const UserPanel = () => {
           />
 
           <h1 className="mt-4 text-2xl font-bold">@{data.username}</h1>
-            {data.profile.bio && (
-          <p className="text-gray-300 mt-2 text-sm">
-            {data.profile.bio}
-          </p>
-        )}
-          <p className="text-gray-400 mt-1">
+
+          {data.profile.bio && (
+            <p className="text-gray-300 mt-2 text-sm whitespace-pre-line">
+              {data.profile.bio}
+            </p>
+          )}
+
+          <p className="text-gray-400 mt-2 text-sm">
             {data.stats?.profile_views || 0} views
           </p>
 
-          <div className="mt-6 space-y-3">
-            {Object.entries(data.socialMedia).map(([platform, url]) => (
-              <a
-                key={platform}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="block w-full rounded-xl bg-purple-600 hover:bg-purple-700 transition py-3 font-semibold text-black"
-              >
-                {platform.toUpperCase()}
-              </a>
-            ))}
-          </div>
+          {socialEntries.length > 0 && (
+            <div className="mt-6 flex flex-wrap justify-center gap-4">
+              {socialEntries.map(([platform, url]) => {
+                const Icon = socialIcons[platform.toLowerCase()] || FaGlobe;
+
+                return (
+                  <a
+                    key={platform}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={platform}
+                    aria-label={platform}
+                    className="w-11 h-11 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-xl text-white hover:text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 transition"
+                  >
+                    <Icon />
+                  </a>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
