@@ -135,73 +135,70 @@ export const UserPanel = () => {
     data.profile.banner_type === "video" && data.profile.banner_video;
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-3xl overflow-hidden bg-gray-900 border border-white/10 shadow-2xl">
-        <div className="relative h-40 overflow-hidden bg-gradient-to-br from-gray-900 to-purple-700">
-          {isVideoBackground ? (
-            <video
-              src={data.profile.banner_video}
-              className="absolute inset-0 w-full h-full object-cover"
-              muted
-              loop
-              autoPlay
-              playsInline
-            />
-          ) : data.profile.banner_image ? (
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{
-                backgroundImage: `url(${data.profile.banner_image})`,
-              }}
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-purple-700" />
-          )}
+    <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
+      {isVideoBackground ? (
+        <video
+          src={data.profile.banner_video}
+          className="absolute inset-0 w-full h-full object-cover"
+          muted
+          loop
+          autoPlay
+          playsInline
+        />
+      ) : data.profile.banner_image ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${data.profile.banner_image})`,
+          }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-purple-950" />
+      )}
 
-          <div className="absolute inset-0 bg-black/20" />
-        </div>
+      <div className="absolute inset-0 bg-black/35" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.25),transparent_45%)]" />
 
-        <div className="px-6 pb-8 text-center -mt-14 relative z-10">
-          <img
-            src={data.profile.profile_image || "/favicon.png"}
-            alt={data.username}
-            className="w-28 h-28 rounded-full mx-auto border-4 border-gray-900 object-cover bg-black"
-          />
+      <div className="relative z-10 w-full max-w-md rounded-3xl bg-black/15 backdrop-blur-sm border border-white/15 shadow-2xl px-6 py-8 text-center">
+        <img
+          src={data.profile.profile_image || "/favicon.png"}
+          alt={data.username}
+          className="w-28 h-28 rounded-full mx-auto border-4 border-white/20 object-cover bg-black shadow-lg"
+        />
 
-          <h1 className="mt-4 text-2xl font-bold">@{data.username}</h1>
+        <h1 className="mt-4 text-3xl font-bold">@{data.username}</h1>
 
-          {data.profile.bio && (
-            <p className="text-gray-300 mt-2 text-sm whitespace-pre-line">
-              {data.profile.bio}
-            </p>
-          )}
-
-          <p className="text-gray-400 mt-2 text-sm">
-            {data.stats?.profile_views || 0} views
+        {data.profile.bio && (
+          <p className="text-gray-300 mt-2 text-sm whitespace-pre-line">
+            {data.profile.bio}
           </p>
+        )}
 
-          {socialEntries.length > 0 && (
-            <div className="mt-6 flex flex-wrap justify-center gap-4">
-              {socialEntries.map(([platform, url]) => {
-                const Icon = socialIcons[platform.toLowerCase()] || FaGlobe;
+        <p className="text-gray-400 mt-2 text-sm">
+          {data.stats?.profile_views || 0} views
+        </p>
 
-                return (
-                  <a
-                    key={platform}
-                    href={getSocialUrl(platform, url)}
-                    target="_blank"
-                    rel="noreferrer"
-                    title={platform}
-                    aria-label={platform}
-                    className="w-11 h-11 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-xl text-white hover:text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 transition"
-                  >
-                    <Icon />
-                  </a>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        {socialEntries.length > 0 && (
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
+            {socialEntries.map(([platform, url]) => {
+              const Icon = socialIcons[platform.toLowerCase()] || FaGlobe;
+
+              return (
+                <a
+                  key={platform}
+                  href={getSocialUrl(platform, url)}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={platform}
+                  aria-label={platform}
+                  className="w-11 h-11 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-xl text-white hover:text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 transition"
+                >
+                  <Icon />
+                </a>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
