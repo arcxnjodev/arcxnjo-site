@@ -15,28 +15,42 @@ export const AdminPanel = () => {
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem("token");
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-        const response = await axios.get(`${API_URL}/api/profile/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-if (!response.data.username) {
-  throw new Error("Username not found.");
-}
-
-setUsername(response.data.username);
-setBio(response.data.bio || "");
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setUsername("");
+      if (!token) {
+        window.location.href = "/login";
+        return;
       }
-    };
 
-    fetchUserData();
-  }, [email, API_URL]);
+      const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+      const usernameFromToken = tokenPayload.username || "";
+
+      const response = await axios.get(`${API_URL}/api/profile/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setUsername(response.data.username || usernameFromToken);
+      setBio(response.data.bio || "");
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        try {
+          const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+          setUsername(tokenPayload.username || "");
+        } catch {
+          setUsername("");
+        }
+      }
+    }
+  };
+
+  fetchUserData();
+}, [API_URL]);
 
   const handleSaveBio = async () => {
     try {
@@ -115,22 +129,22 @@ setBio(response.data.bio || "");
               </button>
             ))}
 
-            <div className="pt-4 mt-4 border-t border-gray-700">
-  <a
-    href={username ? `https://www.arcxnjo.com.br/${username}` : "#"}
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => {
+           <div className="pt-4 mt-4 border-t border-gray-700">
+  <button
+    type="button"
+    onClick={() => {
       if (!username) {
-        e.preventDefault();
         alert("Username is still loading. Please wait a moment.");
+        return;
       }
+
+      window.open(`https://www.arcxnjo.com.br/${username}`, "_blank");
     }}
     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition"
   >
     <FaTachometerAlt />
     <span>View Profile</span>
-  </a>
+  </button>
 </div>
           </aside>
 
