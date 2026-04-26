@@ -23,11 +23,15 @@ export const AdminPanel = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setUsername(response.data.username || email?.split("@")[0] || "user");
-        setBio(response.data.bio || "");
+if (!response.data.username) {
+  throw new Error("Username not found.");
+}
+
+setUsername(response.data.username);
+setBio(response.data.bio || "");
       } catch (error) {
         console.error("Error fetching user data:", error);
-        setUsername(email?.split("@")[0] || "user");
+        setUsername("");
       }
     };
 
@@ -113,7 +117,7 @@ export const AdminPanel = () => {
 
             <div className="pt-4 mt-4 border-t border-gray-700">
               <a
-                href={`https://www.arcxnjo.com.br/${username}`}
+                href={username ? `https://www.arcxnjo.com.br/${username}` : "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition"
@@ -172,7 +176,7 @@ export const AdminPanel = () => {
       <div className="mt-4 pt-4 border-t border-white/20">
         <p className="text-sm">Your public profile is at:</p>
         <code className="text-sm bg-black/30 px-2 py-1 rounded mt-1 inline-block break-all">
-          https://www.arcxnjo.com.br/{username}
+         https://www.arcxnjo.com.br/{username || "loading"}
         </code>
       </div>
 
