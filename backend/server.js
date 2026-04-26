@@ -106,7 +106,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Stripe checkout
+ // Stripe checkout
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 app.post('/api/create-checkout-session', async (req, res) => {
@@ -126,7 +126,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
 
   try {
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       line_items: [
         {
           price: priceId,
@@ -134,6 +133,9 @@ app.post('/api/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'subscription',
+      automatic_payment_methods: {
+        enabled: true,
+      },
       success_url: `${process.env.FRONTEND_URL}/success`,
       cancel_url: `${process.env.FRONTEND_URL}/pricing`,
     });
