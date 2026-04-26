@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 export const Pricing = () => {
   return (
     <div className="text-white w-full flex flex-col items-center mt-[100px] pb-[200px]">
@@ -64,9 +62,9 @@ export const Pricing = () => {
               <p>Add Your Social Media</p>
             </div>
           </div>
-          <Link to="/register" className="bg-purple-700 rounded-lg px-4 py-2 inline-block text-center">
-            Get Started
-          </Link>
+          <a href="/register" className="bg-purple-700 rounded-lg px-4 py-2 inline-block text-center hover:bg-purple-800 transition">
+  Get Started
+</a>
         </div>
 
         <div className="bg-gray-900 p-5 rounded-xl flex flex-col gap-4 w-[370px] bg-main">
@@ -184,9 +182,9 @@ export const Pricing = () => {
               <p>badges+</p>
             </div>
           </div>
-          <Link to="/register" className="bg-purple-600 rounded-lg px-4 py-2 inline-block text-center">
+          <a href="/register" className="bg-purple-600 rounded-lg px-4 py-2 inline-block text-center hover:bg-purple-700 transition">
             Get Started
-          </Link>
+          </a>
         </div>
       </div>
     </div>
