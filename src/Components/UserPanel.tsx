@@ -43,6 +43,40 @@ const socialIcons: Record<string, React.ElementType> = {
   website: FaGlobe,
 };
 
+const getSocialUrl = (platform: string, url: string) => {
+  const cleanUrl = url.trim();
+
+  if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+    return cleanUrl;
+  }
+
+  const cleanUsername = cleanUrl.replace("@", "");
+
+  switch (platform.toLowerCase()) {
+    case "instagram":
+      return `https://instagram.com/${cleanUsername}`;
+    case "x":
+    case "twitter":
+      return `https://x.com/${cleanUsername}`;
+    case "youtube":
+      return `https://youtube.com/@${cleanUsername}`;
+    case "tiktok":
+      return `https://tiktok.com/@${cleanUsername}`;
+    case "twitch":
+      return `https://twitch.tv/${cleanUsername}`;
+    case "kick":
+      return `https://kick.com/${cleanUsername}`;
+    case "linkedin":
+      return `https://linkedin.com/in/${cleanUsername}`;
+    case "github":
+      return `https://github.com/${cleanUsername}`;
+    case "discord":
+      return cleanUrl;
+    default:
+      return `https://${cleanUrl}`;
+  }
+};
+
 export const UserPanel = () => {
   const location = useLocation();
   const username = location.pathname.replace("/", "");
@@ -136,7 +170,7 @@ export const UserPanel = () => {
                 return (
                   <a
                     key={platform}
-                    href={url}
+                    href={getSocialUrl(platform, url)}
                     target="_blank"
                     rel="noreferrer"
                     title={platform}
