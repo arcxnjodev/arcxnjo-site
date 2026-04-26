@@ -3,12 +3,14 @@ import { useLocation } from "react-router-dom";
 
 type ProfileData = {
   username: string;
+
   profile: {
     profile_image?: string;
     banner_image?: string;
     banner_video?: string;
     banner_type?: string;
     theme_color?: string;
+    bio?: string;
   };
   socialMedia: Record<string, string>;
   stats: {
@@ -86,7 +88,11 @@ export const UserPanel = () => {
           />
 
           <h1 className="mt-4 text-2xl font-bold">@{data.username}</h1>
-
+            {data.profile.bio && (
+          <p className="text-gray-300 mt-2 text-sm">
+            {data.profile.bio}
+          </p>
+        )}
           <p className="text-gray-400 mt-1">
             {data.stats?.profile_views || 0} views
           </p>

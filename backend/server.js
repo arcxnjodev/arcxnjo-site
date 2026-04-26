@@ -77,9 +77,16 @@ app.post('/api/register', async (req, res) => {
     const userId = result.rows[0].id;
     
     await pool.query(
-      `INSERT INTO user_profiles (user_id, profile_image, banner_image, banner_type, theme_color) 
-       VALUES ($1, $2, $3, $4, $5)`,
-      [userId, 'https://cdn-icons-png.flaticon.com/512/219/219986.png', '', 'image', '#5865F2']
+      `INSERT INTO user_profiles (user_id, profile_image, banner_image, banner_type, theme_color, bio) 
+ VALUES ($1, $2, $3, $4, $5, $6)`,
+[
+  userId,
+  'https://cdn-icons-png.flaticon.com/512/219/219986.png',
+  '',
+  'image',
+  '#5865F2',
+  ''
+]
     );
     
     await pool.query(
