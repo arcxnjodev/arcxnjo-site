@@ -176,9 +176,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'subscription',
-      automatic_payment_methods: {
-        enabled: true,
-      },
       success_url: `${process.env.FRONTEND_URL}/success`,
       cancel_url: `${process.env.FRONTEND_URL}/pricing`,
     });
