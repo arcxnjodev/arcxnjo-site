@@ -21,7 +21,9 @@ export const ProfileImagesSettings = () => {
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      throw new Error("Invalid file type. Allowed: JPG, PNG, WEBP, GIF, MP4, WEBM.");
+      throw new Error(
+        "Invalid file type. Allowed: JPG, PNG, WEBP, GIF, MP4, WEBM."
+      );
     }
 
     if (file.size > 25 * 1024 * 1024) {
@@ -43,7 +45,7 @@ export const ProfileImagesSettings = () => {
     return response.data;
   };
 
-  const { values, handleSubmit, handleChange, setValues } = useFormik({
+  const { values, handleSubmit, setValues } = useFormik({
     initialValues: {
       profileImage: "",
       bannerType: "image",
@@ -60,10 +62,10 @@ export const ProfileImagesSettings = () => {
         await axios.put(
           `${API_URL}/api/profile/images`,
           {
-            profileImage: values.profileImage.trim(),
+            profileImage: values.profileImage,
             bannerType: values.bannerType,
-            bannerImage: values.bannerImage.trim(),
-            bannerVideo: values.bannerVideo.trim(),
+            bannerImage: values.bannerImage,
+            bannerVideo: values.bannerVideo,
           },
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -142,7 +144,7 @@ export const ProfileImagesSettings = () => {
 
       const uploaded = await uploadFile(file);
 
-      if (uploaded.mimetype.startsWith("video/")) {
+      if (uploaded.mimetype?.startsWith("video/")) {
         setValues({
           ...values,
           bannerType: "video",
@@ -181,17 +183,11 @@ export const ProfileImagesSettings = () => {
       )}
 
       <form onSubmit={handleSubmit}>
-        <p className="text-white font-medium">Profile Picture URL</p>
-        <input
-          type="text"
-          name="profileImage"
-          placeholder="Enter profile image URL"
-          className="w-full p-2 border-none rounded-md my-1 text-black"
-          value={values.profileImage}
-          onChange={handleChange}
-        />
+        <p className="text-white font-medium">Upload profile picture</p>
+        <p className="text-white/70 text-sm mb-2">
+          Allowed formats: JPG, PNG, WEBP, GIF.
+        </p>
 
-        <p className="text-white font-medium mt-3">Or upload profile picture</p>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif"
@@ -200,7 +196,9 @@ export const ProfileImagesSettings = () => {
         />
 
         {uploadingProfile && (
-          <p className="text-white/80 text-sm mt-1">Uploading profile picture...</p>
+          <p className="text-white/80 text-sm mt-1">
+            Uploading profile picture...
+          </p>
         )}
 
         {values.profileImage && (
@@ -214,18 +212,11 @@ export const ProfileImagesSettings = () => {
           </div>
         )}
 
-        <p className="text-white font-medium mt-4">Background Type</p>
-        <select
-          name="bannerType"
-          className="w-full p-2 border-none rounded-md my-1 text-black"
-          value={values.bannerType}
-          onChange={handleChange}
-        >
-          <option value="image">Image / GIF</option>
-          <option value="video">Video</option>
-        </select>
+        <p className="text-white font-medium mt-6">Upload background</p>
+        <p className="text-white/70 text-sm mb-2">
+          Allowed formats: JPG, PNG, WEBP, GIF, MP4, WEBM.
+        </p>
 
-        <p className="text-white font-medium mt-3">Upload background</p>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
@@ -234,59 +225,33 @@ export const ProfileImagesSettings = () => {
         />
 
         {uploadingBackground && (
-          <p className="text-white/80 text-sm mt-1">Uploading background...</p>
+          <p className="text-white/80 text-sm mt-1">
+            Uploading background...
+          </p>
         )}
 
-        {values.bannerType === "image" && (
-          <>
-            <p className="text-white font-medium mt-4">Background Image or GIF URL</p>
-            <input
-              type="text"
-              name="bannerImage"
-              placeholder="Enter image or GIF URL"
-              className="w-full p-2 border-none rounded-md my-1 text-black"
-              value={values.bannerImage}
-              onChange={handleChange}
+        {values.bannerType === "image" && values.bannerImage && (
+          <div className="mt-3 mb-5">
+            <p className="text-white/80 text-sm mb-2">Background Preview</p>
+            <div
+              className="w-full h-40 rounded-lg bg-cover bg-center border border-white/20"
+              style={{ backgroundImage: `url(${values.bannerImage})` }}
             />
-
-            {values.bannerImage && (
-              <div className="mt-3 mb-5">
-                <p className="text-white/80 text-sm mb-2">Background Preview</p>
-                <div
-                  className="w-full h-40 rounded-lg bg-cover bg-center border border-white/20"
-                  style={{ backgroundImage: `url(${values.bannerImage})` }}
-                />
-              </div>
-            )}
-          </>
+          </div>
         )}
 
-        {values.bannerType === "video" && (
-          <>
-            <p className="text-white font-medium mt-4">Background Video URL</p>
-            <input
-              type="text"
-              name="bannerVideo"
-              placeholder="Enter video URL"
-              className="w-full p-2 border-none rounded-md my-1 text-black"
-              value={values.bannerVideo}
-              onChange={handleChange}
+        {values.bannerType === "video" && values.bannerVideo && (
+          <div className="mt-3 mb-5">
+            <p className="text-white/80 text-sm mb-2">Video Preview</p>
+            <video
+              src={values.bannerVideo}
+              className="w-full h-40 rounded-lg object-cover border border-white/20"
+              muted
+              loop
+              autoPlay
+              playsInline
             />
-
-            {values.bannerVideo && (
-              <div className="mt-3 mb-5">
-                <p className="text-white/80 text-sm mb-2">Video Preview</p>
-                <video
-                  src={values.bannerVideo}
-                  className="w-full h-40 rounded-lg object-cover border border-white/20"
-                  muted
-                  loop
-                  autoPlay
-                  playsInline
-                />
-              </div>
-            )}
-          </>
+          </div>
         )}
 
         <button
