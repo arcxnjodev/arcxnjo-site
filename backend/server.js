@@ -402,6 +402,34 @@ app.put('/api/profile/bio', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
+  const { profileTemplate } = req.body;
+
+  const allowedTemplates = [
+    'neon-purple',
+    'cyber-glass',
+    'minimal-dark',
+    'red-glow',
+    'blue-ice',
+  ];
+
+  if (!allowedTemplates.includes(profileTemplate)) {
+    return res.status(400).json({ error: 'Invalid profile template.' });
+  }
+
+  try {
+    await pool.query(
+      'UPDATE user_profiles SET profile_template = $1 WHERE user_id = $2',
+      [profileTemplate, req.userId]
+    );
+
+    return res.json({ message: 'Appearance updated successfully!' });
+  } catch (error) {
+    console.error('Appearance update error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/upload', authenticateToken, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {

@@ -3,8 +3,9 @@ import { useSelector } from "react-redux";
 import { userSliceType } from "../Store/userSlice";
 import { SocialMediaSettings } from "./Ui/SocialMediaSettings";
 import { ProfileImagesSettings } from "./Ui/ProfileImagesSettings";
-import { FaUser, FaLink, FaImage, FaSignOutAlt, FaTachometerAlt } from "react-icons/fa";
+import { FaUser, FaLink, FaImage, FaSignOutAlt, FaTachometerAlt, FaPalette } from "react-icons/fa";
 import axios from "axios";
+import { AppearanceSettings } from "./Ui/AppearanceSettings";
 
 export const AdminPanel = () => {
   const { email } = useSelector((store: { user: userSliceType }) => store.user);
@@ -78,10 +79,11 @@ export const AdminPanel = () => {
   };
 
   const tabs = [
-    { id: "profile", label: "Public Profile", icon: <FaUser />, component: null },
-    { id: "social", label: "Social Media", icon: <FaLink />, component: <SocialMediaSettings /> },
-    { id: "images", label: "Images", icon: <FaImage />, component: <ProfileImagesSettings /> },
-  ];
+  { id: "profile", label: "Public Profile", icon: <FaUser />, component: null },
+  { id: "social", label: "Social Media", icon: <FaLink />, component: <SocialMediaSettings /> },
+  { id: "images", label: "Images", icon: <FaImage />, component: <ProfileImagesSettings /> },
+  { id: "appearance", label: "Appearance", icon: <FaPalette />, component: <AppearanceSettings /> },
+];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
@@ -210,7 +212,8 @@ export const AdminPanel = () => {
   )}
 
   {activeTab === "social" && tabs.find((t) => t.id === "social")?.component}
-  {activeTab === "images" && tabs.find((t) => t.id === "images")?.component}
+{activeTab === "images" && tabs.find((t) => t.id === "images")?.component}
+{activeTab === "appearance" && tabs.find((t) => t.id === "appearance")?.component}
 
 </main>
         </div>
