@@ -157,8 +157,6 @@ export const UserPanel = () => {
       )}
 
       <div className="absolute inset-0 bg-black/10" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.25),transparent_45%)]" />
-
       <div className="relative z-10 w-full max-w-md rounded-3xl bg-black/35 border border-white/10 shadow-2xl px-6 py-8 text-center">
         <img
           src={data.profile.profile_image || "/favicon.png"}
