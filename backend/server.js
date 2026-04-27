@@ -177,7 +177,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
       ],
       mode: 'subscription',
       success_url: `${process.env.FRONTEND_URL}/success`,
-      cancel_url: `${process.env.FRONTEND_URL}/pricing`,
+      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
     });
 
     return res.json({
@@ -423,6 +423,22 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
     return res.json({ message: 'Appearance updated successfully!' });
   } catch (error) {
     console.error('Appearance update error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/profile/display-name', authenticateToken, async (req, res) => {
+  const { displayName } = req.body;
+
+  try {
+    await pool.query(
+      'UPDATE user_profiles SET display_name = $1 WHERE user_id = $2',
+      [displayName || '', req.userId]
+    );
+
+    return res.json({ message: 'Display name updated successfully!' });
+  } catch (error) {
+    console.error('Display name update error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
