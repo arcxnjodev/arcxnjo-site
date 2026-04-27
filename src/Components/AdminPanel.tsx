@@ -19,6 +19,7 @@ export const AdminPanel = () => {
 
   const [activeTab, setActiveTab] = useState("profile");
   const [username, setUsername] = useState<string>("");
+  const [newUsername, setNewUsername] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
   const [bio, setBio] = useState<string>("");
 
@@ -41,7 +42,10 @@ export const AdminPanel = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setUsername(response.data.username || usernameFromToken);
+        const currentUsername = response.data.username || usernameFromToken;
+
+        setUsername(currentUsername);
+        setNewUsername(currentUsername);
         setDisplayName(response.data.display_name || "");
         setBio(response.data.bio || "");
       } catch (error) {
@@ -52,9 +56,13 @@ export const AdminPanel = () => {
         if (token) {
           try {
             const tokenPayload = JSON.parse(atob(token.split(".")[1]));
-            setUsername(tokenPayload.username || "");
+            const usernameFromToken = tokenPayload.username || "";
+
+            setUsername(usernameFromToken);
+            setNewUsername(usernameFromToken);
           } catch {
             setUsername("");
+            setNewUsername("");
           }
         }
       }
@@ -62,6 +70,32 @@ export const AdminPanel = () => {
 
     fetchUserData();
   }, [API_URL]);
+
+  const handleSaveUsername = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.put(
+        `${API_URL}/api/profile/username`,
+        { username: newUsername },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setUsername(response.data.username);
+      setNewUsername(response.data.username);
+
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+      }
+
+      alert("Username updated successfully!");
+    } catch (error: any) {
+      console.error("Error updating username:", error);
+      alert(error.response?.data?.error || "Failed to update username.");
+    }
+  };
 
   const handleSaveDisplayName = async () => {
     try {
@@ -226,6 +260,40 @@ export const AdminPanel = () => {
                     <p className="text-white/70 text-sm">{email}</p>
 
                     <div className="mt-4">
+                      <label className="block text-sm font-semibold mb-2">
+                        Username
+                      </label>
+
+                      <input
+                        type="text"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                        placeholder="your-username"
+                        className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 outline-none focus:border-white/40"
+                        maxLength={20}
+                      />
+
+                      <p className="text-xs text-white/60 mt-1">
+                        3-20 characters. Letters, numbers, dots, underscores,
+                        and hyphens only.
+                      </p>
+
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-white/60">
+                          {newUsername.length}/20
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={handleSaveUsername}
+                          className="bg-black/40 hover:bg-black/60 px-4 py-2 rounded-lg text-sm font-semibold transition"
+                        >
+                          Save Username
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
                       <label className="block text-sm font-semibold mb-2">
                         Display Name
                       </label>

@@ -399,6 +399,59 @@ app.put('/api/profile/bio', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/api/profile/username', authenticateToken, async (req, res) => {
+  const { username } = req.body;
+
+  const cleanUsername = String(username || "")
+    .trim()
+    .toLowerCase();
+
+  const usernameRegex = /^[a-z0-9._-]{3,20}$/;
+
+  if (!usernameRegex.test(cleanUsername)) {
+    return res.status(400).json({
+      error:
+        "Username must be 3-20 characters and can only contain letters, numbers, dots, underscores, and hyphens.",
+    });
+  }
+
+  try {
+    const existingUser = await pool.query(
+      "SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id != $2",
+      [cleanUsername, req.userId]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({
+        error: "Username is already taken.",
+      });
+    }
+
+    await pool.query("UPDATE users SET username = $1 WHERE id = $2", [
+      cleanUsername,
+      req.userId,
+    ]);
+
+    const token = jwt.sign(
+      {
+        userId: req.userId,
+        username: cleanUsername,
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.json({
+      message: "Username updated successfully!",
+      username: cleanUsername,
+      token,
+    });
+  } catch (error) {
+    console.error("Username update error:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
   const { profileTemplate } = req.body;
 
