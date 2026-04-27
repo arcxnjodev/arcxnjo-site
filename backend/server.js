@@ -6,8 +6,16 @@ const multer = require('multer');
 const path = require('path');
 const { Pool } = require('pg');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
 
 const app = express();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -61,9 +69,9 @@ const allowedFileTypes = [
 ];
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: {
-    fileSize: 25 * 1024 * 1024, // 25MB
+    fileSize: 25 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     if (allowedFileTypes.includes(file.mimetype)) {
@@ -394,21 +402,40 @@ app.put('/api/profile/bio', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
+app.post('/api/upload', authenticateToken, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded.' });
     }
 
-    const baseUrl = process.env.API_URL || `${req.protocol}://${req.get('host')}`;
+    const uploadToCloudinary = () => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'arcxnjo/profile-media',
+            resource_type: 'auto',
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
 
-    const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
+        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      });
+    };
+
+    const result = await uploadToCloudinary();
 
     return res.json({
-      url: fileUrl,
+      url: result.secure_url,
       mimetype: req.file.mimetype,
+      publicId: result.public_id,
+      resourceType: result.resource_type,
     });
   } catch (error) {
+    console.error('Cloudinary upload error:', error);
+
     return res.status(500).json({
       error: error.message || 'Upload failed.',
     });
