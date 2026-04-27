@@ -22,6 +22,7 @@ type ProfileData = {
     banner_type?: string;
     theme_color?: string;
     bio?: string;
+    profile_template?: string;
   };
   socialMedia: Record<string, string>;
   stats: {
@@ -75,6 +76,39 @@ const getSocialUrl = (platform: string, url: string) => {
     default:
       return `https://${cleanUrl}`;
   }
+};
+
+const profileTemplates = {
+  "neon-purple": {
+    overlay: "bg-black/25",
+    card: "bg-black/35 border-purple-400/40 shadow-[0_0_35px_rgba(168,85,247,0.35)]",
+    username: "text-white drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]",
+    icon: "hover:text-purple-400 hover:border-purple-400 hover:bg-purple-500/10",
+  },
+  "cyber-glass": {
+    overlay: "bg-black/20",
+    card: "bg-white/10 border-white/20 shadow-[0_0_35px_rgba(255,255,255,0.15)]",
+    username: "text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]",
+    icon: "hover:text-cyan-300 hover:border-cyan-300 hover:bg-cyan-400/10",
+  },
+  "minimal-dark": {
+    overlay: "bg-black/35",
+    card: "bg-black/60 border-white/10 shadow-2xl",
+    username: "text-white",
+    icon: "hover:text-white hover:border-white hover:bg-white/10",
+  },
+  "red-glow": {
+    overlay: "bg-black/30",
+    card: "bg-black/40 border-red-500/40 shadow-[0_0_35px_rgba(239,68,68,0.35)]",
+    username: "text-white drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]",
+    icon: "hover:text-red-400 hover:border-red-400 hover:bg-red-500/10",
+  },
+  "blue-ice": {
+    overlay: "bg-black/25",
+    card: "bg-black/35 border-blue-400/40 shadow-[0_0_35px_rgba(96,165,250,0.35)]",
+    username: "text-white drop-shadow-[0_0_10px_rgba(96,165,250,0.8)]",
+    icon: "hover:text-blue-300 hover:border-blue-300 hover:bg-blue-500/10",
+  },
 };
 
 export const UserPanel = () => {
@@ -134,6 +168,11 @@ export const UserPanel = () => {
   const isVideoBackground =
     data.profile.banner_type === "video" && data.profile.banner_video;
 
+  const template =
+  profileTemplates[
+    (data.profile.profile_template || "neon-purple") as keyof typeof profileTemplates
+  ] || profileTemplates["neon-purple"];
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
       {isVideoBackground ? (
@@ -156,15 +195,17 @@ export const UserPanel = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-purple-950" />
       )}
 
-      <div className="absolute inset-0 bg-black/10" />
-      <div className="relative z-10 w-full max-w-md rounded-3xl bg-black/35 border border-white/10 shadow-2xl px-6 py-8 text-center">
+      <div className={`absolute inset-0 ${template.overlay}`} />
+      <div className={`relative z-10 w-full max-w-md rounded-3xl border px-6 py-8 text-center ${template.card}`}>
         <img
           src={data.profile.profile_image || "/favicon.png"}
           alt={data.username}
           className="w-28 h-28 rounded-full mx-auto border-4 border-white/20 object-cover bg-black shadow-lg"
         />
 
-        <h1 className="mt-4 text-3xl font-bold text-white drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]">@{data.username}</h1>
+        <h1 className={`mt-4 text-3xl font-bold ${template.username}`}>
+  @{data.username}
+</h1>
 
         {data.profile.bio && (
           <p className="text-gray-300 mt-2 text-sm whitespace-pre-line">
@@ -189,7 +230,7 @@ export const UserPanel = () => {
                   rel="noreferrer"
                   title={platform}
                   aria-label={platform}
-                  className="w-11 h-11 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-xl text-white hover:text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 transition"
+                  className={`w-11 h-11 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-xl text-white transition ${template.icon}`}
                 >
                   <Icon />
                 </a>
