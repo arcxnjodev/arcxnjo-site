@@ -156,7 +156,7 @@ export const UserPanel = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-purple-950" />
       )}
 
-      <div className="absolute inset-0 bg-black/25 backdrop-blur-md border border-white/15" />
+      <div className="absolute inset-0 bg-black/25 backdrop-blur-md border border-white/10" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.25),transparent_45%)]" />
 
       <div className="relative z-10 w-full max-w-md rounded-3xl bg-black/35 border border-white/10 shadow-2xl px-6 py-8 text-center">
