@@ -66,6 +66,10 @@ const allowedFileTypes = [
   'image/gif',
   'video/mp4',
   'video/webm',
+  'audio/mpeg',
+  'audio/wav',
+  'audio/ogg',
+  'audio/webm',
 ];
 
 const upload = multer({
@@ -492,6 +496,38 @@ app.put('/api/profile/display-name', authenticateToken, async (req, res) => {
     return res.json({ message: 'Display name updated successfully!' });
   } catch (error) {
     console.error('Display name update error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/profile/music', authenticateToken, async (req, res) => {
+  const { musicUrl, musicTitle } = req.body;
+
+  try {
+    await pool.query(
+      'UPDATE user_profiles SET music_url = $1, music_title = $2 WHERE user_id = $3',
+      [musicUrl || '', musicTitle || '', req.userId]
+    );
+
+    return res.json({ message: 'Music updated successfully!' });
+  } catch (error) {
+    console.error('Music update error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/profile/music', authenticateToken, async (req, res) => {
+  const { musicUrl, musicTitle } = req.body;
+
+  try {
+    await pool.query(
+      'UPDATE user_profiles SET music_url = $1, music_title = $2 WHERE user_id = $3',
+      [musicUrl || '', musicTitle || '', req.userId]
+    );
+
+    return res.json({ message: 'Music updated successfully!' });
+  } catch (error) {
+    console.error('Music update error:', error);
     return res.status(500).json({ error: error.message });
   }
 });

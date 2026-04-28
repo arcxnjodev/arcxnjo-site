@@ -4,6 +4,8 @@ import { userSliceType } from "../Store/userSlice";
 import { SocialMediaSettings } from "./Ui/SocialMediaSettings";
 import { ProfileImagesSettings } from "./Ui/ProfileImagesSettings";
 import { AppearanceSettings } from "./Ui/AppearanceSettings";
+import { MusicSettings } from "./Ui/MusicSettings";
+
 import {
   FaUser,
   FaLink,
@@ -11,6 +13,7 @@ import {
   FaSignOutAlt,
   FaTachometerAlt,
   FaPalette,
+  FaMusic,
 } from "react-icons/fa";
 import axios from "axios";
 
@@ -165,6 +168,12 @@ export const AdminPanel = () => {
       label: "Appearance",
       icon: <FaPalette />,
       component: <AppearanceSettings />,
+    },
+    {
+      id: "music",
+      label: "Music",
+      icon: <FaMusic />,
+      component: <MusicSettings />,
     },
   ];
 
@@ -371,6 +380,9 @@ export const AdminPanel = () => {
 
             {activeTab === "appearance" &&
               tabs.find((t) => t.id === "appearance")?.component}
+            
+            {activeTab === "music" &&
+              tabs.find((t) => t.id === "music")?.component}
           </main>
         </div>
       </div>
