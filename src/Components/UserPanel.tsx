@@ -92,88 +92,88 @@ const getSocialUrl = (platform: string, url: string) => {
 
 const profileTemplates = {
   "neon-purple": {
-    overlay: "bg-black/25",
-    card: "bg-black/35 border-purple-400/40 shadow-[0_0_45px_rgba(168,85,247,0.45)]",
-    avatar: "border-purple-400/50 shadow-[0_0_25px_rgba(168,85,247,0.6)]",
+    overlay: "bg-black/20",
+    card: "bg-black/18 shadow-[0_0_45px_rgba(168,85,247,0.28)]",
+    avatar: "border-purple-400/40 shadow-[0_0_25px_rgba(168,85,247,0.45)]",
     username: "text-white drop-shadow-[0_0_12px_rgba(168,85,247,0.9)]",
     handle: "text-purple-200/80",
-    bio: "text-gray-200",
+    bio: "text-gray-100",
     views: "text-purple-200/80",
-    icon: "hover:text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_18px_rgba(168,85,247,0.6)]",
+    icon: "hover:text-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_18px_rgba(168,85,247,0.6)]",
     audioButton:
-      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
     audioPanel:
-      "bg-[#111111cc] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+      "bg-[#111111cc] shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
     sliderAccent: "accent-purple-400",
-    infoCard: "bg-white/10 border border-white/10",
+    infoCard: "bg-white/8",
     infoIcon: "text-purple-300",
   },
   "cyber-glass": {
-    overlay: "bg-black/20",
-    card: "bg-white/10 border-cyan-300/30 shadow-[0_0_45px_rgba(34,211,238,0.25)]",
-    avatar: "border-cyan-300/50 shadow-[0_0_25px_rgba(34,211,238,0.45)]",
+    overlay: "bg-black/15",
+    card: "bg-white/10 shadow-[0_0_45px_rgba(34,211,238,0.18)]",
+    avatar: "border-cyan-300/40 shadow-[0_0_25px_rgba(34,211,238,0.35)]",
     username: "text-white drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]",
     handle: "text-cyan-200/80",
     bio: "text-cyan-50",
     views: "text-cyan-200/80",
-    icon: "hover:text-cyan-300 hover:border-cyan-300 hover:bg-cyan-400/10 hover:shadow-[0_0_18px_rgba(34,211,238,0.6)]",
+    icon: "hover:text-cyan-300 hover:bg-cyan-400/10 hover:shadow-[0_0_18px_rgba(34,211,238,0.6)]",
     audioButton:
-      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
     audioPanel:
-      "bg-[#111111cc] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+      "bg-[#111111cc] shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
     sliderAccent: "accent-cyan-300",
-    infoCard: "bg-white/10 border border-cyan-300/20",
+    infoCard: "bg-white/10",
     infoIcon: "text-cyan-300",
   },
   "minimal-dark": {
-    overlay: "bg-black/40",
-    card: "bg-black/65 border-white/10 shadow-2xl",
-    avatar: "border-white/20 shadow-lg",
+    overlay: "bg-black/28",
+    card: "bg-black/28 shadow-2xl",
+    avatar: "border-white/15 shadow-lg",
     username: "text-white",
-    handle: "text-gray-400",
-    bio: "text-gray-300",
-    views: "text-gray-400",
-    icon: "hover:text-white hover:border-white hover:bg-white/10",
+    handle: "text-gray-300",
+    bio: "text-gray-200",
+    views: "text-gray-300",
+    icon: "hover:text-white hover:bg-white/10",
     audioButton:
-      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
     audioPanel:
-      "bg-[#111111ee] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.55)]",
+      "bg-[#111111dd] shadow-[0_12px_40px_rgba(0,0,0,0.55)]",
     sliderAccent: "accent-white",
-    infoCard: "bg-white/5 border border-white/10",
+    infoCard: "bg-white/6",
     infoIcon: "text-white",
   },
   "red-glow": {
-    overlay: "bg-black/30",
-    card: "bg-black/40 border-red-500/40 shadow-[0_0_45px_rgba(239,68,68,0.45)]",
-    avatar: "border-red-500/50 shadow-[0_0_25px_rgba(239,68,68,0.6)]",
+    overlay: "bg-black/20",
+    card: "bg-black/18 shadow-[0_0_45px_rgba(239,68,68,0.28)]",
+    avatar: "border-red-500/40 shadow-[0_0_25px_rgba(239,68,68,0.45)]",
     username: "text-white drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]",
     handle: "text-red-200/80",
     bio: "text-red-50",
     views: "text-red-200/80",
-    icon: "hover:text-red-400 hover:border-red-400 hover:bg-red-500/10 hover:shadow-[0_0_18px_rgba(239,68,68,0.6)]",
+    icon: "hover:text-red-400 hover:bg-red-500/10 hover:shadow-[0_0_18px_rgba(239,68,68,0.6)]",
     audioButton:
-      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
     audioPanel:
-      "bg-[#111111cc] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+      "bg-[#111111cc] shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
     sliderAccent: "accent-red-400",
-    infoCard: "bg-white/10 border border-red-400/20",
+    infoCard: "bg-white/8",
     infoIcon: "text-red-300",
   },
   "blue-ice": {
-    overlay: "bg-black/25",
-    card: "bg-slate-950/45 border-blue-300/40 shadow-[0_0_45px_rgba(96,165,250,0.45)]",
-    avatar: "border-blue-300/50 shadow-[0_0_25px_rgba(96,165,250,0.6)]",
+    overlay: "bg-black/18",
+    card: "bg-black/16 shadow-[0_0_45px_rgba(96,165,250,0.28)]",
+    avatar: "border-blue-300/40 shadow-[0_0_25px_rgba(96,165,250,0.45)]",
     username: "text-white drop-shadow-[0_0_12px_rgba(96,165,250,0.9)]",
     handle: "text-blue-200/80",
     bio: "text-blue-50",
     views: "text-blue-200/80",
-    icon: "hover:text-blue-300 hover:border-blue-300 hover:bg-blue-500/10 hover:shadow-[0_0_18px_rgba(96,165,250,0.6)]",
+    icon: "hover:text-blue-300 hover:bg-blue-500/10 hover:shadow-[0_0_18px_rgba(96,165,250,0.6)]",
     audioButton:
-      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
     audioPanel:
-      "bg-[#111111cc] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+      "bg-[#111111cc] shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
     sliderAccent: "accent-blue-300",
-    infoCard: "bg-white/10 border border-blue-300/20",
+    infoCard: "bg-white/8",
     infoIcon: "text-blue-300",
   },
 };
@@ -442,7 +442,7 @@ export const UserPanel = () => {
 
       {entered && (
         <div
-          className={`relative z-10 w-full max-w-md rounded-3xl border px-6 py-8 text-center ${template.card}`}
+          className={`relative z-10 w-full max-w-md rounded-3xl px-6 py-8 text-center ${template.card}`}
         >
           <img
             src={data.profile.profile_image || "/favicon.png"}
