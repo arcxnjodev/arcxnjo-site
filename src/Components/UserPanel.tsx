@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import type { IconType } from "react-icons";
 import {
   FaDiscord,
   FaGlobe,
@@ -14,6 +15,9 @@ import {
   FaVolumeUp,
   FaVolumeMute,
   FaDownload,
+  FaMusic,
+  FaMapMarkerAlt,
+  FaCircle,
 } from "react-icons/fa";
 
 type ProfileData = {
@@ -29,6 +33,8 @@ type ProfileData = {
     profile_template?: string;
     music_url?: string;
     music_title?: string;
+    location?: string;
+    status_text?: string;
   };
   socialMedia: Record<string, string>;
   stats: {
@@ -36,7 +42,7 @@ type ProfileData = {
   };
 };
 
-const socialIcons: Record<string, React.ElementType> = {
+const socialIcons: Record<string, IconType> = {
   instagram: FaInstagram,
   x: FaTwitter,
   twitter: FaTwitter,
@@ -94,7 +100,13 @@ const profileTemplates = {
     bio: "text-gray-200",
     views: "text-purple-200/80",
     icon: "hover:text-purple-400 hover:border-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_18px_rgba(168,85,247,0.6)]",
-    audio: "border-purple-400/40 hover:text-purple-300",
+    audioButton:
+      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+    audioPanel:
+      "bg-[#111111cc] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+    sliderAccent: "accent-purple-400",
+    infoCard: "bg-white/10 border border-white/10",
+    infoIcon: "text-purple-300",
   },
   "cyber-glass": {
     overlay: "bg-black/20",
@@ -105,7 +117,13 @@ const profileTemplates = {
     bio: "text-cyan-50",
     views: "text-cyan-200/80",
     icon: "hover:text-cyan-300 hover:border-cyan-300 hover:bg-cyan-400/10 hover:shadow-[0_0_18px_rgba(34,211,238,0.6)]",
-    audio: "border-cyan-300/40 hover:text-cyan-300",
+    audioButton:
+      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+    audioPanel:
+      "bg-[#111111cc] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+    sliderAccent: "accent-cyan-300",
+    infoCard: "bg-white/10 border border-cyan-300/20",
+    infoIcon: "text-cyan-300",
   },
   "minimal-dark": {
     overlay: "bg-black/40",
@@ -116,7 +134,13 @@ const profileTemplates = {
     bio: "text-gray-300",
     views: "text-gray-400",
     icon: "hover:text-white hover:border-white hover:bg-white/10",
-    audio: "border-white/20 hover:text-white",
+    audioButton:
+      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+    audioPanel:
+      "bg-[#111111ee] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.55)]",
+    sliderAccent: "accent-white",
+    infoCard: "bg-white/5 border border-white/10",
+    infoIcon: "text-white",
   },
   "red-glow": {
     overlay: "bg-black/30",
@@ -127,7 +151,13 @@ const profileTemplates = {
     bio: "text-red-50",
     views: "text-red-200/80",
     icon: "hover:text-red-400 hover:border-red-400 hover:bg-red-500/10 hover:shadow-[0_0_18px_rgba(239,68,68,0.6)]",
-    audio: "border-red-500/40 hover:text-red-400",
+    audioButton:
+      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+    audioPanel:
+      "bg-[#111111cc] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+    sliderAccent: "accent-red-400",
+    infoCard: "bg-white/10 border border-red-400/20",
+    infoIcon: "text-red-300",
   },
   "blue-ice": {
     overlay: "bg-black/25",
@@ -138,29 +168,34 @@ const profileTemplates = {
     bio: "text-blue-50",
     views: "text-blue-200/80",
     icon: "hover:text-blue-300 hover:border-blue-300 hover:bg-blue-500/10 hover:shadow-[0_0_18px_rgba(96,165,250,0.6)]",
-    audio: "border-blue-300/40 hover:text-blue-300",
+    audioButton:
+      "border-white/15 bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+    audioPanel:
+      "bg-[#111111cc] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+    sliderAccent: "accent-blue-300",
+    infoCard: "bg-white/10 border border-blue-300/20",
+    infoIcon: "text-blue-300",
   },
 };
 
 export const UserPanel = () => {
-  const location = useLocation();
-  const username = location.pathname.replace("/", "");
+  const locationPath = useLocation();
+  const username = locationPath.pathname.replace("/", "");
+  const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [entered, setEntered] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
+  const [audioMenuHovered, setAudioMenuHovered] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/profile/${username}`
-        );
-
+        const response = await fetch(`${API_URL}/api/profile/${username}`);
         const result = await response.json();
 
         if (!response.ok) {
@@ -179,13 +214,13 @@ export const UserPanel = () => {
     if (username) {
       fetchProfile();
     }
-  }, [username]);
+  }, [username, API_URL]);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-      audioRef.current.muted = muted;
-    }
+    if (!audioRef.current) return;
+
+    audioRef.current.volume = volume;
+    audioRef.current.muted = muted;
   }, [volume, muted]);
 
   const handleEnter = async () => {
@@ -205,6 +240,26 @@ export const UserPanel = () => {
   const toggleMute = () => {
     setMuted((prev) => !prev);
   };
+
+  const handleVolumeChange = (value: number) => {
+    setVolume(value);
+
+    if (value > 0 && muted) {
+      setMuted(false);
+    }
+
+    if (value === 0) {
+      setMuted(true);
+    }
+  };
+
+  const formatMusicFileName = useMemo(() => {
+    if (!data?.profile.music_title?.trim()) return "profile-music";
+    return data.profile.music_title
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-");
+  }, [data?.profile.music_title]);
 
   if (loading) {
     return (
@@ -236,6 +291,9 @@ export const UserPanel = () => {
 
   const displayName = data.profile.display_name?.trim();
   const hasMusic = Boolean(data.profile.music_url);
+  const audioMenuVisible = entered && hasMusic && audioMenuHovered;
+  const hasLocation = Boolean(data.profile.location?.trim());
+  const hasStatus = Boolean(data.profile.status_text?.trim());
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
@@ -287,45 +345,78 @@ export const UserPanel = () => {
       )}
 
       {entered && hasMusic && (
-        <div className="group fixed top-5 left-5 z-40">
-          <button
-            type="button"
-            onClick={toggleMute}
-            className={`w-11 h-11 rounded-full bg-black/45 border backdrop-blur-sm flex items-center justify-center text-white transition ${template.audio}`}
-            title={muted ? "Unmute" : "Mute"}
-          >
-            {muted ? <FaVolumeMute /> : <FaVolumeUp />}
-          </button>
-
-          <div className="hidden group-hover:block absolute left-0 mt-3 w-64 rounded-2xl bg-black/80 border border-white/10 p-4 shadow-2xl">
-            <p className="text-sm font-semibold text-white truncate">
-              {data.profile.music_title || "Profile Music"}
-            </p>
-
-            <div className="mt-3">
-              <label className="text-xs text-white/60">Volume</label>
-
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={volume}
-                onChange={(e) => setVolume(Number(e.target.value))}
-                className="w-full mt-1"
-              />
-            </div>
-
-            <a
-              href={data.profile.music_url}
-              target="_blank"
-              rel="noreferrer"
-              download
-              className="mt-4 flex items-center justify-center gap-2 w-full rounded-lg bg-white/10 hover:bg-white/20 py-2 text-sm text-white transition"
+        <div
+          className="fixed top-5 left-5 z-40"
+          onMouseEnter={() => setAudioMenuHovered(true)}
+          onMouseLeave={() => setAudioMenuHovered(false)}
+        >
+          <div className="relative">
+            <button
+              type="button"
+              onClick={toggleMute}
+              title={muted ? "Unmute" : "Mute"}
+              className={`w-12 h-12 rounded-2xl backdrop-blur-xl border flex items-center justify-center transition-all duration-200 ${template.audioButton}`}
             >
-              <FaDownload />
-              Download
-            </a>
+              {muted || volume === 0 ? (
+                <FaVolumeMute className="text-xl" />
+              ) : (
+                <FaVolumeUp className="text-xl" />
+              )}
+            </button>
+
+            <div
+              className={`absolute left-0 top-14 w-72 rounded-2xl backdrop-blur-xl p-4 transition-all duration-200 ${
+                audioMenuVisible
+                  ? "opacity-100 translate-y-0 pointer-events-auto"
+                  : "opacity-0 -translate-y-2 pointer-events-none"
+              } ${template.audioPanel}`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                  <FaMusic className="text-sm text-white/90" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white truncate">
+                    {data.profile.music_title || "Profile Music"}
+                  </p>
+
+                  <p className="text-xs text-white/50 mt-0.5">
+                    {muted || volume === 0
+                      ? "Muted"
+                      : `Volume ${Math.round(volume * 100)}%`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-white/60">Volume</span>
+                  <span className="text-xs text-white/60">
+                    {Math.round(volume * 100)}%
+                  </span>
+                </div>
+
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={volume}
+                  onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                  className={`w-full h-2 cursor-pointer ${template.sliderAccent}`}
+                />
+              </div>
+
+              <a
+                href={data.profile.music_url}
+                download={`${formatMusicFileName}.mp3`}
+                className="mt-4 flex items-center justify-center gap-2 w-full rounded-xl bg-white/10 hover:bg-white/20 py-2.5 text-sm font-medium text-white transition"
+              >
+                <FaDownload />
+                Download Music
+              </a>
+            </div>
           </div>
         </div>
       )}
@@ -360,6 +451,30 @@ export const UserPanel = () => {
             <p className={`mt-3 text-sm whitespace-pre-line ${template.bio}`}>
               {data.profile.bio}
             </p>
+          )}
+
+          {(hasLocation || hasStatus) && (
+            <div className={`mt-5 rounded-2xl p-4 text-left ${template.infoCard}`}>
+              <div className="space-y-3">
+                {hasLocation && (
+                  <div className="flex items-center gap-3">
+                    <FaMapMarkerAlt className={`text-sm ${template.infoIcon}`} />
+                    <span className="text-sm text-white/90">
+                      {data.profile.location}
+                    </span>
+                  </div>
+                )}
+
+                {hasStatus && (
+                  <div className="flex items-start gap-3">
+                    <FaCircle className={`text-[10px] mt-1.5 ${template.infoIcon}`} />
+                    <span className="text-sm text-white/90">
+                      {data.profile.status_text}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
 
           <p className={`mt-3 text-sm ${template.views}`}>

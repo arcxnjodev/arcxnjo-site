@@ -5,7 +5,6 @@ import { SocialMediaSettings } from "./Ui/SocialMediaSettings";
 import { ProfileImagesSettings } from "./Ui/ProfileImagesSettings";
 import { AppearanceSettings } from "./Ui/AppearanceSettings";
 import { MusicSettings } from "./Ui/MusicSettings";
-
 import {
   FaUser,
   FaLink,
@@ -25,6 +24,8 @@ export const AdminPanel = () => {
   const [newUsername, setNewUsername] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
   const [bio, setBio] = useState<string>("");
+  const [location, setLocation] = useState<string>("");
+  const [statusText, setStatusText] = useState<string>("");
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
@@ -51,6 +52,8 @@ export const AdminPanel = () => {
         setNewUsername(currentUsername);
         setDisplayName(response.data.display_name || "");
         setBio(response.data.bio || "");
+        setLocation(response.data.location || "");
+        setStatusText(response.data.status_text || "");
       } catch (error) {
         console.error("Error fetching user data:", error);
 
@@ -135,6 +138,25 @@ export const AdminPanel = () => {
     } catch (error) {
       console.error("Error updating bio:", error);
       alert("Failed to update bio. Please try again.");
+    }
+  };
+
+  const handleSaveDetails = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        `${API_URL}/api/profile/details`,
+        { location, statusText },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert("Profile details updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile details:", error);
+      alert("Failed to update profile details. Please try again.");
     }
   };
 
@@ -359,6 +381,50 @@ export const AdminPanel = () => {
                         </button>
                       </div>
                     </div>
+
+                    <div className="mt-6">
+                      <label className="block text-sm font-semibold mb-2">
+                        Location
+                      </label>
+
+                      <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="Your location"
+                        className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 outline-none focus:border-white/40"
+                        maxLength={40}
+                      />
+                    </div>
+
+                    <div className="mt-6">
+                      <label className="block text-sm font-semibold mb-2">
+                        Status
+                      </label>
+
+                      <input
+                        type="text"
+                        value={statusText}
+                        onChange={(e) => setStatusText(e.target.value)}
+                        placeholder="What are you doing now?"
+                        className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 outline-none focus:border-white/40"
+                        maxLength={80}
+                      />
+
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-white/60">
+                          {statusText.length}/80
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={handleSaveDetails}
+                          className="bg-black/40 hover:bg-black/60 px-4 py-2 rounded-lg text-sm font-semibold transition"
+                        >
+                          Save Details
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -380,7 +446,7 @@ export const AdminPanel = () => {
 
             {activeTab === "appearance" &&
               tabs.find((t) => t.id === "appearance")?.component}
-            
+
             {activeTab === "music" &&
               tabs.find((t) => t.id === "music")?.component}
           </main>

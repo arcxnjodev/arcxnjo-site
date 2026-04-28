@@ -516,6 +516,22 @@ app.put('/api/profile/music', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/api/profile/details', authenticateToken, async (req, res) => {
+  const { location, statusText } = req.body;
+
+  try {
+    await pool.query(
+      'UPDATE user_profiles SET location = $1, status_text = $2 WHERE user_id = $3',
+      [location || '', statusText || '', req.userId]
+    );
+
+    return res.json({ message: 'Profile details updated successfully!' });
+  } catch (error) {
+    console.error('Profile details update error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.put('/api/profile/music', authenticateToken, async (req, res) => {
   const { musicUrl, musicTitle } = req.body;
 
