@@ -191,6 +191,7 @@ export const UserPanel = () => {
   const [audioMenuHovered, setAudioMenuHovered] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -216,24 +217,41 @@ export const UserPanel = () => {
     }
   }, [username, API_URL]);
 
-  useEffect(() => {
-    if (!audioRef.current) return;
+  const hasMusic = Boolean(data?.profile.music_url);
+  const isVideoBackground =
+    data?.profile.banner_type === "video" && data?.profile.banner_video;
+  const controlsTarget = hasMusic ? "music" : isVideoBackground ? "video" : null;
 
-    audioRef.current.volume = volume;
-    audioRef.current.muted = muted;
-  }, [volume, muted]);
+  useEffect(() => {
+    if (controlsTarget === "music" && audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.muted = muted;
+    }
+
+    if (controlsTarget === "video" && backgroundVideoRef.current) {
+      backgroundVideoRef.current.volume = volume;
+      backgroundVideoRef.current.muted = muted;
+    }
+  }, [volume, muted, controlsTarget]);
 
   const handleEnter = async () => {
     setEntered(true);
 
-    if (audioRef.current && data?.profile.music_url) {
-      try {
+    try {
+      if (hasMusic && audioRef.current) {
         audioRef.current.volume = volume;
         audioRef.current.muted = muted;
         await audioRef.current.play();
-      } catch (error) {
-        console.error("Audio play error:", error);
+        return;
       }
+
+      if (isVideoBackground && backgroundVideoRef.current) {
+        backgroundVideoRef.current.volume = volume;
+        backgroundVideoRef.current.muted = muted;
+        await backgroundVideoRef.current.play();
+      }
+    } catch (error) {
+      console.error("Media play error:", error);
     }
   };
 
@@ -254,7 +272,7 @@ export const UserPanel = () => {
   };
 
   const formatMusicFileName = useMemo(() => {
-    if (!data?.profile.music_title?.trim()) return "profile-music";
+    if (!data?.profile.music_title?.trim()) return "profile-audio";
     return data.profile.music_title
       .trim()
       .toLowerCase()
@@ -281,17 +299,13 @@ export const UserPanel = () => {
     ([, url]) => url && url.trim() !== ""
   );
 
-  const isVideoBackground =
-    data.profile.banner_type === "video" && data.profile.banner_video;
-
   const template =
     profileTemplates[
       (data.profile.profile_template || "neon-purple") as keyof typeof profileTemplates
     ] || profileTemplates["neon-purple"];
 
   const displayName = data.profile.display_name?.trim();
-  const hasMusic = Boolean(data.profile.music_url);
-  const audioMenuVisible = entered && hasMusic && audioMenuHovered;
+  const audioMenuVisible = entered && controlsTarget && audioMenuHovered;
   const hasLocation = Boolean(data.profile.location?.trim());
   const hasStatus = Boolean(data.profile.status_text?.trim());
 
@@ -299,11 +313,12 @@ export const UserPanel = () => {
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
       {isVideoBackground ? (
         <video
+          ref={backgroundVideoRef}
           src={data.profile.banner_video}
           className="absolute inset-0 w-full h-full object-cover"
-          muted
+          muted={controlsTarget !== "video" ? true : muted}
           loop
-          autoPlay
+          autoPlay={false}
           playsInline
         />
       ) : data.profile.banner_image ? (
@@ -344,7 +359,7 @@ export const UserPanel = () => {
         </button>
       )}
 
-      {entered && hasMusic && (
+      {entered && controlsTarget && (
         <div
           className="fixed top-5 left-5 z-40"
           onMouseEnter={() => setAudioMenuHovered(true)}
@@ -378,7 +393,9 @@ export const UserPanel = () => {
 
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-white truncate">
-                    {data.profile.music_title || "Profile Music"}
+                    {hasMusic
+                      ? data.profile.music_title || "Profile Music"
+                      : "Background Video Audio"}
                   </p>
 
                   <p className="text-xs text-white/50 mt-0.5">
@@ -408,14 +425,16 @@ export const UserPanel = () => {
                 />
               </div>
 
-              <a
-                href={data.profile.music_url}
-                download={`${formatMusicFileName}.mp3`}
-                className="mt-4 flex items-center justify-center gap-2 w-full rounded-xl bg-white/10 hover:bg-white/20 py-2.5 text-sm font-medium text-white transition"
-              >
-                <FaDownload />
-                Download Music
-              </a>
+              {hasMusic && (
+                <a
+                  href={data.profile.music_url}
+                  download={`${formatMusicFileName}.mp3`}
+                  className="mt-4 flex items-center justify-center gap-2 w-full rounded-xl bg-white/10 hover:bg-white/20 py-2.5 text-sm font-medium text-white transition"
+                >
+                  <FaDownload />
+                  Download Music
+                </a>
+              )}
             </div>
           </div>
         </div>
