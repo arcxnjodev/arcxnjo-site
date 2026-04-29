@@ -43,6 +43,7 @@ type ProfileData = {
     display_name?: string;
     profile_template?: string;
     profile_effect?: ProfileEffect;
+    profile_badges?: string[];
     music_url?: string;
     music_title?: string;
     location?: string;
@@ -102,10 +103,29 @@ const getSocialUrl = (platform: string, url: string) => {
   }
 };
 
+const badgeMap: Record<string, { label: string; className: string }> = {
+  gamer: { label: "Gamer", className: "bg-white/10 text-white" },
+  music: { label: "Music", className: "bg-white/10 text-white" },
+  anime: { label: "Anime", className: "bg-white/10 text-white" },
+  "open-dm": { label: "Open DM", className: "bg-white/10 text-white" },
+  artist: { label: "Artist", className: "bg-white/10 text-white" },
+  developer: { label: "Developer", className: "bg-white/10 text-white" },
+
+  premium: { label: "Premium", className: "bg-yellow-400 text-black" },
+  supporter: { label: "Supporter", className: "bg-yellow-400 text-black" },
+  vip: { label: "VIP", className: "bg-yellow-400 text-black" },
+
+  dev: { label: "Dev", className: "bg-cyan-400 text-black" },
+  staff: { label: "Staff", className: "bg-cyan-400 text-black" },
+  verified: { label: "Verified", className: "bg-blue-500 text-white" },
+  founder: { label: "Founder", className: "bg-pink-500 text-white" },
+  official: { label: "Official", className: "bg-red-500 text-white" },
+};
+
 const profileTemplates = {
   "neon-purple": {
-    overlay: "bg-black/18",
-    card: "bg-black/16 shadow-xl",
+    overlay: "bg-black/20",
+    card: "bg-black/20 shadow-xl",
     avatar: "border-white/15 shadow-lg",
     username: "text-white",
     handle: "text-gray-300",
@@ -115,12 +135,12 @@ const profileTemplates = {
     audioButton:
       "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/25 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
     sliderAccent: "accent-white",
-    infoCard: "bg-white/8",
+    infoCard: "bg-white/10",
     infoIcon: "text-white",
     guestbookForm:
-      "bg-black/28 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/30 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
   "cyber-glass": {
     overlay: "bg-black/15",
@@ -134,16 +154,16 @@ const profileTemplates = {
     audioButton:
       "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/25 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
     sliderAccent: "accent-cyan-300",
     infoCard: "bg-white/10",
     infoIcon: "text-cyan-300",
     guestbookForm:
-      "bg-black/28 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/30 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
   "minimal-dark": {
-    overlay: "bg-black/28",
-    card: "bg-black/28 shadow-2xl",
+    overlay: "bg-black/30",
+    card: "bg-black/30 shadow-2xl",
     avatar: "border-white/15 shadow-lg",
     username: "text-white",
     handle: "text-gray-300",
@@ -153,16 +173,16 @@ const profileTemplates = {
     audioButton:
       "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/30 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
     sliderAccent: "accent-white",
-    infoCard: "bg-white/6",
+    infoCard: "bg-white/5",
     infoIcon: "text-white",
     guestbookForm:
-      "bg-black/32 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/35 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
   "red-glow": {
     overlay: "bg-black/20",
-    card: "bg-black/18 shadow-xl",
+    card: "bg-black/20 shadow-xl",
     avatar: "border-red-500/40 shadow-[0_0_25px_rgba(239,68,68,0.45)]",
     username: "text-white",
     handle: "text-red-200/80",
@@ -172,16 +192,16 @@ const profileTemplates = {
     audioButton:
       "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/25 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
     sliderAccent: "accent-red-400",
-    infoCard: "bg-white/8",
+    infoCard: "bg-white/10",
     infoIcon: "text-red-300",
     guestbookForm:
-      "bg-black/28 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/30 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
   "blue-ice": {
-    overlay: "bg-black/18",
-    card: "bg-black/16 shadow-xl",
+    overlay: "bg-black/20",
+    card: "bg-black/20 shadow-xl",
     avatar: "border-blue-300/40 shadow-[0_0_25px_rgba(96,165,250,0.45)]",
     username: "text-white",
     handle: "text-blue-200/80",
@@ -191,12 +211,12 @@ const profileTemplates = {
     audioButton:
       "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/25 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
     sliderAccent: "accent-blue-300",
-    infoCard: "bg-white/8",
+    infoCard: "bg-white/10",
     infoIcon: "text-blue-300",
     guestbookForm:
-      "bg-black/28 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+      "bg-black/30 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
 };
 
@@ -552,6 +572,9 @@ export const UserPanel = () => {
   const hasLocation = Boolean(data.profile.location?.trim());
   const hasStatus = Boolean(data.profile.status_text?.trim());
   const profileEffect = (data.profile.profile_effect || "none") as ProfileEffect;
+  const profileBadges = Array.isArray(data.profile.profile_badges)
+    ? data.profile.profile_badges
+    : [];
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
@@ -762,7 +785,7 @@ export const UserPanel = () => {
             <button
               type="button"
               onClick={() => setGuestbookOpen((prev) => !prev)}
-              className="w-12 h-12 rounded-2xl bg-black/20 hover:bg-black/30 backdrop-blur-2xl flex items-center justify-center text-white shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition"
+              className="w-12 h-12 rounded-2xl bg-black/20 hover:bg-black/30 backdrop-blur-xl flex items-center justify-center text-white shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition"
               title="Open guestbook"
             >
               <FaBookOpen className="text-lg" />
@@ -794,6 +817,24 @@ export const UserPanel = () => {
               <h1 className={`mt-4 text-3xl font-bold ${template.username}`}>
                 @{data.username}
               </h1>
+            )}
+
+            {profileBadges.length > 0 && (
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {profileBadges.map((badgeId) => {
+                  const badge = badgeMap[badgeId];
+                  if (!badge) return null;
+
+                  return (
+                    <span
+                      key={badgeId}
+                      className={`px-3 py-1 rounded-full text-xs font-bold ${badge.className}`}
+                    >
+                      {badge.label}
+                    </span>
+                  );
+                })}
+              </div>
             )}
 
             {data.profile.bio && (
