@@ -188,8 +188,7 @@ export const UserPanel = () => {
   const [entered, setEntered] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
-  const [audioMenuHovered, setAudioMenuHovered] = useState(false);
-
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -305,7 +304,6 @@ export const UserPanel = () => {
     ] || profileTemplates["neon-purple"];
 
   const displayName = data.profile.display_name?.trim();
-  const audioMenuVisible = entered && controlsTarget && audioMenuHovered;
   const hasLocation = Boolean(data.profile.location?.trim());
   const hasStatus = Boolean(data.profile.status_text?.trim());
 
@@ -360,85 +358,77 @@ export const UserPanel = () => {
       )}
 
       {entered && controlsTarget && (
-        <div
-          className="fixed top-5 left-5 z-40"
-          onMouseEnter={() => setAudioMenuHovered(true)}
-          onMouseLeave={() => setAudioMenuHovered(false)}
-        >
-          <div className="relative">
-            <button
-              type="button"
-              onClick={toggleMute}
-              title={muted ? "Unmute" : "Mute"}
-              className={`w-12 h-12 rounded-2xl backdrop-blur-xl border flex items-center justify-center transition-all duration-200 ${template.audioButton}`}
-            >
-              {muted || volume === 0 ? (
-                <FaVolumeMute className="text-xl" />
-              ) : (
-                <FaVolumeUp className="text-xl" />
-              )}
-            </button>
+  <div className="fixed top-5 left-5 z-40 group">
+    <div className="relative">
+      <button
+        type="button"
+        onClick={toggleMute}
+        title={muted ? "Unmute" : "Mute"}
+        className={`w-12 h-12 rounded-2xl backdrop-blur-xl flex items-center justify-center transition-all duration-200 ${template.audioButton}`}
+      >
+        {muted || volume === 0 ? (
+          <FaVolumeMute className="text-xl" />
+        ) : (
+          <FaVolumeUp className="text-xl" />
+        )}
+      </button>
 
-            <div
-              className={`absolute left-0 top-14 w-72 rounded-2xl backdrop-blur-xl p-4 transition-all duration-200 ${
-                audioMenuVisible
-                  ? "opacity-100 translate-y-0 pointer-events-auto"
-                  : "opacity-0 -translate-y-2 pointer-events-none"
-              } ${template.audioPanel}`}
-            >
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                  <FaMusic className="text-sm text-white/90" />
-                </div>
+      <div className="absolute left-0 top-full pt-2 opacity-0 pointer-events-none translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0">
+        <div className={`w-72 rounded-2xl p-4 ${template.audioPanel}`}>
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+              <FaMusic className="text-sm text-white/90" />
+            </div>
 
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white truncate">
-                    {hasMusic
-                      ? data.profile.music_title || "Profile Music"
-                      : "Background Video Audio"}
-                  </p>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-white truncate">
+                {hasMusic
+                  ? data.profile.music_title || "Profile Music"
+                  : "Background Video Audio"}
+              </p>
 
-                  <p className="text-xs text-white/50 mt-0.5">
-                    {muted || volume === 0
-                      ? "Muted"
-                      : `Volume ${Math.round(volume * 100)}%`}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-white/60">Volume</span>
-                  <span className="text-xs text-white/60">
-                    {Math.round(volume * 100)}%
-                  </span>
-                </div>
-
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={volume}
-                  onChange={(e) => handleVolumeChange(Number(e.target.value))}
-                  className={`w-full h-2 cursor-pointer ${template.sliderAccent}`}
-                />
-              </div>
-
-              {hasMusic && (
-                <a
-                  href={data.profile.music_url}
-                  download={`${formatMusicFileName}.mp3`}
-                  className="mt-4 flex items-center justify-center gap-2 w-full rounded-xl bg-white/10 hover:bg-white/20 py-2.5 text-sm font-medium text-white transition"
-                >
-                  <FaDownload />
-                  Download Music
-                </a>
-              )}
+              <p className="text-xs text-white/50 mt-0.5">
+                {muted || volume === 0
+                  ? "Muted"
+                  : `Volume ${Math.round(volume * 100)}%`}
+              </p>
             </div>
           </div>
+
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-white/60">Volume</span>
+              <span className="text-xs text-white/60">
+                {Math.round(volume * 100)}%
+              </span>
+            </div>
+
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={(e) => handleVolumeChange(Number(e.target.value))}
+              className={`w-full h-2 cursor-pointer ${template.sliderAccent}`}
+            />
+          </div>
+
+          {hasMusic && (
+            <a
+              href={data.profile.music_url}
+              download={`${formatMusicFileName}.mp3`}
+              className="mt-4 flex items-center justify-center gap-2 w-full rounded-xl bg-white/10 hover:bg-white/20 py-2.5 text-sm font-medium text-white transition"
+            >
+              <FaDownload />
+              Download Music
+            </a>
+          )}
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
 
       {entered && (
         <div
