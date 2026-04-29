@@ -278,6 +278,79 @@ app.get('/api/profile/me', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/api/profile/:username/guestbook', async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const userResult = await pool.query(
+      'SELECT id FROM users WHERE username = $1',
+      [username]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const userId = userResult.rows[0].id;
+
+    const guestbookResult = await pool.query(
+      `SELECT id, visitor_name, message, created_at
+       FROM guestbook_entries
+       WHERE profile_user_id = $1
+       ORDER BY created_at DESC
+       LIMIT 30`,
+      [userId]
+    );
+
+    return res.json(guestbookResult.rows);
+  } catch (error) {
+    console.error('Guestbook fetch error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/profile/:username/guestbook', async (req, res) => {
+  const { username } = req.params;
+  const { visitorName, message } = req.body;
+
+  const cleanVisitorName = (visitorName || '').trim().slice(0, 32);
+  const cleanMessage = (message || '').trim().slice(0, 180);
+
+  if (!cleanVisitorName || !cleanMessage) {
+    return res.status(400).json({
+      error: 'Visitor name and message are required.',
+    });
+  }
+
+  try {
+    const userResult = await pool.query(
+      'SELECT id FROM users WHERE username = $1',
+      [username]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const profileUserId = userResult.rows[0].id;
+
+    const insertResult = await pool.query(
+      `INSERT INTO guestbook_entries (profile_user_id, visitor_name, message)
+       VALUES ($1, $2, $3)
+       RETURNING id, visitor_name, message, created_at`,
+      [profileUserId, cleanVisitorName, cleanMessage]
+    );
+
+    return res.status(201).json({
+      message: 'Guestbook entry created successfully!',
+      entry: insertResult.rows[0],
+    });
+  } catch (error) {
+    console.error('Guestbook create error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/profile/:username', async (req, res) => {
   const { username } = req.params;
 

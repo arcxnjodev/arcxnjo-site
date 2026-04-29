@@ -18,9 +18,18 @@ import {
   FaMusic,
   FaMapMarkerAlt,
   FaCircle,
+  FaBookOpen,
+  FaPaperPlane,
 } from "react-icons/fa";
 
 type ProfileEffect = "none" | "stars" | "snow" | "sparkles" | "hearts";
+
+type GuestbookEntry = {
+  id: number;
+  visitor_name: string;
+  message: string;
+  created_at: string;
+};
 
 type ProfileData = {
   username: string;
@@ -110,6 +119,8 @@ const profileTemplates = {
     sliderAccent: "accent-white",
     infoCard: "bg-white/8",
     infoIcon: "text-white",
+    guestbookCard: "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+    guestbookInner: "bg-white/8",
   },
   "cyber-glass": {
     overlay: "bg-black/15",
@@ -127,6 +138,8 @@ const profileTemplates = {
     sliderAccent: "accent-cyan-300",
     infoCard: "bg-white/10",
     infoIcon: "text-cyan-300",
+    guestbookCard: "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+    guestbookInner: "bg-white/10",
   },
   "minimal-dark": {
     overlay: "bg-black/28",
@@ -144,6 +157,8 @@ const profileTemplates = {
     sliderAccent: "accent-white",
     infoCard: "bg-white/6",
     infoIcon: "text-white",
+    guestbookCard: "bg-black/24 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+    guestbookInner: "bg-white/6",
   },
   "red-glow": {
     overlay: "bg-black/20",
@@ -161,6 +176,8 @@ const profileTemplates = {
     sliderAccent: "accent-red-400",
     infoCard: "bg-white/8",
     infoIcon: "text-red-300",
+    guestbookCard: "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+    guestbookInner: "bg-white/8",
   },
   "blue-ice": {
     overlay: "bg-black/18",
@@ -178,14 +195,12 @@ const profileTemplates = {
     sliderAccent: "accent-blue-300",
     infoCard: "bg-white/8",
     infoIcon: "text-blue-300",
+    guestbookCard: "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+    guestbookInner: "bg-white/8",
   },
 };
 
-const ParticleLayer = ({
-  effect,
-}: {
-  effect: ProfileEffect;
-}) => {
+const ParticleLayer = ({ effect }: { effect: ProfileEffect }) => {
   const particles = useMemo(() => {
     const count =
       effect === "stars"
@@ -315,6 +330,14 @@ export const UserPanel = () => {
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
 
+  const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
+  const [guestbookIndex, setGuestbookIndex] = useState(0);
+  const [guestbookVisible, setGuestbookVisible] = useState(true);
+  const [visitorName, setVisitorName] = useState("");
+  const [guestbookMessage, setGuestbookMessage] = useState("");
+  const [guestbookSubmitting, setGuestbookSubmitting] = useState(false);
+  const [guestbookFeedback, setGuestbookFeedback] = useState("");
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -341,6 +364,52 @@ export const UserPanel = () => {
       fetchProfile();
     }
   }, [username, API_URL]);
+
+  useEffect(() => {
+    const fetchGuestbook = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/profile/${username}/guestbook`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to load guestbook.");
+        }
+
+        setGuestbookEntries(Array.isArray(result) ? result : []);
+        setGuestbookIndex(0);
+        setGuestbookVisible(true);
+      } catch (error) {
+        console.error("Guestbook fetch error:", error);
+      }
+    };
+
+    if (username) {
+      fetchGuestbook();
+    }
+  }, [username, API_URL]);
+
+  useEffect(() => {
+    if (guestbookEntries.length <= 1) return;
+
+    let switchTimeout: number | null = null;
+
+    const interval = window.setInterval(() => {
+      setGuestbookVisible(false);
+
+      switchTimeout = window.setTimeout(() => {
+        setGuestbookIndex((prev) => (prev + 1) % guestbookEntries.length);
+        setGuestbookVisible(true);
+      }, 260);
+    }, 3200);
+
+    return () => {
+      window.clearInterval(interval);
+
+      if (switchTimeout) {
+        window.clearTimeout(switchTimeout);
+      }
+    };
+  }, [guestbookEntries.length]);
 
   const hasMusic = Boolean(data?.profile.music_url);
   const isVideoBackground =
@@ -404,6 +473,64 @@ export const UserPanel = () => {
       .replace(/[^a-z0-9]+/g, "-");
   }, [data?.profile.music_title]);
 
+  const currentGuestbookEntry =
+    guestbookEntries.length > 0
+      ? guestbookEntries[guestbookIndex % guestbookEntries.length]
+      : null;
+
+  const formatGuestbookDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return "";
+    }
+  };
+
+  const handleGuestbookSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!visitorName.trim() || !guestbookMessage.trim()) {
+      setGuestbookFeedback("Please fill in your name and message.");
+      return;
+    }
+
+    setGuestbookSubmitting(true);
+    setGuestbookFeedback("");
+
+    try {
+      const response = await fetch(`${API_URL}/api/profile/${username}/guestbook`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          visitorName,
+          message: guestbookMessage,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to send message.");
+      }
+
+      if (result.entry) {
+        setGuestbookEntries((prev) => [result.entry, ...prev].slice(0, 30));
+        setGuestbookIndex(0);
+        setGuestbookVisible(true);
+      }
+
+      setVisitorName("");
+      setGuestbookMessage("");
+      setGuestbookFeedback("Message sent successfully!");
+    } catch (error: any) {
+      setGuestbookFeedback(error.message || "Failed to send message.");
+    } finally {
+      setGuestbookSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white">
@@ -433,6 +560,84 @@ export const UserPanel = () => {
   const hasLocation = Boolean(data.profile.location?.trim());
   const hasStatus = Boolean(data.profile.status_text?.trim());
   const profileEffect = (data.profile.profile_effect || "none") as ProfileEffect;
+
+  const renderGuestbook = () => (
+    <div className={`w-full rounded-3xl p-4 text-white ${template.guestbookCard}`}>
+      <div className="flex items-center gap-2 mb-4">
+        <FaBookOpen className="text-sm" />
+        <h3 className="text-sm font-semibold tracking-wide uppercase">
+          Guestbook
+        </h3>
+      </div>
+
+      <div className={`relative h-32 rounded-2xl p-4 overflow-hidden ${template.guestbookInner}`}>
+        {currentGuestbookEntry ? (
+          <div
+            className={`absolute inset-0 p-4 transition-all duration-300 ${
+              guestbookVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-6"
+            }`}
+          >
+            <p className="text-sm leading-relaxed text-white/90 max-h-[64px] overflow-hidden">
+              “{currentGuestbookEntry.message}”
+            </p>
+
+            <div className="mt-4 flex items-center justify-between text-xs text-white/60">
+              <span className="font-semibold text-white/85">
+                {currentGuestbookEntry.visitor_name}
+              </span>
+              <span>{formatGuestbookDate(currentGuestbookEntry.created_at)}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-center text-white/60">
+            <p className="text-sm">No messages yet.</p>
+            <p className="text-xs mt-1">Be the first to leave one.</p>
+          </div>
+        )}
+      </div>
+
+      <form onSubmit={handleGuestbookSubmit} className="mt-4 space-y-3">
+        <input
+          type="text"
+          value={visitorName}
+          onChange={(e) => setVisitorName(e.target.value)}
+          placeholder="Your name"
+          maxLength={32}
+          className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm text-white placeholder-white/45 outline-none"
+        />
+
+        <textarea
+          value={guestbookMessage}
+          onChange={(e) => setGuestbookMessage(e.target.value)}
+          placeholder="Leave a message..."
+          maxLength={180}
+          rows={3}
+          className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm text-white placeholder-white/45 outline-none resize-none"
+        />
+
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-white/55">
+            {guestbookMessage.length}/180
+          </span>
+
+          <button
+            type="submit"
+            disabled={guestbookSubmitting}
+            className="inline-flex items-center gap-2 rounded-xl bg-white/12 hover:bg-white/20 px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
+          >
+            <FaPaperPlane className="text-xs" />
+            {guestbookSubmitting ? "Sending..." : "Send"}
+          </button>
+        </div>
+
+        {guestbookFeedback && (
+          <p className="text-xs text-white/70">{guestbookFeedback}</p>
+        )}
+      </form>
+    </div>
+  );
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
@@ -560,86 +765,94 @@ export const UserPanel = () => {
       )}
 
       {entered && (
-        <div
-          className={`relative z-10 w-full max-w-md rounded-3xl px-6 py-8 text-center ${template.card}`}
-        >
-          <img
-            src={data.profile.profile_image || "/favicon.png"}
-            alt={data.username}
-            className={`w-28 h-28 rounded-full mx-auto border-4 object-cover bg-black ${template.avatar}`}
-          />
+        <div className="hidden xl:block fixed right-6 top-1/2 -translate-y-1/2 z-20 w-[340px]">
+          {renderGuestbook()}
+        </div>
+      )}
 
-          {displayName ? (
-            <>
+      {entered && (
+        <div className="relative z-10 w-full max-w-md space-y-4">
+          <div className={`rounded-3xl px-6 py-8 text-center ${template.card}`}>
+            <img
+              src={data.profile.profile_image || "/favicon.png"}
+              alt={data.username}
+              className={`w-28 h-28 rounded-full mx-auto border-4 object-cover bg-black ${template.avatar}`}
+            />
+
+            {displayName ? (
+              <>
+                <h1 className={`mt-4 text-3xl font-bold ${template.username}`}>
+                  {displayName}
+                </h1>
+
+                <p className={`mt-1 text-sm ${template.handle}`}>
+                  @{data.username}
+                </p>
+              </>
+            ) : (
               <h1 className={`mt-4 text-3xl font-bold ${template.username}`}>
-                {displayName}
-              </h1>
-
-              <p className={`mt-1 text-sm ${template.handle}`}>
                 @{data.username}
+              </h1>
+            )}
+
+            {data.profile.bio && (
+              <p className={`mt-3 text-sm whitespace-pre-line ${template.bio}`}>
+                {data.profile.bio}
               </p>
-            </>
-          ) : (
-            <h1 className={`mt-4 text-3xl font-bold ${template.username}`}>
-              @{data.username}
-            </h1>
-          )}
+            )}
 
-          {data.profile.bio && (
-            <p className={`mt-3 text-sm whitespace-pre-line ${template.bio}`}>
-              {data.profile.bio}
-            </p>
-          )}
+            {(hasLocation || hasStatus) && (
+              <div className={`mt-5 rounded-2xl p-4 text-left ${template.infoCard}`}>
+                <div className="space-y-3">
+                  {hasLocation && (
+                    <div className="flex items-center gap-3">
+                      <FaMapMarkerAlt className={`text-sm ${template.infoIcon}`} />
+                      <span className="text-sm text-white/90">
+                        {data.profile.location}
+                      </span>
+                    </div>
+                  )}
 
-          {(hasLocation || hasStatus) && (
-            <div className={`mt-5 rounded-2xl p-4 text-left ${template.infoCard}`}>
-              <div className="space-y-3">
-                {hasLocation && (
-                  <div className="flex items-center gap-3">
-                    <FaMapMarkerAlt className={`text-sm ${template.infoIcon}`} />
-                    <span className="text-sm text-white/90">
-                      {data.profile.location}
-                    </span>
-                  </div>
-                )}
-
-                {hasStatus && (
-                  <div className="flex items-start gap-3">
-                    <FaCircle className={`text-[10px] mt-1.5 ${template.infoIcon}`} />
-                    <span className="text-sm text-white/90">
-                      {data.profile.status_text}
-                    </span>
-                  </div>
-                )}
+                  {hasStatus && (
+                    <div className="flex items-start gap-3">
+                      <FaCircle className={`text-[10px] mt-1.5 ${template.infoIcon}`} />
+                      <span className="text-sm text-white/90">
+                        {data.profile.status_text}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <p className={`mt-3 text-sm ${template.views}`}>
-            {data.stats?.profile_views || 0} views
-          </p>
+            <p className={`mt-3 text-sm ${template.views}`}>
+              {data.stats?.profile_views || 0} views
+            </p>
 
-          {socialEntries.length > 0 && (
-            <div className="mt-6 flex flex-wrap justify-center gap-4">
-              {socialEntries.map(([platform, url]) => {
-                const Icon = socialIcons[platform.toLowerCase()] || FaGlobe;
+            {socialEntries.length > 0 && (
+              <div className="mt-6 flex flex-wrap justify-center gap-4">
+                {socialEntries.map(([platform, url]) => {
+                  const Icon = socialIcons[platform.toLowerCase()] || FaGlobe;
 
-                return (
-                  <a
-                    key={platform}
-                    href={getSocialUrl(platform, url)}
-                    target="_blank"
-                    rel="noreferrer"
-                    title={platform}
-                    aria-label={platform}
-                    className={`w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-xl text-white transition ${template.icon}`}
-                  >
-                    <Icon />
-                  </a>
-                );
-              })}
-            </div>
-          )}
+                  return (
+                    <a
+                      key={platform}
+                      href={getSocialUrl(platform, url)}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={platform}
+                      aria-label={platform}
+                      className={`w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-xl text-white transition ${template.icon}`}
+                    >
+                      <Icon />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="xl:hidden">{renderGuestbook()}</div>
         </div>
       )}
     </div>
