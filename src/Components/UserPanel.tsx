@@ -119,8 +119,8 @@ const profileTemplates = {
     sliderAccent: "accent-white",
     infoCard: "bg-white/8",
     infoIcon: "text-white",
-    guestbookCard: "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
-    guestbookInner: "bg-white/8",
+    guestbookForm:
+      "bg-black/28 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
   "cyber-glass": {
     overlay: "bg-black/15",
@@ -138,8 +138,8 @@ const profileTemplates = {
     sliderAccent: "accent-cyan-300",
     infoCard: "bg-white/10",
     infoIcon: "text-cyan-300",
-    guestbookCard: "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
-    guestbookInner: "bg-white/10",
+    guestbookForm:
+      "bg-black/28 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
   "minimal-dark": {
     overlay: "bg-black/28",
@@ -157,8 +157,8 @@ const profileTemplates = {
     sliderAccent: "accent-white",
     infoCard: "bg-white/6",
     infoIcon: "text-white",
-    guestbookCard: "bg-black/24 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
-    guestbookInner: "bg-white/6",
+    guestbookForm:
+      "bg-black/32 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
   "red-glow": {
     overlay: "bg-black/20",
@@ -176,8 +176,8 @@ const profileTemplates = {
     sliderAccent: "accent-red-400",
     infoCard: "bg-white/8",
     infoIcon: "text-red-300",
-    guestbookCard: "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
-    guestbookInner: "bg-white/8",
+    guestbookForm:
+      "bg-black/28 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
   "blue-ice": {
     overlay: "bg-black/18",
@@ -195,8 +195,8 @@ const profileTemplates = {
     sliderAccent: "accent-blue-300",
     infoCard: "bg-white/8",
     infoIcon: "text-blue-300",
-    guestbookCard: "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
-    guestbookInner: "bg-white/8",
+    guestbookForm:
+      "bg-black/28 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
   },
 };
 
@@ -333,6 +333,7 @@ export const UserPanel = () => {
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
   const [guestbookIndex, setGuestbookIndex] = useState(0);
   const [guestbookVisible, setGuestbookVisible] = useState(true);
+  const [guestbookOpen, setGuestbookOpen] = useState(false);
   const [visitorName, setVisitorName] = useState("");
   const [guestbookMessage, setGuestbookMessage] = useState("");
   const [guestbookSubmitting, setGuestbookSubmitting] = useState(false);
@@ -399,12 +400,11 @@ export const UserPanel = () => {
       switchTimeout = window.setTimeout(() => {
         setGuestbookIndex((prev) => (prev + 1) % guestbookEntries.length);
         setGuestbookVisible(true);
-      }, 260);
+      }, 280);
     }, 3200);
 
     return () => {
       window.clearInterval(interval);
-
       if (switchTimeout) {
         window.clearTimeout(switchTimeout);
       }
@@ -478,14 +478,6 @@ export const UserPanel = () => {
       ? guestbookEntries[guestbookIndex % guestbookEntries.length]
       : null;
 
-  const formatGuestbookDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return "";
-    }
-  };
-
   const handleGuestbookSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -523,7 +515,7 @@ export const UserPanel = () => {
 
       setVisitorName("");
       setGuestbookMessage("");
-      setGuestbookFeedback("Message sent successfully!");
+      setGuestbookFeedback("Message sent!");
     } catch (error: any) {
       setGuestbookFeedback(error.message || "Failed to send message.");
     } finally {
@@ -560,84 +552,6 @@ export const UserPanel = () => {
   const hasLocation = Boolean(data.profile.location?.trim());
   const hasStatus = Boolean(data.profile.status_text?.trim());
   const profileEffect = (data.profile.profile_effect || "none") as ProfileEffect;
-
-  const renderGuestbook = () => (
-    <div className={`w-full rounded-3xl p-4 text-white ${template.guestbookCard}`}>
-      <div className="flex items-center gap-2 mb-4">
-        <FaBookOpen className="text-sm" />
-        <h3 className="text-sm font-semibold tracking-wide uppercase">
-          Guestbook
-        </h3>
-      </div>
-
-      <div className={`relative h-32 rounded-2xl p-4 overflow-hidden ${template.guestbookInner}`}>
-        {currentGuestbookEntry ? (
-          <div
-            className={`absolute inset-0 p-4 transition-all duration-300 ${
-              guestbookVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 -translate-y-6"
-            }`}
-          >
-            <p className="text-sm leading-relaxed text-white/90 max-h-[64px] overflow-hidden">
-              “{currentGuestbookEntry.message}”
-            </p>
-
-            <div className="mt-4 flex items-center justify-between text-xs text-white/60">
-              <span className="font-semibold text-white/85">
-                {currentGuestbookEntry.visitor_name}
-              </span>
-              <span>{formatGuestbookDate(currentGuestbookEntry.created_at)}</span>
-            </div>
-          </div>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center text-white/60">
-            <p className="text-sm">No messages yet.</p>
-            <p className="text-xs mt-1">Be the first to leave one.</p>
-          </div>
-        )}
-      </div>
-
-      <form onSubmit={handleGuestbookSubmit} className="mt-4 space-y-3">
-        <input
-          type="text"
-          value={visitorName}
-          onChange={(e) => setVisitorName(e.target.value)}
-          placeholder="Your name"
-          maxLength={32}
-          className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm text-white placeholder-white/45 outline-none"
-        />
-
-        <textarea
-          value={guestbookMessage}
-          onChange={(e) => setGuestbookMessage(e.target.value)}
-          placeholder="Leave a message..."
-          maxLength={180}
-          rows={3}
-          className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm text-white placeholder-white/45 outline-none resize-none"
-        />
-
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-white/55">
-            {guestbookMessage.length}/180
-          </span>
-
-          <button
-            type="submit"
-            disabled={guestbookSubmitting}
-            className="inline-flex items-center gap-2 rounded-xl bg-white/12 hover:bg-white/20 px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-          >
-            <FaPaperPlane className="text-xs" />
-            {guestbookSubmitting ? "Sending..." : "Send"}
-          </button>
-        </div>
-
-        {guestbookFeedback && (
-          <p className="text-xs text-white/70">{guestbookFeedback}</p>
-        )}
-      </form>
-    </div>
-  );
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
@@ -765,13 +679,100 @@ export const UserPanel = () => {
       )}
 
       {entered && (
-        <div className="hidden xl:block fixed right-6 top-1/2 -translate-y-1/2 z-20 w-[340px]">
-          {renderGuestbook()}
+        <div className="fixed bottom-5 right-5 z-40 flex items-end gap-3 max-w-[90vw]">
+          <div className="pointer-events-none max-w-[260px] text-right">
+            <div
+              className={`transition-all duration-300 ${
+                guestbookVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
+            >
+              {currentGuestbookEntry ? (
+                <>
+                  <p className="text-sm font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
+                    {currentGuestbookEntry.visitor_name}
+                  </p>
+
+                  <p className="mt-1 text-xs leading-relaxed text-white/85 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
+                    {currentGuestbookEntry.message}
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-white/70 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
+                  No comments yet
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="relative">
+            {guestbookOpen && (
+              <div className="absolute bottom-16 right-0 w-[280px]">
+                <div className={`rounded-2xl p-4 ${template.guestbookForm}`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <FaBookOpen className="text-sm text-white/80" />
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-white">
+                      Guestbook
+                    </h3>
+                  </div>
+
+                  <form onSubmit={handleGuestbookSubmit} className="space-y-3">
+                    <input
+                      type="text"
+                      value={visitorName}
+                      onChange={(e) => setVisitorName(e.target.value)}
+                      placeholder="Your name"
+                      maxLength={32}
+                      className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm text-white placeholder-white/45 outline-none"
+                    />
+
+                    <textarea
+                      value={guestbookMessage}
+                      onChange={(e) => setGuestbookMessage(e.target.value)}
+                      placeholder="Leave a message..."
+                      maxLength={180}
+                      rows={3}
+                      className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm text-white placeholder-white/45 outline-none resize-none"
+                    />
+
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs text-white/55">
+                        {guestbookMessage.length}/180
+                      </span>
+
+                      <button
+                        type="submit"
+                        disabled={guestbookSubmitting}
+                        className="inline-flex items-center gap-2 rounded-xl bg-white/12 hover:bg-white/20 px-4 py-2.5 text-sm font-medium text-white transition disabled:opacity-50"
+                      >
+                        <FaPaperPlane className="text-xs" />
+                        {guestbookSubmitting ? "Sending..." : "Send"}
+                      </button>
+                    </div>
+
+                    {guestbookFeedback && (
+                      <p className="text-xs text-white/70">{guestbookFeedback}</p>
+                    )}
+                  </form>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setGuestbookOpen((prev) => !prev)}
+              className="w-12 h-12 rounded-2xl bg-black/20 hover:bg-black/30 backdrop-blur-2xl flex items-center justify-center text-white shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition"
+              title="Open guestbook"
+            >
+              <FaBookOpen className="text-lg" />
+            </button>
+          </div>
         </div>
       )}
 
       {entered && (
-        <div className="relative z-10 w-full max-w-md space-y-4">
+        <div className="relative z-10 w-full max-w-md">
           <div className={`rounded-3xl px-6 py-8 text-center ${template.card}`}>
             <img
               src={data.profile.profile_image || "/favicon.png"}
@@ -851,8 +852,6 @@ export const UserPanel = () => {
               </div>
             )}
           </div>
-
-          <div className="xl:hidden">{renderGuestbook()}</div>
         </div>
       )}
     </div>
