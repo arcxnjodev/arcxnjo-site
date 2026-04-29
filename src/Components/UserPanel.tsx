@@ -20,6 +20,8 @@ import {
   FaCircle,
 } from "react-icons/fa";
 
+type ProfileEffect = "none" | "stars" | "snow" | "sparkles" | "hearts";
+
 type ProfileData = {
   username: string;
   profile: {
@@ -31,6 +33,7 @@ type ProfileData = {
     bio?: string;
     display_name?: string;
     profile_template?: string;
+    profile_effect?: ProfileEffect;
     music_url?: string;
     music_title?: string;
     location?: string;
@@ -92,35 +95,35 @@ const getSocialUrl = (platform: string, url: string) => {
 
 const profileTemplates = {
   "neon-purple": {
-    overlay: "bg-black/20",
-    card: "bg-black/18 shadow-[0_0_45px_rgba(168,85,247,0.28)]",
-    avatar: "border-purple-400/40 shadow-[0_0_25px_rgba(168,85,247,0.45)]",
-    username: "text-white drop-shadow-[0_0_12px_rgba(168,85,247,0.9)]",
-    handle: "text-purple-200/80",
+    overlay: "bg-black/18",
+    card: "bg-black/16 shadow-xl",
+    avatar: "border-white/15 shadow-lg",
+    username: "text-white",
+    handle: "text-gray-300",
     bio: "text-gray-100",
-    views: "text-purple-200/80",
-    icon: "hover:text-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_18px_rgba(168,85,247,0.6)]",
+    views: "text-gray-300",
+    icon: "hover:text-white hover:bg-white/10",
     audioButton:
-      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-[#111111cc] shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
-    sliderAccent: "accent-purple-400",
+      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+    sliderAccent: "accent-white",
     infoCard: "bg-white/8",
-    infoIcon: "text-purple-300",
+    infoIcon: "text-white",
   },
   "cyber-glass": {
     overlay: "bg-black/15",
     card: "bg-white/10 shadow-[0_0_45px_rgba(34,211,238,0.18)]",
     avatar: "border-cyan-300/40 shadow-[0_0_25px_rgba(34,211,238,0.35)]",
-    username: "text-white drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]",
+    username: "text-white",
     handle: "text-cyan-200/80",
     bio: "text-cyan-50",
     views: "text-cyan-200/80",
-    icon: "hover:text-cyan-300 hover:bg-cyan-400/10 hover:shadow-[0_0_18px_rgba(34,211,238,0.6)]",
+    icon: "hover:text-cyan-300 hover:bg-cyan-400/10",
     audioButton:
-      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-[#111111cc] shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
     sliderAccent: "accent-cyan-300",
     infoCard: "bg-white/10",
     infoIcon: "text-cyan-300",
@@ -135,47 +138,170 @@ const profileTemplates = {
     views: "text-gray-300",
     icon: "hover:text-white hover:bg-white/10",
     audioButton:
-      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-[#111111dd] shadow-[0_12px_40px_rgba(0,0,0,0.55)]",
+      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
     sliderAccent: "accent-white",
     infoCard: "bg-white/6",
     infoIcon: "text-white",
   },
   "red-glow": {
     overlay: "bg-black/20",
-    card: "bg-black/18 shadow-[0_0_45px_rgba(239,68,68,0.28)]",
+    card: "bg-black/18 shadow-xl",
     avatar: "border-red-500/40 shadow-[0_0_25px_rgba(239,68,68,0.45)]",
-    username: "text-white drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]",
+    username: "text-white",
     handle: "text-red-200/80",
     bio: "text-red-50",
     views: "text-red-200/80",
-    icon: "hover:text-red-400 hover:bg-red-500/10 hover:shadow-[0_0_18px_rgba(239,68,68,0.6)]",
+    icon: "hover:text-red-400 hover:bg-red-500/10",
     audioButton:
-      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-[#111111cc] shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
     sliderAccent: "accent-red-400",
     infoCard: "bg-white/8",
     infoIcon: "text-red-300",
   },
   "blue-ice": {
     overlay: "bg-black/18",
-    card: "bg-black/16 shadow-[0_0_45px_rgba(96,165,250,0.28)]",
+    card: "bg-black/16 shadow-xl",
     avatar: "border-blue-300/40 shadow-[0_0_25px_rgba(96,165,250,0.45)]",
-    username: "text-white drop-shadow-[0_0_12px_rgba(96,165,250,0.9)]",
+    username: "text-white",
     handle: "text-blue-200/80",
     bio: "text-blue-50",
     views: "text-blue-200/80",
-    icon: "hover:text-blue-300 hover:bg-blue-500/10 hover:shadow-[0_0_18px_rgba(96,165,250,0.6)]",
+    icon: "hover:text-blue-300 hover:bg-blue-500/10",
     audioButton:
-      "bg-white/10 hover:bg-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+      "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
     audioPanel:
-      "bg-[#111111cc] shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+      "bg-black/22 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
     sliderAccent: "accent-blue-300",
     infoCard: "bg-white/8",
     infoIcon: "text-blue-300",
   },
+};
+
+const ParticleLayer = ({
+  effect,
+}: {
+  effect: ProfileEffect;
+}) => {
+  const particles = useMemo(() => {
+    const count =
+      effect === "stars"
+        ? 28
+        : effect === "snow"
+        ? 30
+        : effect === "sparkles"
+        ? 20
+        : effect === "hearts"
+        ? 16
+        : 0;
+
+    return Array.from({ length: count }, (_, index) => ({
+      id: `${effect}-${index}`,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      size: 8 + Math.random() * 18,
+      duration: 4 + Math.random() * 8,
+      delay: Math.random() * 6,
+      opacity: 0.2 + Math.random() * 0.7,
+    }));
+  }, [effect]);
+
+  if (effect === "none") return null;
+
+  return (
+    <>
+      <style>{`
+        @keyframes arcxnjoTwinkle {
+          0%,100% { opacity: 0.15; transform: scale(0.8); }
+          50% { opacity: 0.95; transform: scale(1.15); }
+        }
+        @keyframes arcxnjoSnowFall {
+          0% { transform: translateY(-12vh); opacity: 0; }
+          10% { opacity: 0.85; }
+          100% { transform: translateY(110vh); opacity: 0; }
+        }
+        @keyframes arcxnjoFloatUp {
+          0% { transform: translateY(16px) scale(0.9); opacity: 0; }
+          10% { opacity: 0.85; }
+          100% { transform: translateY(-110vh) scale(1.08); opacity: 0; }
+        }
+      `}</style>
+
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {effect === "stars" &&
+          particles.map((particle) => (
+            <span
+              key={particle.id}
+              className="absolute rounded-full bg-white"
+              style={{
+                left: `${particle.left}%`,
+                top: `${particle.top}%`,
+                width: `${particle.size / 4}px`,
+                height: `${particle.size / 4}px`,
+                opacity: particle.opacity,
+                animation: `arcxnjoTwinkle ${particle.duration}s ease-in-out ${particle.delay}s infinite`,
+                boxShadow: "0 0 10px rgba(255,255,255,0.55)",
+              }}
+            />
+          ))}
+
+        {effect === "snow" &&
+          particles.map((particle) => (
+            <span
+              key={particle.id}
+              className="absolute rounded-full bg-white"
+              style={{
+                left: `${particle.left}%`,
+                top: `-${particle.size}px`,
+                width: `${particle.size / 3}px`,
+                height: `${particle.size / 3}px`,
+                opacity: particle.opacity,
+                animation: `arcxnjoSnowFall ${particle.duration + 4}s linear ${particle.delay}s infinite`,
+              }}
+            />
+          ))}
+
+        {effect === "sparkles" &&
+          particles.map((particle) => (
+            <span
+              key={particle.id}
+              className="absolute text-white"
+              style={{
+                left: `${particle.left}%`,
+                top: `${particle.top}%`,
+                fontSize: `${particle.size}px`,
+                opacity: particle.opacity,
+                animation: `arcxnjoTwinkle ${particle.duration}s ease-in-out ${particle.delay}s infinite`,
+                textShadow: "0 0 12px rgba(255,255,255,0.5)",
+              }}
+            >
+              ✦
+            </span>
+          ))}
+
+        {effect === "hearts" &&
+          particles.map((particle) => (
+            <span
+              key={particle.id}
+              className="absolute text-pink-300"
+              style={{
+                left: `${particle.left}%`,
+                bottom: `-24px`,
+                fontSize: `${particle.size}px`,
+                opacity: particle.opacity,
+                animation: `arcxnjoFloatUp ${particle.duration + 5}s linear ${particle.delay}s infinite`,
+                textShadow: "0 0 14px rgba(255,105,180,0.4)",
+              }}
+            >
+              ♥
+            </span>
+          ))}
+      </div>
+    </>
+  );
 };
 
 export const UserPanel = () => {
@@ -188,7 +314,7 @@ export const UserPanel = () => {
   const [entered, setEntered] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
-  
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -306,6 +432,7 @@ export const UserPanel = () => {
   const displayName = data.profile.display_name?.trim();
   const hasLocation = Boolean(data.profile.location?.trim());
   const hasStatus = Boolean(data.profile.status_text?.trim());
+  const profileEffect = (data.profile.profile_effect || "none") as ProfileEffect;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
@@ -331,6 +458,8 @@ export const UserPanel = () => {
       )}
 
       <div className={`absolute inset-0 ${template.overlay}`} />
+
+      {entered && <ParticleLayer effect={profileEffect} />}
 
       {hasMusic && (
         <audio
@@ -358,77 +487,77 @@ export const UserPanel = () => {
       )}
 
       {entered && controlsTarget && (
-  <div className="fixed top-5 left-5 z-40 group">
-    <div className="relative">
-      <button
-        type="button"
-        onClick={toggleMute}
-        title={muted ? "Unmute" : "Mute"}
-        className={`w-12 h-12 rounded-2xl backdrop-blur-xl flex items-center justify-center transition-all duration-200 ${template.audioButton}`}
-      >
-        {muted || volume === 0 ? (
-          <FaVolumeMute className="text-xl" />
-        ) : (
-          <FaVolumeUp className="text-xl" />
-        )}
-      </button>
-
-      <div className="absolute left-0 top-full pt-2 opacity-0 pointer-events-none translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0">
-        <div className={`w-72 rounded-2xl p-4 ${template.audioPanel}`}>
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-              <FaMusic className="text-sm text-white/90" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-white truncate">
-                {hasMusic
-                  ? data.profile.music_title || "Profile Music"
-                  : "Background Video Audio"}
-              </p>
-
-              <p className="text-xs text-white/50 mt-0.5">
-                {muted || volume === 0
-                  ? "Muted"
-                  : `Volume ${Math.round(volume * 100)}%`}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-white/60">Volume</span>
-              <span className="text-xs text-white/60">
-                {Math.round(volume * 100)}%
-              </span>
-            </div>
-
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
-              onChange={(e) => handleVolumeChange(Number(e.target.value))}
-              className={`w-full h-2 cursor-pointer ${template.sliderAccent}`}
-            />
-          </div>
-
-          {hasMusic && (
-            <a
-              href={data.profile.music_url}
-              download={`${formatMusicFileName}.mp3`}
-              className="mt-4 flex items-center justify-center gap-2 w-full rounded-xl bg-white/10 hover:bg-white/20 py-2.5 text-sm font-medium text-white transition"
+        <div className="fixed top-5 left-5 z-40 group">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={toggleMute}
+              title={muted ? "Unmute" : "Mute"}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${template.audioButton}`}
             >
-              <FaDownload />
-              Download Music
-            </a>
-          )}
+              {muted || volume === 0 ? (
+                <FaVolumeMute className="text-xl" />
+              ) : (
+                <FaVolumeUp className="text-xl" />
+              )}
+            </button>
+
+            <div className="absolute left-0 top-full pt-2 opacity-0 pointer-events-none translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0">
+              <div className={`w-72 rounded-2xl p-4 ${template.audioPanel}`}>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                    <FaMusic className="text-sm text-white/90" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-white truncate">
+                      {hasMusic
+                        ? data.profile.music_title || "Profile Music"
+                        : "Background Video Audio"}
+                    </p>
+
+                    <p className="text-xs text-white/50 mt-0.5">
+                      {muted || volume === 0
+                        ? "Muted"
+                        : `Volume ${Math.round(volume * 100)}%`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-white/60">Volume</span>
+                    <span className="text-xs text-white/60">
+                      {Math.round(volume * 100)}%
+                    </span>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={volume}
+                    onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                    className={`w-full h-2 cursor-pointer ${template.sliderAccent}`}
+                  />
+                </div>
+
+                {hasMusic && (
+                  <a
+                    href={data.profile.music_url}
+                    download={`${formatMusicFileName}.mp3`}
+                    className="mt-4 flex items-center justify-center gap-2 w-full rounded-xl bg-white/10 hover:bg-white/20 py-2.5 text-sm font-medium text-white transition"
+                  >
+                    <FaDownload />
+                    Download Music
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
       {entered && (
         <div
@@ -503,7 +632,7 @@ export const UserPanel = () => {
                     rel="noreferrer"
                     title={platform}
                     aria-label={platform}
-                    className={`w-11 h-11 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-xl text-white transition ${template.icon}`}
+                    className={`w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-xl text-white transition ${template.icon}`}
                   >
                     <Icon />
                   </a>

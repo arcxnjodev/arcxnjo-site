@@ -457,7 +457,7 @@ app.put('/api/profile/username', authenticateToken, async (req, res) => {
 });
 
 app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
-  const { profileTemplate } = req.body;
+  const { profileTemplate, profileEffect } = req.body;
 
   const allowedTemplates = [
     'neon-purple',
@@ -467,14 +467,26 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
     'blue-ice',
   ];
 
+  const allowedEffects = [
+    'none',
+    'stars',
+    'snow',
+    'sparkles',
+    'hearts',
+  ];
+
   if (!allowedTemplates.includes(profileTemplate)) {
     return res.status(400).json({ error: 'Invalid profile template.' });
   }
 
+  if (!allowedEffects.includes(profileEffect)) {
+    return res.status(400).json({ error: 'Invalid profile effect.' });
+  }
+
   try {
     await pool.query(
-      'UPDATE user_profiles SET profile_template = $1 WHERE user_id = $2',
-      [profileTemplate, req.userId]
+      'UPDATE user_profiles SET profile_template = $1, profile_effect = $2 WHERE user_id = $3',
+      [profileTemplate, profileEffect, req.userId]
     );
 
     return res.json({ message: 'Appearance updated successfully!' });

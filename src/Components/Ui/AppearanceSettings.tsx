@@ -11,13 +11,13 @@ const templates = [
   {
     id: "cyber-glass",
     name: "Cyber Glass",
-    description: "Clean transparent futuristic style.",
+    description: "Transparent futuristic style.",
     preview: "from-cyan-500 to-purple-700",
   },
   {
     id: "minimal-dark",
     name: "Minimal Dark",
-    description: "Simple, clean and dark.",
+    description: "Simple and clean dark layout.",
     preview: "from-gray-900 to-black",
   },
   {
@@ -34,8 +34,37 @@ const templates = [
   },
 ];
 
+const effects = [
+  {
+    id: "none",
+    name: "None",
+    description: "No animated particles.",
+  },
+  {
+    id: "stars",
+    name: "Stars",
+    description: "Twinkling stars in the background.",
+  },
+  {
+    id: "snow",
+    name: "Snow",
+    description: "Soft falling snow effect.",
+  },
+  {
+    id: "sparkles",
+    name: "Sparkles",
+    description: "Small shining sparkles.",
+  },
+  {
+    id: "hearts",
+    name: "Hearts",
+    description: "Floating hearts effect.",
+  },
+];
+
 export const AppearanceSettings = () => {
   const [selectedTemplate, setSelectedTemplate] = useState("neon-purple");
+  const [selectedEffect, setSelectedEffect] = useState("none");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -52,6 +81,7 @@ export const AppearanceSettings = () => {
         });
 
         setSelectedTemplate(response.data.profile_template || "neon-purple");
+        setSelectedEffect(response.data.profile_effect || "none");
       } catch (error) {
         console.error("Error fetching appearance:", error);
       }
@@ -69,7 +99,10 @@ export const AppearanceSettings = () => {
 
       await axios.put(
         `${API_URL}/api/profile/appearance`,
-        { profileTemplate: selectedTemplate },
+        {
+          profileTemplate: selectedTemplate,
+          profileEffect: selectedEffect,
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -101,6 +134,8 @@ export const AppearanceSettings = () => {
         </div>
       )}
 
+      <p className="text-white font-semibold mb-3">Templates</p>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {templates.map((template) => {
           const isSelected = selectedTemplate === template.id;
@@ -119,15 +154,37 @@ export const AppearanceSettings = () => {
               <div
                 className={`h-28 bg-gradient-to-br ${template.preview} flex items-center justify-center`}
               >
-                <div className="w-20 h-20 rounded-full bg-black/40 border border-white/20" />
+                <div className="w-20 h-20 rounded-full bg-black/40" />
               </div>
 
               <div className="bg-black/40 p-4 text-white">
                 <p className="font-bold">{template.name}</p>
-                <p className="text-sm text-white/70">
-                  {template.description}
-                </p>
+                <p className="text-sm text-white/70">{template.description}</p>
               </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="text-white font-semibold mt-8 mb-3">Effects</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {effects.map((effect) => {
+          const isSelected = selectedEffect === effect.id;
+
+          return (
+            <button
+              key={effect.id}
+              type="button"
+              onClick={() => setSelectedEffect(effect.id)}
+              className={`text-left rounded-xl p-4 border transition ${
+                isSelected
+                  ? "border-white bg-black/35 shadow-lg scale-[1.02]"
+                  : "border-white/20 bg-black/25 hover:border-white/60"
+              }`}
+            >
+              <p className="font-bold text-white">{effect.name}</p>
+              <p className="text-sm text-white/70">{effect.description}</p>
             </button>
           );
         })}
@@ -137,7 +194,7 @@ export const AppearanceSettings = () => {
         type="button"
         onClick={handleSave}
         disabled={loading}
-        className="bg-purple-900 w-full p-3 rounded-md my-4 text-white hover:bg-purple-800 transition disabled:opacity-50"
+        className="bg-purple-900 w-full p-3 rounded-md my-6 text-white hover:bg-purple-800 transition disabled:opacity-50"
       >
         {loading ? "Saving..." : "Save Appearance"}
       </button>
