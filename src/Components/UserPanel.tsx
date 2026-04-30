@@ -103,23 +103,62 @@ const getSocialUrl = (platform: string, url: string) => {
   }
 };
 
-const badgeMap: Record<string, { label: string; className: string }> = {
-  gamer: { label: "Gamer", className: "bg-white/10 text-white" },
-  music: { label: "Music", className: "bg-white/10 text-white" },
-  anime: { label: "Anime", className: "bg-white/10 text-white" },
-  "open-dm": { label: "Open DM", className: "bg-white/10 text-white" },
-  artist: { label: "Artist", className: "bg-white/10 text-white" },
-  developer: { label: "Developer", className: "bg-white/10 text-white" },
+const badgeMap: Record<
+  string,
+  { label: string; className: string; image: string }
+> = {
+  "open-dm": {
+    label: "Open DM",
+    className: "bg-gradient-to-r from-emerald-500/80 to-teal-600/80 text-white",
+    image: "https://cdn.discordapp.com/emojis/827964533792440421.webp",
+  },
+  music: {
+    label: "Music",
+    className: "bg-gradient-to-r from-fuchsia-500/80 to-pink-600/80 text-white",
+    image: "https://cdn.discordapp.com/emojis/847487695227584562.webp",
+  },
+  anime: {
+    label: "Anime",
+    className: "bg-gradient-to-r from-violet-500/80 to-indigo-600/80 text-white",
+    image: "https://cdn.discordapp.com/emojis/705315110004195430.webp",
+  },
 
-  premium: { label: "Premium", className: "bg-yellow-400 text-black" },
-  supporter: { label: "Supporter", className: "bg-yellow-400 text-black" },
-  vip: { label: "VIP", className: "bg-yellow-400 text-black" },
+  verified: {
+    label: "Verified",
+    className: "bg-gradient-to-r from-blue-400/90 to-indigo-600/90 text-white",
+    image: "https://cdn.discordapp.com/emojis/894156569858703380.webp?size=32&animated=true",
+  },
+  premium: {
+    label: "Premium",
+    className: "bg-gradient-to-r from-amber-300/90 to-yellow-500/90 text-black",
+    image: "https://cdn.discordapp.com/emojis/1083803537785499669.webp",
+  },
+  vip: {
+    label: "VIP",
+    className: "bg-gradient-to-r from-yellow-300/90 to-orange-500/90 text-black",
+    image: "https://cdn.discordapp.com/emojis/1041872676710514748.webp",
+  },
+  og: {
+    label: "OG",
+    className: "bg-gradient-to-r from-orange-400/90 to-red-500/90 text-white",
+    image: "https://cdn.discordapp.com/emojis/972692703072649336.webp",
+  },
 
-  dev: { label: "Dev", className: "bg-cyan-400 text-black" },
-  staff: { label: "Staff", className: "bg-cyan-400 text-black" },
-  verified: { label: "Verified", className: "bg-blue-500 text-white" },
-  founder: { label: "Founder", className: "bg-pink-500 text-white" },
-  official: { label: "Official", className: "bg-red-500 text-white" },
+  developer: {
+    label: "Developer",
+    className: "bg-gradient-to-r from-sky-500/90 to-blue-700/90 text-white",
+    image: "https://cdn.discordapp.com/emojis/827964533792440421.webp",
+  },
+  staff: {
+    label: "Staff",
+    className: "bg-gradient-to-r from-cyan-400/90 to-blue-500/90 text-black",
+    image: "https://cdn.discordapp.com/emojis/928907588282748948.webp",
+  },
+  founder: {
+    label: "Founder",
+    className: "bg-gradient-to-r from-pink-400/90 to-rose-500/90 text-white",
+    image: "https://cdn.discordapp.com/emojis/1257354981384650873.webp",
+  },
 };
 
 const profileTemplates = {
@@ -820,6 +859,15 @@ export const UserPanel = () => {
             )}
 
             {profileBadges.length > 0 && (
+            <>
+              <style>{`
+                @keyframes arcxnjoProfileBadgeShine {
+                  0% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
+                  20% { opacity: 0.95; }
+                  100% { transform: translateX(260%) skewX(-20deg); opacity: 0; }
+                }
+              `}</style>
+
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {profileBadges.map((badgeId) => {
                   const badge = badgeMap[badgeId];
@@ -828,14 +876,27 @@ export const UserPanel = () => {
                   return (
                     <span
                       key={badgeId}
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${badge.className}`}
+                      className={`relative overflow-hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold shadow-[0_0_14px_rgba(255,255,255,0.12)] ${badge.className}`}
                     >
-                      {badge.label}
+                      <span
+                        className="absolute inset-y-0 -left-10 w-8 bg-white/35 blur-md"
+                        style={{
+                          transform: "skewX(-20deg)",
+                          animation: "arcxnjoProfileBadgeShine 2.8s linear infinite",
+                        }}
+                      />
+                      <img
+                        src={badge.image}
+                        alt={badge.label}
+                        className="relative z-10 w-4 h-4 object-contain"
+                      />
+                      <span className="relative z-10">{badge.label}</span>
                     </span>
                   );
                 })}
               </div>
-            )}
+            </>
+          )}
 
             {data.profile.bio && (
               <p className={`mt-3 text-sm whitespace-pre-line ${template.bio}`}>

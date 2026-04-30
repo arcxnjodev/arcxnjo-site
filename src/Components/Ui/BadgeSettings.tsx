@@ -7,26 +7,73 @@ type UserRole = "user" | "dev" | "staff" | "founder" | "admin";
 type BadgeDef = {
   id: string;
   label: string;
-  group: "free" | "pro" | "staff";
+  group: "free" | "pro" | "manual";
+  image: string;
 };
 
 const allBadges: BadgeDef[] = [
-  { id: "gamer", label: "Gamer", group: "free" },
-  { id: "music", label: "Music", group: "free" },
-  { id: "anime", label: "Anime", group: "free" },
-  { id: "open-dm", label: "Open DM", group: "free" },
-  { id: "artist", label: "Artist", group: "free" },
-  { id: "developer", label: "Developer", group: "free" },
+  {
+    id: "open-dm",
+    label: "Open DM",
+    group: "free",
+    image: "https://cdn.discordapp.com/emojis/827964533792440421.webp",
+  },
+  {
+    id: "music",
+    label: "Music",
+    group: "free",
+    image: "https://cdn.discordapp.com/emojis/847487695227584562.webp",
+  },
+  {
+    id: "anime",
+    label: "Anime",
+    group: "free",
+    image: "https://cdn.discordapp.com/emojis/705315110004195430.webp",
+  },
 
-  { id: "premium", label: "Premium", group: "pro" },
-  { id: "supporter", label: "Supporter", group: "pro" },
-  { id: "vip", label: "VIP", group: "pro" },
+  {
+    id: "verified",
+    label: "Verified",
+    group: "pro",
+    image: "https://cdn.discordapp.com/emojis/894156569858703380.webp?size=32&animated=true",
+  },
+  {
+    id: "premium",
+    label: "Premium",
+    group: "pro",
+    image: "https://cdn.discordapp.com/emojis/1083803537785499669.webp",
+  },
+  {
+    id: "vip",
+    label: "VIP",
+    group: "pro",
+    image: "https://cdn.discordapp.com/emojis/1041872676710514748.webp",
+  },
+  {
+    id: "og",
+    label: "OG",
+    group: "pro",
+    image: "https://cdn.discordapp.com/emojis/972692703072649336.webp",
+  },
 
-  { id: "dev", label: "Dev", group: "staff" },
-  { id: "staff", label: "Staff", group: "staff" },
-  { id: "verified", label: "Verified", group: "staff" },
-  { id: "founder", label: "Founder", group: "staff" },
-  { id: "official", label: "Official", group: "staff" },
+  {
+    id: "developer",
+    label: "Developer",
+    group: "manual",
+    image: "https://cdn.discordapp.com/emojis/827964533792440421.webp",
+  },
+  {
+    id: "staff",
+    label: "Staff",
+    group: "manual",
+    image: "https://cdn.discordapp.com/emojis/928907588282748948.webp",
+  },
+  {
+    id: "founder",
+    label: "Founder",
+    group: "manual",
+    image: "https://cdn.discordapp.com/emojis/1257354981384650873.webp",
+  },
 ];
 
 export const BadgeSettings = () => {
@@ -50,16 +97,8 @@ export const BadgeSettings = () => {
       ];
     }
 
-    if (["dev", "staff", "founder", "admin"].includes(role)) {
-      allowed = [
-        ...allowed,
-        ...allBadges.filter((badge) => badge.group === "pro").map((b) => b.id),
-        ...allBadges.filter((badge) => badge.group === "staff").map((b) => b.id),
-      ];
-    }
-
     return [...new Set(allowed)];
-  }, [plan, role]);
+  }, [plan]);
 
   useEffect(() => {
     const fetchBadges = async () => {
@@ -118,7 +157,12 @@ export const BadgeSettings = () => {
         }
       );
 
-      setSelectedBadges(Array.isArray(response.data.badges) ? response.data.badges : selectedBadges);
+      setSelectedBadges(
+        Array.isArray(response.data.badges)
+          ? response.data.badges
+          : selectedBadges
+      );
+
       setMessage("✅ Badges updated successfully!");
       setTimeout(() => setMessage(""), 3000);
     } catch (error: any) {
@@ -134,13 +178,13 @@ export const BadgeSettings = () => {
   const grouped = {
     free: allBadges.filter((badge) => badge.group === "free"),
     pro: allBadges.filter((badge) => badge.group === "pro"),
-    staff: allBadges.filter((badge) => badge.group === "staff"),
+    manual: allBadges.filter((badge) => badge.group === "manual"),
   };
 
   const renderGroup = (
     title: string,
     badges: BadgeDef[],
-    groupColor: string
+    locked = false
   ) => (
     <div className="mt-6">
       <p className="text-white font-semibold mb-3">{title}</p>
@@ -149,21 +193,37 @@ export const BadgeSettings = () => {
         {badges.map((badge) => {
           const selected = selectedBadges.includes(badge.id);
           const allowed = allowedBadges.includes(badge.id);
+          const clickable = !locked && allowed;
 
           return (
             <button
               key={badge.id}
               type="button"
-              onClick={() => toggleBadge(badge.id)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+              onClick={() => clickable && toggleBadge(badge.id)}
+              className={`relative overflow-hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition ${
                 selected
-                  ? `${groupColor} text-white shadow-lg`
-                  : allowed
+                  ? "bg-gradient-to-r from-white/25 to-white/10 text-white shadow-[0_0_18px_rgba(255,255,255,0.18)] scale-[1.03]"
+                  : clickable
                   ? "bg-white/10 text-white hover:bg-white/20"
                   : "bg-white/5 text-white/35 cursor-not-allowed"
               }`}
             >
-              {badge.label}
+              {selected && (
+                <span
+                  className="absolute inset-y-0 -left-10 w-10 bg-white/30 blur-md"
+                  style={{
+                    transform: "skewX(-20deg)",
+                    animation: "arcxnjoBadgeShine 2.8s linear infinite",
+                  }}
+                />
+              )}
+
+              <img
+                src={badge.image}
+                alt={badge.label}
+                className="relative z-10 w-5 h-5 object-contain"
+              />
+              <span className="relative z-10">{badge.label}</span>
             </button>
           );
         })}
@@ -173,6 +233,14 @@ export const BadgeSettings = () => {
 
   return (
     <div className="bg-purple-700 p-10 rounded-lg m-5">
+      <style>{`
+        @keyframes arcxnjoBadgeShine {
+          0% { transform: translateX(-140px) skewX(-20deg); opacity: 0; }
+          20% { opacity: 0.9; }
+          100% { transform: translateX(340px) skewX(-20deg); opacity: 0; }
+        }
+      `}</style>
+
       <p className="text-2xl font-bold mb-2 text-white">Badges</p>
       <p className="text-white/70 text-sm">
         Select up to 3 badges for your profile.
@@ -200,9 +268,9 @@ export const BadgeSettings = () => {
         </div>
       )}
 
-      {renderGroup("Free Badges", grouped.free, "bg-white/20")}
-      {renderGroup("Pro Badges", grouped.pro, "bg-yellow-500/70")}
-      {renderGroup("Dev / Staff Badges", grouped.staff, "bg-cyan-500/70")}
+      {renderGroup("Free Badges", grouped.free)}
+      {renderGroup("Pro Badges", grouped.pro)}
+      {renderGroup("Manual Badges (Neon only)", grouped.manual, true)}
 
       <button
         type="button"

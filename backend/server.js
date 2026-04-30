@@ -275,27 +275,21 @@ app.get('/api/profile/me', authenticateToken, async (req, res) => {
 app.put('/api/profile/badges', authenticateToken, async (req, res) => {
   const { badges } = req.body;
 
-  const freeBadges = ['gamer', 'music', 'anime', 'open-dm', 'artist', 'developer'];
-  const proBadges = ['premium', 'supporter', 'vip'];
-  const staffBadges = ['dev', 'staff', 'verified', 'founder', 'official'];
+  const freeBadges = ['open-dm', 'music', 'anime'];
+  const proBadges = ['verified', 'premium', 'vip', 'og'];
 
   try {
     const userResult = await pool.query(
-      "SELECT COALESCE(plan, 'free') AS plan, COALESCE(role, 'user') AS role FROM users WHERE id = $1",
+      "SELECT COALESCE(plan, 'free') AS plan FROM users WHERE id = $1",
       [req.userId]
     );
 
     const plan = userResult.rows[0]?.plan || 'free';
-    const role = userResult.rows[0]?.role || 'user';
 
     let allowedBadges = [...freeBadges];
 
     if (plan === 'pro') {
       allowedBadges = [...allowedBadges, ...proBadges];
-    }
-
-    if (['dev', 'staff', 'founder', 'admin'].includes(role)) {
-      allowedBadges = [...allowedBadges, ...proBadges, ...staffBadges];
     }
 
     const uniqueBadges = Array.isArray(badges)
@@ -329,37 +323,6 @@ app.put('/api/profile/badges', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Badge update error:', error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/profile/:username/guestbook', async (req, res) => {
-  const { username } = req.params;
-
-  try {
-    const userResult = await pool.query(
-      'SELECT id FROM users WHERE username = $1',
-      [username]
-    );
-
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
-
-    const userId = userResult.rows[0].id;
-
-    const guestbookResult = await pool.query(
-      `SELECT id, visitor_name, message, created_at
-       FROM guestbook_entries
-       WHERE profile_user_id = $1
-       ORDER BY created_at DESC
-       LIMIT 30`,
-      [userId]
-    );
-
-    return res.json(guestbookResult.rows);
-  } catch (error) {
-    console.error('Guestbook fetch error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
