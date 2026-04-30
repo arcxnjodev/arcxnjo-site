@@ -870,80 +870,80 @@ export const UserPanel = () => {
             )}
 
             {profileBadges.length > 0 && (
-              <>
-                <style>{`
-                  @keyframes arcxnjoProfileBadgeShine {
-                    0% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
-                    20% { opacity: 0.95; }
-                    100% { transform: translateX(260%) skewX(-20deg); opacity: 0; }
-                  }
+  <>
+    <style>{`
+      @keyframes arcxnjoProfileBadgeShine {
+        0% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
+        20% { opacity: 0.95; }
+        100% { transform: translateX(260%) skewX(-20deg); opacity: 0; }
+      }
 
-                  @keyframes arcxnjoBadgePulse {
-                    0%, 100% {
-                      transform: scale(1);
-                      filter: brightness(1);
-                    }
-                    50% {
-                      transform: scale(1.04);
-                      filter: brightness(1.08);
-                    }
-                  }
-                `}</style>
+      @keyframes arcxnjoBadgePulse {
+        0%, 100% {
+          transform: scale(1);
+          filter: brightness(1);
+        }
+        50% {
+          transform: scale(1.05);
+          filter: brightness(1.08);
+        }
+      }
+    `}</style>
 
-                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  {profileBadges.map((badgeId) => {
-                    const badge = badgeMap[badgeId];
-                    if (!badge) return null;
+    <div className="mt-4 flex flex-wrap justify-center gap-3">
+      {profileBadges.map((badgeId) => {
+        const badge = badgeMap[badgeId];
+        if (!badge) return null;
 
-                    const isOpen = openBadgeId === badgeId;
+        const isOpen = openBadgeId === badgeId;
 
-                    return (
-                      <button
-                        key={badgeId}
-                        type="button"
-                        onClick={() =>
-                          setOpenBadgeId((prev) => (prev === badgeId ? null : badgeId))
-                        }
-                        onBlur={() => {
-                          setTimeout(() => {
-                            setOpenBadgeId((prev) => (prev === badgeId ? null : prev));
-                          }, 120);
-                        }}
-                        className={`group relative overflow-visible inline-flex items-center justify-center w-10 h-10 rounded-full ${badge.className} ${badge.glowClass}`}
-                        title={badge.label}
-                        style={{
-                          animation: "arcxnjoBadgePulse 2.4s ease-in-out infinite",
-                        }}
-                      >
-                        <span
-                          className="absolute inset-y-0 -left-10 w-8 bg-white/40 blur-md"
-                          style={{
-                            transform: "skewX(-20deg)",
-                            animation: "arcxnjoProfileBadgeShine 2.6s linear infinite",
-                          }}
-                        />
+        return (
+          <button
+            key={badgeId}
+            type="button"
+            onClick={() =>
+              setOpenBadgeId((prev) => (prev === badgeId ? null : badgeId))
+            }
+            onBlur={() => {
+              setTimeout(() => {
+                setOpenBadgeId((prev) => (prev === badgeId ? null : prev));
+              }, 120);
+            }}
+            className="group relative overflow-visible inline-flex items-center justify-center bg-transparent p-0"
+            title={badge.label}
+            style={{
+              animation: "arcxnjoBadgePulse 2.4s ease-in-out infinite",
+            }}
+          >
+            <span
+              className="absolute inset-y-0 -left-6 w-6 bg-white/35 blur-md"
+              style={{
+                transform: "skewX(-20deg)",
+                animation: "arcxnjoProfileBadgeShine 2.6s linear infinite",
+              }}
+            />
 
-                        <img
-                          src={badge.image}
-                          alt={badge.label}
-                          className="relative z-10 w-5 h-5 object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.45)]"
-                        />
+            <img
+              src={badge.image}
+              alt={badge.label}
+              className="relative z-10 w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.45)]"
+            />
 
-                        <span
-                          className={`pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black/80 px-2 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 ${
-                            isOpen
-                              ? "opacity-100 translate-y-0"
-                              : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
-                          }`}
-                        >
-                          {badge.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+            <span
+              className={`pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black/80 px-2 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 ${
+                isOpen
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
+              }`}
+            >
+              {badge.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  </>
+)}
 
             {data.profile.bio && (
               <p className={`mt-3 text-sm whitespace-pre-line ${template.bio}`}>
