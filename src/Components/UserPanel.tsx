@@ -105,59 +105,69 @@ const getSocialUrl = (platform: string, url: string) => {
 
 const badgeMap: Record<
   string,
-  { label: string; className: string; image: string }
+  { label: string; className: string; image: string; glowClass: string }
 > = {
   "open-dm": {
     label: "Open DM",
-    className: "bg-gradient-to-r from-emerald-500/80 to-teal-600/80 text-white",
+    className: "bg-gradient-to-r from-emerald-500/85 to-teal-600/85 text-white",
     image: "https://cdn.discordapp.com/emojis/827964533792440421.webp",
+    glowClass: "shadow-[0_0_18px_rgba(16,185,129,0.45),0_0_38px_rgba(13,148,136,0.25)]",
   },
   music: {
     label: "Music",
-    className: "bg-gradient-to-r from-fuchsia-500/80 to-pink-600/80 text-white",
+    className: "bg-gradient-to-r from-fuchsia-500/85 to-pink-600/85 text-white",
     image: "https://cdn.discordapp.com/emojis/847487695227584562.webp",
+    glowClass: "shadow-[0_0_18px_rgba(217,70,239,0.45),0_0_38px_rgba(219,39,119,0.25)]",
   },
   anime: {
     label: "Anime",
-    className: "bg-gradient-to-r from-violet-500/80 to-indigo-600/80 text-white",
+    className: "bg-gradient-to-r from-violet-500/85 to-indigo-600/85 text-white",
     image: "https://cdn.discordapp.com/emojis/705315110004195430.webp",
+    glowClass: "shadow-[0_0_18px_rgba(139,92,246,0.45),0_0_38px_rgba(79,70,229,0.25)]",
   },
 
   verified: {
     label: "Verified",
-    className: "bg-gradient-to-r from-blue-400/90 to-indigo-600/90 text-white",
+    className: "bg-gradient-to-r from-blue-400/95 to-indigo-600/95 text-white",
     image: "https://cdn.discordapp.com/emojis/894156569858703380.webp?size=32&animated=true",
+    glowClass: "shadow-[0_0_18px_rgba(59,130,246,0.55),0_0_40px_rgba(79,70,229,0.3)]",
   },
   premium: {
     label: "Premium",
-    className: "bg-gradient-to-r from-amber-300/90 to-yellow-500/90 text-black",
+    className: "bg-gradient-to-r from-amber-300/95 to-yellow-500/95 text-black",
     image: "https://cdn.discordapp.com/emojis/1083803537785499669.webp",
+    glowClass: "shadow-[0_0_18px_rgba(251,191,36,0.55),0_0_40px_rgba(245,158,11,0.3)]",
   },
   vip: {
     label: "VIP",
-    className: "bg-gradient-to-r from-yellow-300/90 to-orange-500/90 text-black",
+    className: "bg-gradient-to-r from-yellow-300/95 to-orange-500/95 text-black",
     image: "https://cdn.discordapp.com/emojis/1041872676710514748.webp",
+    glowClass: "shadow-[0_0_18px_rgba(253,224,71,0.55),0_0_40px_rgba(249,115,22,0.3)]",
   },
   og: {
     label: "OG",
-    className: "bg-gradient-to-r from-orange-400/90 to-red-500/90 text-white",
+    className: "bg-gradient-to-r from-orange-400/95 to-red-500/95 text-white",
     image: "https://cdn.discordapp.com/emojis/972692703072649336.webp",
+    glowClass: "shadow-[0_0_18px_rgba(251,146,60,0.55),0_0_40px_rgba(239,68,68,0.3)]",
   },
 
   developer: {
     label: "Developer",
-    className: "bg-gradient-to-r from-sky-500/90 to-blue-700/90 text-white",
+    className: "bg-gradient-to-r from-sky-500/95 to-blue-700/95 text-white",
     image: "https://cdn.discordapp.com/emojis/827964533792440421.webp",
+    glowClass: "shadow-[0_0_18px_rgba(14,165,233,0.55),0_0_40px_rgba(29,78,216,0.3)]",
   },
   staff: {
     label: "Staff",
-    className: "bg-gradient-to-r from-cyan-400/90 to-blue-500/90 text-black",
+    className: "bg-gradient-to-r from-cyan-400/95 to-blue-500/95 text-black",
     image: "https://cdn.discordapp.com/emojis/928907588282748948.webp",
+    glowClass: "shadow-[0_0_18px_rgba(34,211,238,0.55),0_0_40px_rgba(59,130,246,0.3)]",
   },
   founder: {
     label: "Founder",
-    className: "bg-gradient-to-r from-pink-400/90 to-rose-500/90 text-white",
+    className: "bg-gradient-to-r from-pink-400/95 to-rose-500/95 text-white",
     image: "https://cdn.discordapp.com/emojis/1257354981384650873.webp",
+    glowClass: "shadow-[0_0_18px_rgba(244,114,182,0.55),0_0_40px_rgba(244,63,94,0.3)]",
   },
 };
 
@@ -388,7 +398,8 @@ export const UserPanel = () => {
   const [entered, setEntered] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
-
+  const [openBadgeId, setOpenBadgeId] = useState<string | null>(null);
+  
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
   const [guestbookIndex, setGuestbookIndex] = useState(0);
   const [guestbookVisible, setGuestbookVisible] = useState(true);
@@ -859,44 +870,80 @@ export const UserPanel = () => {
             )}
 
             {profileBadges.length > 0 && (
-            <>
-              <style>{`
-                @keyframes arcxnjoProfileBadgeShine {
-                  0% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
-                  20% { opacity: 0.95; }
-                  100% { transform: translateX(260%) skewX(-20deg); opacity: 0; }
-                }
-              `}</style>
+              <>
+                <style>{`
+                  @keyframes arcxnjoProfileBadgeShine {
+                    0% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
+                    20% { opacity: 0.95; }
+                    100% { transform: translateX(260%) skewX(-20deg); opacity: 0; }
+                  }
 
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {profileBadges.map((badgeId) => {
-                  const badge = badgeMap[badgeId];
-                  if (!badge) return null;
+                  @keyframes arcxnjoBadgePulse {
+                    0%, 100% {
+                      transform: scale(1);
+                      filter: brightness(1);
+                    }
+                    50% {
+                      transform: scale(1.04);
+                      filter: brightness(1.08);
+                    }
+                  }
+                `}</style>
 
-                  return (
-                    <span
-                      key={badgeId}
-                      className={`relative overflow-hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold shadow-[0_0_14px_rgba(255,255,255,0.12)] ${badge.className}`}
-                    >
-                      <span
-                        className="absolute inset-y-0 -left-10 w-8 bg-white/35 blur-md"
-                        style={{
-                          transform: "skewX(-20deg)",
-                          animation: "arcxnjoProfileBadgeShine 2.8s linear infinite",
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  {profileBadges.map((badgeId) => {
+                    const badge = badgeMap[badgeId];
+                    if (!badge) return null;
+
+                    const isOpen = openBadgeId === badgeId;
+
+                    return (
+                      <button
+                        key={badgeId}
+                        type="button"
+                        onClick={() =>
+                          setOpenBadgeId((prev) => (prev === badgeId ? null : badgeId))
+                        }
+                        onBlur={() => {
+                          setTimeout(() => {
+                            setOpenBadgeId((prev) => (prev === badgeId ? null : prev));
+                          }, 120);
                         }}
-                      />
-                      <img
-                        src={badge.image}
-                        alt={badge.label}
-                        className="relative z-10 w-4 h-4 object-contain"
-                      />
-                      <span className="relative z-10">{badge.label}</span>
-                    </span>
-                  );
-                })}
-              </div>
-            </>
-          )}
+                        className={`group relative overflow-visible inline-flex items-center justify-center w-10 h-10 rounded-full ${badge.className} ${badge.glowClass}`}
+                        title={badge.label}
+                        style={{
+                          animation: "arcxnjoBadgePulse 2.4s ease-in-out infinite",
+                        }}
+                      >
+                        <span
+                          className="absolute inset-y-0 -left-10 w-8 bg-white/40 blur-md"
+                          style={{
+                            transform: "skewX(-20deg)",
+                            animation: "arcxnjoProfileBadgeShine 2.6s linear infinite",
+                          }}
+                        />
+
+                        <img
+                          src={badge.image}
+                          alt={badge.label}
+                          className="relative z-10 w-5 h-5 object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.45)]"
+                        />
+
+                        <span
+                          className={`pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black/80 px-2 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 ${
+                            isOpen
+                              ? "opacity-100 translate-y-0"
+                              : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
+                          }`}
+                        >
+                          {badge.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
             {data.profile.bio && (
               <p className={`mt-3 text-sm whitespace-pre-line ${template.bio}`}>
