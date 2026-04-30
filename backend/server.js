@@ -239,7 +239,15 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/profile/me', authenticateToken, async (req, res) => {
   try {
     const userResult = await pool.query(
-      "SELECT username, COALESCE(plan, 'free') AS plan, COALESCE(role, 'user') AS role FROM users WHERE id = $1",
+      `
+      SELECT
+        username,
+        email,
+        COALESCE(plan, 'free') AS plan,
+        COALESCE(role, 'user') AS role
+      FROM users
+      WHERE id = $1
+      `,
       [req.userId]
     );
 
@@ -259,10 +267,18 @@ app.get('/api/profile/me', authenticateToken, async (req, res) => {
       socialMedia[link.platform] = link.url;
     });
 
+    const user = userResult.rows[0] || {};
+    const ownerBypassEmail = (process.env.OWNER_BYPASS_EMAIL || '').trim().toLowerCase();
+    const isOwnerBypass =
+      ownerBypassEmail &&
+      String(user.email || '').trim().toLowerCase() === ownerBypassEmail;
+
     return res.json({
-      username: userResult.rows[0]?.username || '',
-      plan: userResult.rows[0]?.plan || 'free',
-      role: userResult.rows[0]?.role || 'user',
+      username: user.username || '',
+      email: user.email || '',
+      plan: user.plan || 'free',
+      role: user.role || 'user',
+      owner_bypass: Boolean(isOwnerBypass),
       ...profileResult.rows[0],
       socialMedia,
     });
@@ -277,33 +293,46 @@ app.put('/api/profile/badges', authenticateToken, async (req, res) => {
 
   const freeBadges = ['open-dm', 'music', 'anime'];
   const proBadges = ['verified', 'premium', 'vip', 'og'];
+  const manualBadges = ['developer', 'staff', 'founder'];
 
   try {
     const userResult = await pool.query(
-      "SELECT COALESCE(plan, 'free') AS plan FROM users WHERE id = $1",
+      `
+      SELECT
+        COALESCE(u.plan, 'free') AS plan,
+        u.email,
+        COALESCE(up.profile_badges, '[]'::jsonb) AS profile_badges
+      FROM users u
+      LEFT JOIN user_profiles up ON up.user_id = u.id
+      WHERE u.id = $1
+      `,
       [req.userId]
     );
 
-    const plan = userResult.rows[0]?.plan || 'free';
+    const row = userResult.rows[0] || {};
+    const plan = row.plan || 'free';
+    const email = String(row.email || '').trim().toLowerCase();
+    const currentBadges = Array.isArray(row.profile_badges) ? row.profile_badges : [];
 
-    let allowedBadges = [...freeBadges];
+    const ownerBypassEmail = (process.env.OWNER_BYPASS_EMAIL || '').trim().toLowerCase();
+    const isOwnerBypass = ownerBypassEmail && email === ownerBypassEmail;
+
+    let editableAllowed = [...freeBadges];
 
     if (plan === 'pro') {
-      allowedBadges = [...allowedBadges, ...proBadges];
+      editableAllowed = [...editableAllowed, ...proBadges];
     }
 
-    const uniqueBadges = Array.isArray(badges)
+    if (isOwnerBypass) {
+      editableAllowed = [...freeBadges, ...proBadges, ...manualBadges];
+    }
+
+    const requestedBadges = Array.isArray(badges)
       ? [...new Set(badges.map((badge) => String(badge).trim().toLowerCase()))]
       : [];
 
-    if (uniqueBadges.length > 3) {
-      return res.status(400).json({
-        error: 'You can select a maximum of 3 badges.',
-      });
-    }
-
-    const invalidBadges = uniqueBadges.filter(
-      (badge) => !allowedBadges.includes(badge)
+    const invalidBadges = requestedBadges.filter(
+      (badge) => !editableAllowed.includes(badge)
     );
 
     if (invalidBadges.length > 0) {
@@ -312,14 +341,31 @@ app.put('/api/profile/badges', authenticateToken, async (req, res) => {
       });
     }
 
+    let finalBadges = requestedBadges;
+
+    if (!isOwnerBypass) {
+      const existingManualBadges = currentBadges.filter((badge) =>
+        manualBadges.includes(String(badge).toLowerCase())
+      );
+
+      finalBadges = [...new Set([...existingManualBadges, ...requestedBadges])];
+    }
+
+    if (finalBadges.length > 3) {
+      return res.status(400).json({
+        error: 'You can have a maximum of 3 badges total.',
+      });
+    }
+
     await pool.query(
       'UPDATE user_profiles SET profile_badges = $1::jsonb WHERE user_id = $2',
-      [JSON.stringify(uniqueBadges), req.userId]
+      [JSON.stringify(finalBadges), req.userId]
     );
 
     return res.json({
       message: 'Badges updated successfully!',
-      badges: uniqueBadges,
+      badges: finalBadges,
+      owner_bypass: Boolean(isOwnerBypass),
     });
   } catch (error) {
     console.error('Badge update error:', error);

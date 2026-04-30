@@ -2,7 +2,6 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 
 type UserPlan = "free" | "pro";
-type UserRole = "user" | "dev" | "staff" | "founder" | "admin";
 
 type BadgeDef = {
   id: string;
@@ -80,10 +79,10 @@ export const BadgeSettings = () => {
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
   const [plan, setPlan] = useState<UserPlan>("free");
-  const [role, setRole] = useState<UserRole>("user");
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [ownerBypass, setOwnerBypass] = useState(false);
 
   const allowedBadges = useMemo(() => {
     let allowed = allBadges
@@ -97,8 +96,12 @@ export const BadgeSettings = () => {
       ];
     }
 
+    if (ownerBypass) {
+      allowed = allBadges.map((b) => b.id);
+    }
+
     return [...new Set(allowed)];
-  }, [plan]);
+  }, [plan, ownerBypass]);
 
   useEffect(() => {
     const fetchBadges = async () => {
@@ -110,13 +113,15 @@ export const BadgeSettings = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setPlan((response.data.plan || "free") as UserPlan);
-        setRole((response.data.role || "user") as UserRole);
-        setSelectedBadges(
-          Array.isArray(response.data.profile_badges)
-            ? response.data.profile_badges
-            : []
-        );
+        const currentPlan = (response.data.plan || "free") as UserPlan;
+        const currentBadges = Array.isArray(response.data.profile_badges)
+          ? response.data.profile_badges
+          : [];
+        const currentOwnerBypass = Boolean(response.data.owner_bypass);
+
+        setPlan(currentPlan);
+        setOwnerBypass(currentOwnerBypass);
+        setSelectedBadges(currentBadges);
       } catch (error) {
         console.error("Error fetching badges:", error);
       }
@@ -126,8 +131,7 @@ export const BadgeSettings = () => {
   }, [API_URL]);
 
   const toggleBadge = (badgeId: string) => {
-    const isAllowed = allowedBadges.includes(badgeId);
-    if (!isAllowed) return;
+    if (!allowedBadges.includes(badgeId)) return;
 
     setSelectedBadges((prev) => {
       if (prev.includes(badgeId)) {
@@ -158,9 +162,7 @@ export const BadgeSettings = () => {
       );
 
       setSelectedBadges(
-        Array.isArray(response.data.badges)
-          ? response.data.badges
-          : selectedBadges
+        Array.isArray(response.data.badges) ? response.data.badges : selectedBadges
       );
 
       setMessage("✅ Badges updated successfully!");
@@ -192,8 +194,7 @@ export const BadgeSettings = () => {
       <div className="flex flex-wrap gap-3">
         {badges.map((badge) => {
           const selected = selectedBadges.includes(badge.id);
-          const allowed = allowedBadges.includes(badge.id);
-          const clickable = !locked && allowed;
+          const clickable = !locked && allowedBadges.includes(badge.id);
 
           return (
             <button
@@ -251,7 +252,7 @@ export const BadgeSettings = () => {
           Plan: {plan}
         </span>
         <span className="bg-black/25 text-white px-3 py-1 rounded-full">
-          Role: {role}
+          Bypass: {ownerBypass ? "enabled" : "disabled"}
         </span>
         <span className="bg-black/25 text-white px-3 py-1 rounded-full">
           Selected: {selectedBadges.length}/3
@@ -270,7 +271,7 @@ export const BadgeSettings = () => {
 
       {renderGroup("Free Badges", grouped.free)}
       {renderGroup("Pro Badges", grouped.pro)}
-      {renderGroup("Manual Badges (Neon only)", grouped.manual, true)}
+      {renderGroup("Owner-only / Manual Badges", grouped.manual, !ownerBypass)}
 
       <button
         type="button"
