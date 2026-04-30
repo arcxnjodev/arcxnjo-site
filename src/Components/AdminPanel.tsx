@@ -4,6 +4,7 @@ import { userSliceType } from "../Store/userSlice";
 import { SocialMediaSettings } from "./Ui/SocialMediaSettings";
 import { ProfileImagesSettings } from "./Ui/ProfileImagesSettings";
 import { AppearanceSettings } from "./Ui/AppearanceSettings";
+import { BadgeSettings } from "./Ui/BadgeSettings";
 import { MusicSettings } from "./Ui/MusicSettings";
 import {
   FaUser,
@@ -13,6 +14,7 @@ import {
   FaTachometerAlt,
   FaPalette,
   FaMusic,
+  FaCertificate,
 } from "react-icons/fa";
 import axios from "axios";
 
@@ -197,6 +199,12 @@ export const AdminPanel = () => {
       icon: <FaMusic />,
       component: <MusicSettings />,
     },
+    {
+      id: "badges",
+      label: "Badges",
+      icon: <FaCertificate />,
+      component: <BadgeSettings />,
+    },
   ];
 
   return (
@@ -265,7 +273,7 @@ export const AdminPanel = () => {
                     return;
                   }
 
-                  window.open(`https://www.arcxnjo.com.br/${username}`, "_blank");
+                  window.open(`https://arcxnjo.com.br/${username}`, "_blank");
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition"
               >
@@ -432,7 +440,7 @@ export const AdminPanel = () => {
                   <p className="text-sm">Your public profile is at:</p>
 
                   <code className="text-sm bg-black/30 px-2 py-1 rounded mt-1 inline-block break-all">
-                    https://www.arcxnjo.com.br/{username || "loading"}
+                    https://arcxnjo.com.br/{username || "loading"}
                   </code>
                 </div>
               </div>
@@ -449,6 +457,9 @@ export const AdminPanel = () => {
 
             {activeTab === "music" &&
               tabs.find((t) => t.id === "music")?.component}
+
+            {activeTab === "badges" &&
+              tabs.find((t) => t.id === "badges")?.component}
           </main>
         </div>
       </div>

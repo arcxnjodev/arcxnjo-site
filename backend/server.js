@@ -1,11 +1,8 @@
 const express = require('express');
-const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const path = require('path');
 const { Pool } = require('pg');
-const fs = require('fs');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 
@@ -34,30 +31,12 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu_secret_jwt_2024';
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, 'uploads');
-
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    cb(null, uploadDir);
-  },
-
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
 
 const allowedFileTypes = [
   'image/jpeg',
@@ -81,7 +60,11 @@ const upload = multer({
     if (allowedFileTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Allowed: JPG, PNG, WEBP, GIF, MP4, WEBM.'));
+      cb(
+        new Error(
+          'Invalid file type. Allowed: JPG, PNG, WEBP, GIF, MP4, WEBM, MP3, WAV, OGG.'
+        )
+      );
     }
   },
 });
@@ -118,8 +101,16 @@ app.post('/api/register', async (req, res) => {
     const userId = result.rows[0].id;
 
     await pool.query(
-      `INSERT INTO user_profiles (user_id, profile_image, banner_image, banner_type, theme_color, bio)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO user_profiles (
+        user_id,
+        profile_image,
+        banner_image,
+        banner_type,
+        theme_color,
+        bio,
+        profile_badges
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         userId,
         'https://cdn-icons-png.flaticon.com/512/219/219986.png',
@@ -127,6 +118,7 @@ app.post('/api/register', async (req, res) => {
         'image',
         '#5865F2',
         '',
+        '[]',
       ]
     );
 
@@ -247,7 +239,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/profile/me', authenticateToken, async (req, res) => {
   try {
     const userResult = await pool.query(
-      'SELECT username FROM users WHERE id = $1',
+      "SELECT username, COALESCE(plan, 'free') AS plan, COALESCE(role, 'user') AS role FROM users WHERE id = $1",
       [req.userId]
     );
 
@@ -269,11 +261,74 @@ app.get('/api/profile/me', authenticateToken, async (req, res) => {
 
     return res.json({
       username: userResult.rows[0]?.username || '',
+      plan: userResult.rows[0]?.plan || 'free',
+      role: userResult.rows[0]?.role || 'user',
       ...profileResult.rows[0],
       socialMedia,
     });
   } catch (error) {
     console.error('Profile me error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/profile/badges', authenticateToken, async (req, res) => {
+  const { badges } = req.body;
+
+  const freeBadges = ['gamer', 'music', 'anime', 'open-dm', 'artist', 'developer'];
+  const proBadges = ['premium', 'supporter', 'vip'];
+  const staffBadges = ['dev', 'staff', 'verified', 'founder', 'official'];
+
+  try {
+    const userResult = await pool.query(
+      "SELECT COALESCE(plan, 'free') AS plan, COALESCE(role, 'user') AS role FROM users WHERE id = $1",
+      [req.userId]
+    );
+
+    const plan = userResult.rows[0]?.plan || 'free';
+    const role = userResult.rows[0]?.role || 'user';
+
+    let allowedBadges = [...freeBadges];
+
+    if (plan === 'pro') {
+      allowedBadges = [...allowedBadges, ...proBadges];
+    }
+
+    if (['dev', 'staff', 'founder', 'admin'].includes(role)) {
+      allowedBadges = [...allowedBadges, ...proBadges, ...staffBadges];
+    }
+
+    const uniqueBadges = Array.isArray(badges)
+      ? [...new Set(badges.map((badge) => String(badge).trim().toLowerCase()))]
+      : [];
+
+    if (uniqueBadges.length > 3) {
+      return res.status(400).json({
+        error: 'You can select a maximum of 3 badges.',
+      });
+    }
+
+    const invalidBadges = uniqueBadges.filter(
+      (badge) => !allowedBadges.includes(badge)
+    );
+
+    if (invalidBadges.length > 0) {
+      return res.status(403).json({
+        error: 'You cannot use one or more selected badges.',
+      });
+    }
+
+    await pool.query(
+      'UPDATE user_profiles SET profile_badges = $1::jsonb WHERE user_id = $2',
+      [JSON.stringify(uniqueBadges), req.userId]
+    );
+
+    return res.json({
+      message: 'Badges updated successfully!',
+      badges: uniqueBadges,
+    });
+  } catch (error) {
+    console.error('Badge update error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
@@ -479,7 +534,7 @@ app.put('/api/profile/bio', authenticateToken, async (req, res) => {
 app.put('/api/profile/username', authenticateToken, async (req, res) => {
   const { username } = req.body;
 
-  const cleanUsername = String(username || "")
+  const cleanUsername = String(username || '')
     .trim()
     .toLowerCase();
 
@@ -488,23 +543,23 @@ app.put('/api/profile/username', authenticateToken, async (req, res) => {
   if (!usernameRegex.test(cleanUsername)) {
     return res.status(400).json({
       error:
-        "Username must be 3-20 characters and can only contain letters, numbers, dots, underscores, and hyphens.",
+        'Username must be 3-20 characters and can only contain letters, numbers, dots, underscores, and hyphens.',
     });
   }
 
   try {
     const existingUser = await pool.query(
-      "SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id != $2",
+      'SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id != $2',
       [cleanUsername, req.userId]
     );
 
     if (existingUser.rows.length > 0) {
       return res.status(409).json({
-        error: "Username is already taken.",
+        error: 'Username is already taken.',
       });
     }
 
-    await pool.query("UPDATE users SET username = $1 WHERE id = $2", [
+    await pool.query('UPDATE users SET username = $1 WHERE id = $2', [
       cleanUsername,
       req.userId,
     ]);
@@ -515,16 +570,16 @@ app.put('/api/profile/username', authenticateToken, async (req, res) => {
         username: cleanUsername,
       },
       JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: '7d' }
     );
 
     return res.json({
-      message: "Username updated successfully!",
+      message: 'Username updated successfully!',
       username: cleanUsername,
       token,
     });
   } catch (error) {
-    console.error("Username update error:", error);
+    console.error('Username update error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
@@ -540,13 +595,7 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
     'blue-ice',
   ];
 
-  const allowedEffects = [
-    'none',
-    'stars',
-    'snow',
-    'sparkles',
-    'hearts',
-  ];
+  const allowedEffects = ['none', 'stars', 'snow', 'sparkles', 'hearts'];
 
   if (!allowedTemplates.includes(profileTemplate)) {
     return res.status(400).json({ error: 'Invalid profile template.' });
@@ -613,22 +662,6 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
     return res.json({ message: 'Profile details updated successfully!' });
   } catch (error) {
     console.error('Profile details update error:', error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-app.put('/api/profile/music', authenticateToken, async (req, res) => {
-  const { musicUrl, musicTitle } = req.body;
-
-  try {
-    await pool.query(
-      'UPDATE user_profiles SET music_url = $1, music_title = $2 WHERE user_id = $3',
-      [musicUrl || '', musicTitle || '', req.userId]
-    );
-
-    return res.json({ message: 'Music updated successfully!' });
-  } catch (error) {
-    console.error('Music update error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
