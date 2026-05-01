@@ -414,32 +414,32 @@ export const UserPanel = () => {
   }, [username, API_URL]);
 
   useEffect(() => {
-    if (!data?.profile?.discord_id) return;
+  if (!data?.profile?.discord_id) return;
 
-    const fetchDiscordPresence = async () => {
-      try {
-        const response = await fetch(
-          `https://api.lanyard.rest/v1/users/${data.profile.discord_id}`
-        );
+  const fetchDiscordPresence = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/discord-presence/${data.profile.discord_id}`
+      );
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (result.success) {
-          setDiscordData(result.data);
-        }
-      } catch (error) {
-        console.error("Discord presence error:", error);
+      if (result.success) {
+        setDiscordData(result);
       }
-    };
+    } catch (error) {
+      console.error("Discord presence error:", error);
+    }
+  };
 
-    fetchDiscordPresence();
+  fetchDiscordPresence();
 
-    const interval = window.setInterval(fetchDiscordPresence, 30000);
+  const interval = window.setInterval(fetchDiscordPresence, 30000);
 
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [data?.profile?.discord_id]);
+  return () => {
+    window.clearInterval(interval);
+  };
+}, [data?.profile?.discord_id, API_URL]);;
 
   useEffect(() => {
     const fetchGuestbook = async () => {
