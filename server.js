@@ -759,6 +759,7 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
     };
 
     return res.json({
+      debug_version: 'discord-card-v2',
       success: true,
       monitored: isGuildMember,
       discord_user: discordUser,
