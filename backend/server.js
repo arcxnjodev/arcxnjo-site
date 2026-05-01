@@ -1,5 +1,4 @@
-import axios from 'axios';
-
+const axios = require('axios');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -417,8 +416,10 @@ app.post('/api/profile/:username/guestbook', async (req, res) => {
   }
 });
 
-app.get('/api/auth/discord', (req, res) => {
-  const redirect = `https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&scope=identify`;
+app.get('/api/auth/discord', authenticateToken, (req, res) => {
+  const state = req.userId;
+
+  const redirect = `https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&scope=identify&state=${state}`;
 
   res.redirect(redirect);
 });
@@ -683,10 +684,18 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/auth/discord/callback', authenticateToken, async (req, res) => {
+app.get('/api/auth/discord/callback', async (req, res) => {
   const code = req.query.code;
+  const state = req.query.state;
+
+  if (!code || !state) {
+    return res.status(400).send('Missing code or state');
+  }
 
   try {
+    // state = userId
+    const userId = state;
+
     const tokenResponse = await axios.post(
       'https://discord.com/api/oauth2/token',
       new URLSearchParams({
@@ -718,12 +727,12 @@ app.get('/api/auth/discord/callback', authenticateToken, async (req, res) => {
       `UPDATE user_profiles
        SET discord_id = $1
        WHERE user_id = $2`,
-      [discordUser.id, req.userId]
+      [discordUser.id, userId]
     );
 
     return res.redirect('https://arcxnjo.com.br/dashboard');
   } catch (err) {
-    console.error(err);
+    console.error('Discord OAuth error:', err.response?.data || err.message);
     return res.status(500).send('Discord auth failed');
   }
 });
