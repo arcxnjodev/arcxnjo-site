@@ -6,6 +6,7 @@ const multer = require('multer');
 const { Pool } = require('pg');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
+const { Client, GatewayIntentBits, ActivityType } = require('discord.js');
 
 const app = express();
 
@@ -88,6 +89,150 @@ function authenticateToken(req, res, next) {
   });
 }
 
+/* =========================================================
+   DISCORD BOT PRESENCE SYSTEM
+========================================================= */
+
+const discordPresenceCache = new Map();
+const discordUserCache = new Map();
+
+function normalizeDiscordUser(user) {
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    username: user.username,
+    global_name: user.globalName || user.global_name || user.username,
+    avatar: user.avatar || null,
+  };
+}
+
+function normalizeActivity(activity) {
+  if (!activity) return null;
+
+  return {
+    name: activity.name || '',
+    type: activity.type,
+    details: activity.details || null,
+    state: activity.state || null,
+    created_at: activity.createdTimestamp || null,
+  };
+}
+
+function normalizeSpotify(activity) {
+  if (!activity) return null;
+
+  let albumArtUrl = null;
+
+  try {
+    if (activity.assets && typeof activity.assets.largeImageURL === 'function') {
+      albumArtUrl = activity.assets.largeImageURL({ size: 128 });
+    }
+  } catch {
+    albumArtUrl = null;
+  }
+
+  return {
+    song: activity.details || '',
+    artist: activity.state || '',
+    album: activity.assets?.largeText || '',
+    album_art_url: albumArtUrl,
+  };
+}
+
+function savePresence(presence) {
+  if (!presence?.userId) return;
+
+  const user = presence.user || presence.member?.user;
+
+  if (user) {
+    discordUserCache.set(presence.userId, normalizeDiscordUser(user));
+  }
+
+  const activities = Array.isArray(presence.activities)
+    ? presence.activities
+    : [];
+
+  const spotifyActivity = activities.find(
+    (activity) =>
+      activity.type === ActivityType.Listening &&
+      activity.name?.toLowerCase() === 'spotify'
+  );
+
+  const filteredActivities = activities
+    .filter((activity) => activity.type !== ActivityType.Custom)
+    .filter(
+      (activity) =>
+        !(
+          activity.type === ActivityType.Listening &&
+          activity.name?.toLowerCase() === 'spotify'
+        )
+    )
+    .map(normalizeActivity)
+    .filter(Boolean);
+
+  discordPresenceCache.set(presence.userId, {
+    discord_status: presence.status || 'offline',
+    activities: filteredActivities,
+    spotify: normalizeSpotify(spotifyActivity),
+    updated_at: new Date().toISOString(),
+  });
+}
+
+let discordClient = null;
+
+if (process.env.DISCORD_BOT_TOKEN) {
+  discordClient = new Client({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMembers,
+      GatewayIntentBits.GuildPresences,
+    ],
+  });
+
+  discordClient.once('ready', async () => {
+    console.log(`Discord bot logged in as ${discordClient.user.tag}`);
+
+    try {
+      if (process.env.DISCORD_GUILD_ID) {
+        const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+
+        await guild.members.fetch();
+
+        guild.members.cache.forEach((member) => {
+          if (member?.user) {
+            discordUserCache.set(member.user.id, normalizeDiscordUser(member.user));
+          }
+        });
+
+        guild.presences.cache.forEach((presence) => {
+          savePresence(presence);
+        });
+
+        console.log(`Loaded Discord guild cache for ${guild.name}`);
+      } else {
+        console.warn('DISCORD_GUILD_ID not set. Guild presence cache skipped.');
+      }
+    } catch (error) {
+      console.error('Discord guild cache error:', error.message);
+    }
+  });
+
+  discordClient.on('presenceUpdate', (oldPresence, newPresence) => {
+    savePresence(newPresence);
+  });
+
+  discordClient.login(process.env.DISCORD_BOT_TOKEN).catch((error) => {
+    console.error('Discord bot login error:', error.message);
+  });
+} else {
+  console.warn('DISCORD_BOT_TOKEN not set. Discord presence disabled.');
+}
+
+/* =========================================================
+   AUTH
+========================================================= */
+
 app.post('/api/register', async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -147,48 +292,6 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
-app.post('/api/create-checkout-session', async (req, res) => {
-  const { plan } = req.body;
-
-  const prices = {
-    pro: process.env.STRIPE_PRICE_PRO_ID,
-  };
-
-  const priceId = prices[plan];
-
-  if (!priceId) {
-    return res.status(400).json({
-      error: 'Invalid plan.',
-    });
-  }
-
-  try {
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: `${process.env.FRONTEND_URL || 'https://arcxnjo.com.br'}/success`,
-      cancel_url: `${process.env.FRONTEND_URL || 'https://arcxnjo.com.br'}/cancel`,
-    });
-
-    return res.json({
-      url: session.url,
-    });
-  } catch (error) {
-    console.error('Stripe checkout error:', error);
-
-    return res.status(500).json({
-      error: error.message || 'Failed to create checkout session.',
-    });
-  }
-});
-
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -232,10 +335,66 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-/*
-  IMPORTANT:
-  This route must come before /api/profile/:username.
-*/
+/* =========================================================
+   STRIPE CHECKOUT
+========================================================= */
+
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? require('stripe')(process.env.STRIPE_SECRET_KEY)
+  : null;
+
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { plan } = req.body;
+
+  if (!stripe) {
+    return res.status(500).json({
+      error: 'Stripe is not configured.',
+    });
+  }
+
+  const prices = {
+    pro: process.env.STRIPE_PRICE_PRO_ID,
+  };
+
+  const priceId = prices[plan];
+
+  if (!priceId) {
+    return res.status(400).json({
+      error: 'Invalid plan.',
+    });
+  }
+
+  try {
+    const frontendUrl = process.env.FRONTEND_URL || 'https://arcxnjo.com.br';
+
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${frontendUrl}/success`,
+      cancel_url: `${frontendUrl}/cancel`,
+    });
+
+    return res.json({
+      url: session.url,
+    });
+  } catch (error) {
+    console.error('Stripe checkout error:', error);
+
+    return res.status(500).json({
+      error: error.message || 'Failed to create checkout session.',
+    });
+  }
+});
+
+/* =========================================================
+   PROFILE ME
+========================================================= */
+
 app.get('/api/profile/me', authenticateToken, async (req, res) => {
   try {
     const userResult = await pool.query(
@@ -269,6 +428,7 @@ app.get('/api/profile/me', authenticateToken, async (req, res) => {
 
     const user = userResult.rows[0] || {};
     const profile = profileResult.rows[0] || {};
+
     const ownerBypassEmail = (process.env.OWNER_BYPASS_EMAIL || '')
       .trim()
       .toLowerCase();
@@ -291,6 +451,10 @@ app.get('/api/profile/me', authenticateToken, async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+/* =========================================================
+   BADGES
+========================================================= */
 
 app.put('/api/profile/badges', authenticateToken, async (req, res) => {
   const { badges } = req.body;
@@ -323,6 +487,7 @@ app.put('/api/profile/badges', authenticateToken, async (req, res) => {
     const ownerBypassEmail = (process.env.OWNER_BYPASS_EMAIL || '')
       .trim()
       .toLowerCase();
+
     const isOwnerBypass = ownerBypassEmail && email === ownerBypassEmail;
 
     let editableAllowed = [...freeBadges];
@@ -381,11 +546,10 @@ app.put('/api/profile/badges', authenticateToken, async (req, res) => {
   }
 });
 
-/*
-  Discord OAuth
-  Frontend must redirect to:
-  https://api.arcxnjo.com.br/api/auth/discord?token=JWT_TOKEN
-*/
+/* =========================================================
+   DISCORD OAUTH
+========================================================= */
+
 app.get('/api/auth/discord', async (req, res) => {
   const token = req.query.token;
 
@@ -478,6 +642,15 @@ app.get('/api/auth/discord/callback', async (req, res) => {
       [discordUser.id, userId]
     );
 
+    if (discordClient?.isReady()) {
+      try {
+        const fetchedUser = await discordClient.users.fetch(discordUser.id);
+        discordUserCache.set(discordUser.id, normalizeDiscordUser(fetchedUser));
+      } catch (error) {
+        console.error('Discord user cache after OAuth error:', error.message);
+      }
+    }
+
     const frontendUrl = process.env.FRONTEND_URL || 'https://arcxnjo.com.br';
 
     return res.redirect(`${frontendUrl}/panel?discord=connected`);
@@ -486,6 +659,76 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     return res.status(500).send('Discord auth failed');
   }
 });
+
+/* =========================================================
+   DISCORD PRESENCE ROUTE
+========================================================= */
+
+app.get('/api/discord-presence/:discordId', async (req, res) => {
+  const { discordId } = req.params;
+
+  try {
+    let discordUser = discordUserCache.get(discordId) || null;
+    let isGuildMember = false;
+
+    if (discordClient?.isReady()) {
+      try {
+        const user = await discordClient.users.fetch(discordId);
+        discordUser = normalizeDiscordUser(user);
+        discordUserCache.set(discordId, discordUser);
+      } catch (error) {
+        console.error('Discord user fetch error:', error.message);
+      }
+
+      if (process.env.DISCORD_GUILD_ID) {
+        try {
+          const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+          const member = await guild.members.fetch(discordId);
+          isGuildMember = Boolean(member);
+
+          if (member?.presence) {
+            savePresence(member.presence);
+          }
+
+          if (member?.user) {
+            discordUser = normalizeDiscordUser(member.user);
+            discordUserCache.set(discordId, discordUser);
+          }
+        } catch {
+          isGuildMember = false;
+        }
+      }
+    }
+
+    const presence = discordPresenceCache.get(discordId) || {
+      discord_status: 'offline',
+      activities: [],
+      spotify: null,
+      updated_at: null,
+    };
+
+    return res.json({
+      success: true,
+      monitored: isGuildMember,
+      discord_user: discordUser,
+      discord_status: presence.discord_status,
+      activities: presence.activities,
+      spotify: presence.spotify,
+      updated_at: presence.updated_at,
+    });
+  } catch (error) {
+    console.error('Discord presence route error:', error.message);
+
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to load Discord presence.',
+    });
+  }
+});
+
+/* =========================================================
+   GUESTBOOK
+========================================================= */
 
 app.get('/api/profile/:username/guestbook', async (req, res) => {
   const { username } = req.params;
@@ -560,6 +803,10 @@ app.post('/api/profile/:username/guestbook', async (req, res) => {
   }
 });
 
+/* =========================================================
+   PUBLIC PROFILE
+========================================================= */
+
 app.get('/api/profile/:username', async (req, res) => {
   const { username } = req.params;
 
@@ -612,6 +859,10 @@ app.get('/api/profile/:username', async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+/* =========================================================
+   PROFILE SETTINGS
+========================================================= */
 
 app.put('/api/profile/social-media', authenticateToken, async (req, res) => {
   const { instagram, x, youtube, twitch, kick, discord, linkedIn } = req.body;
@@ -816,6 +1067,10 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+/* =========================================================
+   UPLOAD
+========================================================= */
 
 app.post('/api/upload', authenticateToken, upload.single('file'), async (req, res) => {
   try {
