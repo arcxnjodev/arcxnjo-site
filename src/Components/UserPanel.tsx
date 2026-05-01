@@ -2,6 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import type { IconType } from "react-icons";
 import {
+  FaBolt,
+  FaRocket,
+  FaTag,
+  FaGem,
   FaDiscord,
   FaGlobe,
   FaInstagram,
@@ -655,9 +659,19 @@ export const UserPanel = () => {
       (activity: any) => activity.type !== 4 && activity.name !== "Spotify"
     ) || null;
 
-    const discordNitro = Boolean(discordData?.has_nitro);
-    const discordBooster = Boolean(discordData?.is_server_booster);
-    const discordServerTag = discordData?.server_tag || null;
+    const hasNitro = Boolean(discordData?.nitro);
+    const hasServerBoost = Boolean(discordData?.server_boosted);
+    const serverRole = discordData?.server_role || null;
+    const primaryGuild = discordData?.primary_guild || null;
+
+    const nitroLabel =
+      discordData?.premium_type === 1
+        ? "Nitro Classic"
+        : discordData?.premium_type === 2
+        ? "Nitro"
+        : discordData?.premium_type === 3
+        ? "Nitro Basic"
+        : "Nitro";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
@@ -958,8 +972,8 @@ export const UserPanel = () => {
             )}
 
             {discordData && discordUser && (
-  <div className="mt-5 rounded-[28px] border border-white/10 bg-black/25 backdrop-blur-xl p-4 text-left shadow-[0_10px_40px_rgba(0,0,0,0.30)]">
-    <div className="flex items-start gap-3">
+  <div className={`mt-5 rounded-2xl p-4 text-left ${template.infoCard}`}>
+    <div className="flex items-center gap-3">
       <div className="relative shrink-0">
         <img
           src={discordAvatar}
@@ -973,62 +987,68 @@ export const UserPanel = () => {
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-[15px] font-semibold text-white truncate">
+        <div className="flex items-center gap-2">
+          <FaDiscord className={`text-sm ${template.infoIcon}`} />
+
+          <p className="text-base font-semibold text-white truncate">
             {discordDisplayName}
           </p>
-
-          <FaDiscord className="text-[#5865F2] text-sm shrink-0" />
         </div>
 
-        <p className="text-xs text-white/55 truncate mt-0.5">
+        <p className="text-xs text-white/55 truncate">
           @{discordUser.username}
         </p>
 
-        {(discordNitro || discordBooster || discordServerTag) && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {discordNitro && (
-              <span className="inline-flex items-center rounded-full bg-gradient-to-r from-indigo-500/30 to-fuchsia-500/30 border border-indigo-300/20 px-2.5 py-1 text-[11px] font-semibold text-indigo-100">
-                Nitro
-              </span>
-            )}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {hasNitro && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#5865F2]/25 px-2.5 py-1 text-[11px] font-semibold text-[#d7dcff] shadow-[0_0_12px_rgba(88,101,242,0.18)]">
+              <FaGem className="text-[10px]" />
+              {nitroLabel}
+            </span>
+          )}
 
-            {discordBooster && (
-              <span className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500/30 to-purple-500/30 border border-pink-300/20 px-2.5 py-1 text-[11px] font-semibold text-pink-100">
-                Booster
-              </span>
-            )}
+          {hasServerBoost && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-pink-500/20 px-2.5 py-1 text-[11px] font-semibold text-pink-200 shadow-[0_0_12px_rgba(236,72,153,0.18)]">
+              <FaRocket className="text-[10px]" />
+              Boost
+            </span>
+          )}
 
-            {discordServerTag && (
-              <span
-                className="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold text-white"
-                style={{
-                  backgroundColor: `${discordServerTag.color}22`,
-                  borderColor: `${discordServerTag.color}66`,
-                }}
-              >
-                {discordServerTag.name}
-              </span>
-            )}
-          </div>
-        )}
+          {primaryGuild?.identity_enabled && primaryGuild?.tag && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white">
+              <FaTag className="text-[10px]" />
+              {primaryGuild.tag}
+            </span>
+          )}
+
+          {serverRole && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
+              style={{
+                backgroundColor: `${serverRole.color}33`,
+                boxShadow: `0 0 12px ${serverRole.color}22`,
+              }}
+            >
+              <FaBolt className="text-[10px]" />
+              {serverRole.name}
+            </span>
+          )}
+        </div>
       </div>
     </div>
 
     {discordData.spotify ? (
-      <div className="mt-4 rounded-2xl bg-white/5 border border-white/5 p-3 flex items-center gap-3">
+      <div className="mt-4 rounded-xl bg-black/20 p-3 flex items-center gap-3">
         {discordData.spotify.album_art_url && (
           <img
             src={discordData.spotify.album_art_url}
             alt={discordData.spotify.song}
-            className="w-11 h-11 rounded-xl object-cover"
+            className="w-11 h-11 rounded-lg object-cover"
           />
         )}
 
         <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-wide text-green-300/80">
-            Listening to Spotify
-          </p>
+          <p className="text-xs text-white/50">Listening to Spotify</p>
 
           <p className="mt-1 text-sm font-semibold text-white truncate">
             {discordData.spotify.song}
@@ -1040,26 +1060,22 @@ export const UserPanel = () => {
         </div>
       </div>
     ) : activeDiscordActivity ? (
-      <div className="mt-4 rounded-2xl bg-white/5 border border-white/5 p-3">
-        <p className="text-[11px] uppercase tracking-wide text-white/45">
-          Current Activity
-        </p>
+      <div className="mt-4 rounded-xl bg-black/20 p-3">
+        <p className="text-xs text-white/50">Activity</p>
 
         <p className="mt-1 text-sm font-semibold text-white truncate">
           {activeDiscordActivity.name}
         </p>
 
         {(activeDiscordActivity.details || activeDiscordActivity.state) && (
-          <p className="text-xs text-white/60 truncate mt-1">
+          <p className="text-xs text-white/60 truncate">
             {activeDiscordActivity.details || activeDiscordActivity.state}
           </p>
         )}
       </div>
     ) : (
-      <div className="mt-4 rounded-2xl bg-white/5 border border-white/5 p-3">
-        <p className="text-xs text-white/60">
-          No activity right now
-        </p>
+      <div className="mt-4 rounded-xl bg-black/20 p-3">
+        <p className="text-xs text-white/60">Online on Discord</p>
       </div>
     )}
   </div>
