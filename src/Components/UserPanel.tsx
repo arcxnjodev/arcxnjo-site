@@ -16,8 +16,6 @@ import {
   FaVolumeMute,
   FaDownload,
   FaMusic,
-  FaMapMarkerAlt,
-  FaCircle,
   FaBookOpen,
   FaPaperPlane,
 } from "react-icons/fa";
@@ -48,6 +46,7 @@ type ProfileData = {
     music_title?: string;
     location?: string;
     status_text?: string;
+    discord_id?: string;
   };
   socialMedia: Record<string, string>;
   stats: {
@@ -103,10 +102,7 @@ const getSocialUrl = (platform: string, url: string) => {
   }
 };
 
-const badgeMap: Record<
-  string,
-  { label: string; image: string }
-> = {
+const badgeMap: Record<string, { label: string; image: string }> = {
   "open-dm": {
     label: "Open DM",
     image: "https://cdn.discordapp.com/emojis/827964533792440421.webp",
@@ -119,10 +115,10 @@ const badgeMap: Record<
     label: "Anime",
     image: "https://cdn.discordapp.com/emojis/705315110004195430.webp",
   },
-
   verified: {
     label: "Verified",
-    image: "https://cdn.discordapp.com/emojis/894156569858703380.webp?size=32&animated=true",
+    image:
+      "https://cdn.discordapp.com/emojis/894156569858703380.webp?size=32&animated=true",
   },
   premium: {
     label: "Premium",
@@ -136,7 +132,6 @@ const badgeMap: Record<
     label: "OG",
     image: "https://cdn.discordapp.com/emojis/972692703072649336.webp",
   },
-
   developer: {
     label: "Developer",
     image: "https://emoji.gg/emoji/95693-developer.png",
@@ -378,8 +373,10 @@ export const UserPanel = () => {
   const [entered, setEntered] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
+
+  const [discordData, setDiscordData] = useState<any>(null);
   const [openBadgeId, setOpenBadgeId] = useState<string | null>(null);
-  
+
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
   const [guestbookIndex, setGuestbookIndex] = useState(0);
   const [guestbookVisible, setGuestbookVisible] = useState(true);
@@ -415,6 +412,34 @@ export const UserPanel = () => {
       fetchProfile();
     }
   }, [username, API_URL]);
+
+  useEffect(() => {
+    if (!data?.profile?.discord_id) return;
+
+    const fetchDiscordPresence = async () => {
+      try {
+        const response = await fetch(
+          `https://api.lanyard.rest/v1/users/${data.profile.discord_id}`
+        );
+
+        const result = await response.json();
+
+        if (result.success) {
+          setDiscordData(result.data);
+        }
+      } catch (error) {
+        console.error("Discord presence error:", error);
+      }
+    };
+
+    fetchDiscordPresence();
+
+    const interval = window.setInterval(fetchDiscordPresence, 30000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [data?.profile?.discord_id]);
 
   useEffect(() => {
     const fetchGuestbook = async () => {
@@ -517,6 +542,7 @@ export const UserPanel = () => {
 
   const formatMusicFileName = useMemo(() => {
     if (!data?.profile.music_title?.trim()) return "profile-audio";
+
     return data.profile.music_title
       .trim()
       .toLowerCase()
@@ -599,12 +625,35 @@ export const UserPanel = () => {
     ] || profileTemplates["neon-purple"];
 
   const displayName = data.profile.display_name?.trim();
-  const hasLocation = Boolean(data.profile.location?.trim());
-  const hasStatus = Boolean(data.profile.status_text?.trim());
   const profileEffect = (data.profile.profile_effect || "none") as ProfileEffect;
   const profileBadges = Array.isArray(data.profile.profile_badges)
     ? data.profile.profile_badges
     : [];
+
+  const discordUser = discordData?.discord_user;
+
+  const discordAvatar = discordUser?.avatar
+    ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.${
+        discordUser.avatar.startsWith("a_") ? "gif" : "png"
+      }?size=128`
+    : "https://cdn.discordapp.com/embed/avatars/0.png";
+
+  const discordDisplayName =
+    discordUser?.global_name || discordUser?.username || "Discord User";
+
+  const discordStatusClass =
+    discordData?.discord_status === "online"
+      ? "bg-green-400"
+      : discordData?.discord_status === "idle"
+      ? "bg-yellow-400"
+      : discordData?.discord_status === "dnd"
+      ? "bg-red-500"
+      : "bg-gray-400";
+
+  const activeDiscordActivity =
+    discordData?.activities?.find(
+      (activity: any) => activity.type !== 4 && activity.name !== "Spotify"
+    ) || null;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
@@ -850,63 +899,53 @@ export const UserPanel = () => {
             )}
 
             {profileBadges.length > 0 && (
-  <>
-    <style>{`
-      @keyframes badgeGlow {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.06); }
-      }
-    `}</style>
+              <div className="mt-4 flex flex-wrap justify-center gap-3">
+                {profileBadges.map((badgeId) => {
+                  const badge = badgeMap[badgeId];
+                  if (!badge) return null;
 
-    <div className="mt-4 flex flex-wrap justify-center gap-3">
-      {profileBadges.map((badgeId) => {
-        const badge = badgeMap[badgeId];
-        if (!badge) return null;
+                  const isOpen = openBadgeId === badgeId;
 
-        const isOpen = openBadgeId === badgeId;
+                  return (
+                    <button
+                      key={badgeId}
+                      type="button"
+                      onClick={() =>
+                        setOpenBadgeId((prev) =>
+                          prev === badgeId ? null : badgeId
+                        )
+                      }
+                      onBlur={() => {
+                        setTimeout(() => {
+                          setOpenBadgeId((prev) =>
+                            prev === badgeId ? null : prev
+                          );
+                        }, 120);
+                      }}
+                      className="group relative flex items-center justify-center w-12 h-12 rounded-full bg-white/10 backdrop-blur-md"
+                      title={badge.label}
+                    >
+                      <img
+                        src={badge.image}
+                        alt={badge.label}
+                        className="w-7 h-7 object-contain"
+                        draggable={false}
+                      />
 
-        return (
-          <button
-            key={badgeId}
-            type="button"
-            onClick={() =>
-              setOpenBadgeId((prev) => (prev === badgeId ? null : badgeId))
-            }
-            onBlur={() => {
-              setTimeout(() => {
-                setOpenBadgeId((prev) =>
-                  prev === badgeId ? null : prev
-                );
-              }, 120);
-            }}
-            className="group relative flex items-center justify-center w-12 h-12 rounded-full bg-white/10 backdrop-blur-md"
-            title={badge.label}
-            style={{
-              animation: "badgeGlow 2.5s ease-in-out infinite",
-            }}
-          >
-            <img
-              src={badge.image}
-              alt={badge.label}
-              className="w-7 h-7 object-contain"
-              draggable={false}
-            />
-
-            <span
-              className={`pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black/80 px-2 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 ${
-                isOpen
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
-              }`}
-            >
-              {badge.label}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  </>
-)}
+                      <span
+                        className={`pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black/80 px-2 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 ${
+                          isOpen
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
+                        }`}
+                      >
+                        {badge.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {data.profile.bio && (
               <p className={`mt-3 text-sm whitespace-pre-line ${template.bio}`}>
@@ -914,27 +953,82 @@ export const UserPanel = () => {
               </p>
             )}
 
-            {(hasLocation || hasStatus) && (
+            {discordData && discordUser && (
               <div className={`mt-5 rounded-2xl p-4 text-left ${template.infoCard}`}>
-                <div className="space-y-3">
-                  {hasLocation && (
-                    <div className="flex items-center gap-3">
-                      <FaMapMarkerAlt className={`text-sm ${template.infoIcon}`} />
-                      <span className="text-sm text-white/90">
-                        {data.profile.location}
-                      </span>
-                    </div>
-                  )}
+                <div className="flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <img
+                      src={discordAvatar}
+                      alt={discordDisplayName}
+                      className="w-12 h-12 rounded-full object-cover bg-black"
+                    />
 
-                  {hasStatus && (
-                    <div className="flex items-start gap-3">
-                      <FaCircle className={`text-[10px] mt-1.5 ${template.infoIcon}`} />
-                      <span className="text-sm text-white/90">
-                        {data.profile.status_text}
-                      </span>
+                    <span
+                      className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-black ${discordStatusClass}`}
+                    />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <FaDiscord className={`text-sm ${template.infoIcon}`} />
+
+                      <p className="text-sm font-semibold text-white truncate">
+                        {discordDisplayName}
+                      </p>
                     </div>
-                  )}
+
+                    <p className="text-xs text-white/55 truncate">
+                      @{discordUser.username}
+                    </p>
+                  </div>
                 </div>
+
+                {discordData.spotify ? (
+                  <div className="mt-4 rounded-xl bg-black/20 p-3 flex items-center gap-3">
+                    {discordData.spotify.album_art_url && (
+                      <img
+                        src={discordData.spotify.album_art_url}
+                        alt={discordData.spotify.song}
+                        className="w-10 h-10 rounded-lg object-cover"
+                      />
+                    )}
+
+                    <div className="min-w-0">
+                      <p className="text-xs text-white/50">
+                        Listening to Spotify
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-white truncate">
+                        {discordData.spotify.song}
+                      </p>
+
+                      <p className="text-xs text-white/60 truncate">
+                        {discordData.spotify.artist}
+                      </p>
+                    </div>
+                  </div>
+                ) : activeDiscordActivity ? (
+                  <div className="mt-4 rounded-xl bg-black/20 p-3">
+                    <p className="text-xs text-white/50">Activity</p>
+
+                    <p className="mt-1 text-sm font-semibold text-white truncate">
+                      {activeDiscordActivity.name}
+                    </p>
+
+                    {(activeDiscordActivity.details || activeDiscordActivity.state) && (
+                      <p className="text-xs text-white/60 truncate">
+                        {activeDiscordActivity.details ||
+                          activeDiscordActivity.state}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-xl bg-black/20 p-3">
+                    <p className="text-xs text-white/60">
+                      No activity right now
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

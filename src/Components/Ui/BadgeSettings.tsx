@@ -31,7 +31,6 @@ const allBadges: BadgeDef[] = [
     group: "free",
     image: "https://cdn.discordapp.com/emojis/705315110004195430.webp",
   },
-
   {
     id: "verified",
     label: "Verified",
@@ -57,7 +56,6 @@ const allBadges: BadgeDef[] = [
     group: "pro",
     image: "https://cdn.discordapp.com/emojis/972692703072649336.webp",
   },
-
   {
     id: "developer",
     label: "Developer",
@@ -113,10 +111,7 @@ export const BadgeSettings = () => {
     const fetchBadges = async () => {
       try {
         const token = localStorage.getItem("token");
-
-        if (!token) {
-          return;
-        }
+        if (!token) return;
 
         const response = await axios.get(`${API_URL}/api/profile/me`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -163,9 +158,7 @@ export const BadgeSettings = () => {
   const totalSelected = selectedBadges.length + lockedBadges.length;
 
   const toggleBadge = (badgeId: string) => {
-    if (!allowedBadges.includes(badgeId)) {
-      return;
-    }
+    if (!allowedBadges.includes(badgeId)) return;
 
     setSelectedBadges((prev) => {
       if (prev.includes(badgeId)) {
@@ -173,6 +166,8 @@ export const BadgeSettings = () => {
       }
 
       if (prev.length + lockedBadges.length >= 3) {
+        setMessage("❌ You can select a maximum of 3 badges.");
+        setTimeout(() => setMessage(""), 2500);
         return prev;
       }
 
