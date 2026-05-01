@@ -198,39 +198,31 @@ export const BadgeSettings = () => {
 
           return (
             <button
-              key={badge.id}
-              type="button"
-              onClick={() => clickable && toggleBadge(badge.id)}
-              className={`relative overflow-hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition ${
+            key={badge.id}
+            type="button"
+            onClick={() => clickable && toggleBadge(badge.id)}
+            className={`relative overflow-hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition ${
                 selected
-                  ? "bg-gradient-to-r from-white/25 to-white/10 text-white shadow-[0_0_18px_rgba(255,255,255,0.18)] scale-[1.03]"
-                  : clickable
-                  ? "bg-white/10 text-white hover:bg-white/20"
-                  : "bg-white/5 text-white/35 cursor-not-allowed"
-              }`}
+                ? "bg-gradient-to-r from-white/25 to-white/10 text-white shadow-[0_0_18px_rgba(255,255,255,0.18)] scale-[1.03]"
+                : clickable
+                ? "bg-white/10 text-white hover:bg-white/20"
+                : "bg-white/5 text-white/35 cursor-not-allowed"
+            }`}
             >
-              {selected && (
-                <span
-                  className="absolute inset-y-0 -left-10 w-10 bg-white/30 blur-md"
-                  style={{
-                    transform: "skewX(-20deg)",
-                    animation: "arcxnjoBadgeShine 2.8s linear infinite",
-                  }}
-                />
-              )}
-
-              <img
+            <img
                 src={badge.image}
                 alt={badge.label}
                 className="relative z-10 w-5 h-5 object-contain"
-              />
-              <span className="relative z-10">{badge.label}</span>
+                style={{ filter: "brightness(0) saturate(100%)" }}
+            />
+
+            <span className="relative z-10">{badge.label}</span>
             </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+                    );
+                    })}
+                </div>
+                </div>
+            );
 
   return (
     <div className="bg-purple-700 p-10 rounded-lg m-5">
