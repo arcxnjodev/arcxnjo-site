@@ -637,9 +637,20 @@ app.get('/api/auth/discord/callback', async (req, res) => {
 
     await pool.query(
       `UPDATE user_profiles
-       SET discord_id = $1
-       WHERE user_id = $2`,
-      [discordUser.id, userId]
+       SET discord_id = $1,
+           discord_username = $2,
+           discord_global_name = $3,
+           discord_avatar = $4,
+           discord_premium_type = $5
+       WHERE user_id = $6`,
+      [
+        discordUser.id,
+        discordUser.username || '',
+        discordUser.global_name || '',
+        discordUser.avatar || '',
+        Number(discordUser.premium_type || 0),
+        userId,
+      ]
     );
 
     if (discordClient?.isReady()) {
@@ -668,8 +679,24 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
   const { discordId } = req.params;
 
   try {
+    const storedProfileResult = await pool.query(
+      `SELECT
+         discord_username,
+         discord_global_name,
+         discord_avatar,
+         COALESCE(discord_premium_type, 0) AS discord_premium_type
+       FROM user_profiles
+       WHERE discord_id = $1
+       LIMIT 1`,
+      [discordId]
+    );
+
+    const storedProfile = storedProfileResult.rows[0] || {};
+
     let discordUser = discordUserCache.get(discordId) || null;
     let isGuildMember = false;
+    let isServerBooster = false;
+    let serverTag = null;
 
     if (discordClient?.isReady()) {
       try {
@@ -684,6 +711,7 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
         try {
           const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
           const member = await guild.members.fetch(discordId);
+
           isGuildMember = Boolean(member);
 
           if (member?.presence) {
@@ -694,11 +722,53 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
             discordUser = normalizeDiscordUser(member.user);
             discordUserCache.set(discordId, discordUser);
           }
+
+          isServerBooster = Boolean(member.premiumSince);
+
+          const topRole = member.roles.cache
+            .filter((role) => role.id !== guild.id && !role.managed)
+            .sort((a, b) => b.position - a.position)
+            .first();
+
+          if (topRole) {
+            serverTag = {
+              id: topRole.id,
+              name: topRole.name,
+              color:
+                topRole.hexColor && topRole.hexColor !== '#000000'
+                  ? topRole.hexColor
+                  : '#99aab5',
+            };
+          }
         } catch {
           isGuildMember = false;
         }
       }
     }
+
+    const fallbackUser = {
+      id: discordId,
+      username:
+        discordUser?.username ||
+        storedProfile.discord_username ||
+        'unknown',
+      global_name:
+        discordUser?.global_name ||
+        storedProfile.discord_global_name ||
+        storedProfile.discord_username ||
+        'Discord User',
+      avatar:
+        discordUser?.avatar ||
+        storedProfile.discord_avatar ||
+        null,
+    };
+
+    const hasAnimatedAvatar = Boolean(
+      fallbackUser.avatar && String(fallbackUser.avatar).startsWith('a_')
+    );
+
+    const hasNitro =
+      Number(storedProfile.discord_premium_type || 0) > 0 || hasAnimatedAvatar;
 
     const presence = discordPresenceCache.get(discordId) || {
       discord_status: 'offline',
@@ -710,11 +780,14 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
     return res.json({
       success: true,
       monitored: isGuildMember,
-      discord_user: discordUser,
+      discord_user: fallbackUser,
       discord_status: presence.discord_status,
       activities: presence.activities,
       spotify: presence.spotify,
       updated_at: presence.updated_at,
+      has_nitro: hasNitro,
+      is_server_booster: isServerBooster,
+      server_tag: serverTag,
     });
   } catch (error) {
     console.error('Discord presence route error:', error.message);
