@@ -223,6 +223,33 @@ export const BadgeSettings = () => {
                 </div>
                 </div>
             );
+      
+            <div className="mt-6 flex flex-col items-center gap-3">
+
+  <button
+    onClick={() => {
+      window.location.href = "https://api.arcxnjo.com.br/api/auth/discord";
+    }}
+    className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] transition px-5 py-2.5 rounded-xl text-white font-semibold shadow-md"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path d="M20.317 4.369A19.791 19.791 0 0 0 16.885 3c-.161.287-.343.671-.471.973a18.27 18.27 0 0 0-5.828 0 10.8 10.8 0 0 0-.48-.973 19.736 19.736 0 0 0-3.432 1.37C2.533 9.045 1.555 13.58 2.013 18.057a19.9 19.9 0 0 0 5.993 3.02c.486-.66.92-1.356 1.296-2.082-.713-.27-1.39-.605-2.033-.998.17-.123.338-.25.5-.381a13.913 13.913 0 0 0 11.464 0c.163.131.33.258.5.381-.644.393-1.32.728-2.034.998.377.726.81 1.422 1.297 2.082a19.89 19.89 0 0 0 5.993-3.02c.54-5.177-.9-9.674-3.683-13.688zM9.545 15.735c-1.18 0-2.145-1.085-2.145-2.419 0-1.333.945-2.419 2.145-2.419 1.2 0 2.164 1.096 2.145 2.419 0 1.334-.945 2.419-2.145 2.419zm4.91 0c-1.18 0-2.145-1.085-2.145-2.419 0-1.333.945-2.419 2.145-2.419 1.2 0 2.164 1.096 2.145 2.419 0 1.334-.945 2.419-2.145 2.419z"/>
+    </svg>
+
+    Connect Discord
+  </button>
+
+  <p className="text-xs text-white/60 text-center max-w-[220px]">
+    Connect your Discord to show your status on your profile
+  </p>
+
+</div>
 
   return (
     <div className="bg-purple-700 p-10 rounded-lg m-5">

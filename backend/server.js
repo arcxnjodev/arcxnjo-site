@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -415,6 +417,12 @@ app.post('/api/profile/:username/guestbook', async (req, res) => {
   }
 });
 
+app.get('/api/auth/discord', (req, res) => {
+  const redirect = `https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&scope=identify`;
+
+  res.redirect(redirect);
+});
+
 app.get('/api/profile/:username', async (req, res) => {
   const { username } = req.params;
 
@@ -672,6 +680,51 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Profile details update error:', error);
     return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/auth/discord/callback', authenticateToken, async (req, res) => {
+  const code = req.query.code;
+
+  try {
+    const tokenResponse = await axios.post(
+      'https://discord.com/api/oauth2/token',
+      new URLSearchParams({
+        client_id: process.env.DISCORD_CLIENT_ID,
+        client_secret: process.env.DISCORD_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: process.env.DISCORD_REDIRECT_URI,
+      }),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    const userResponse = await axios.get(
+      'https://discord.com/api/users/@me',
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    const discordUser = userResponse.data;
+
+    await pool.query(
+      `UPDATE user_profiles
+       SET discord_id = $1
+       WHERE user_id = $2`,
+      [discordUser.id, req.userId]
+    );
+
+    return res.redirect('https://arcxnjo.com.br/dashboard');
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send('Discord auth failed');
   }
 });
 
