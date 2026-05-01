@@ -480,7 +480,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
 
     const frontendUrl = process.env.FRONTEND_URL || 'https://arcxnjo.com.br';
 
-    return res.redirect(`${frontendUrl}/dashboard`);
+    return res.redirect(`${frontendUrl}/panel?discord=connected`);
   } catch (err) {
     console.error('Discord OAuth error:', err.response?.data || err.message);
     return res.status(500).send('Discord auth failed');
