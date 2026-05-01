@@ -850,51 +850,62 @@ export const UserPanel = () => {
             )}
 
             {profileBadges.length > 0 && (
-  <div className="mt-4 flex flex-wrap justify-center gap-2">
-    {profileBadges.map((badgeId) => {
-      const badge = badgeMap[badgeId];
-      if (!badge) return null;
+  <>
+    <style>{`
+      @keyframes badgeGlow {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.06); }
+      }
+    `}</style>
 
-      const isOpen = openBadgeId === badgeId;
+    <div className="mt-4 flex flex-wrap justify-center gap-3">
+      {profileBadges.map((badgeId) => {
+        const badge = badgeMap[badgeId];
+        if (!badge) return null;
 
-      return (
-        <button
-          key={badgeId}
-          type="button"
-          onClick={() =>
-            setOpenBadgeId((prev) => (prev === badgeId ? null : badgeId))
-          }
-          onBlur={() => {
-            setTimeout(() => {
-              setOpenBadgeId((prev) =>
-                prev === badgeId ? null : prev
-              );
-            }, 120);
-          }}
-          className="group relative inline-flex items-center justify-center bg-transparent border-0 p-0 shadow-none outline-none"
-          title={badge.label}
-        >
-          <img
-            src={badge.image}
-            alt={badge.label}
-            className="w-6 h-6 object-contain bg-transparent"
-            style={{ filter: "brightness(0) saturate(100%)" }}
-            draggable={false}
-          />
+        const isOpen = openBadgeId === badgeId;
 
-          <span
-            className={`pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black/80 px-2 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 ${
-              isOpen
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
-            }`}
+        return (
+          <button
+            key={badgeId}
+            type="button"
+            onClick={() =>
+              setOpenBadgeId((prev) => (prev === badgeId ? null : badgeId))
+            }
+            onBlur={() => {
+              setTimeout(() => {
+                setOpenBadgeId((prev) =>
+                  prev === badgeId ? null : prev
+                );
+              }, 120);
+            }}
+            className="group relative flex items-center justify-center w-12 h-12 rounded-full bg-white/10 backdrop-blur-md"
+            title={badge.label}
+            style={{
+              animation: "badgeGlow 2.5s ease-in-out infinite",
+            }}
           >
-            {badge.label}
-          </span>
-        </button>
-      );
-    })}
-  </div>
+            <img
+              src={badge.image}
+              alt={badge.label}
+              className="w-7 h-7 object-contain"
+              draggable={false}
+            />
+
+            <span
+              className={`pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black/80 px-2 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 ${
+                isOpen
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
+              }`}
+            >
+              {badge.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  </>
 )}
 
             {data.profile.bio && (
