@@ -111,7 +111,7 @@ app.post('/api/register', async (req, res) => {
         bio,
         profile_badges
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
       [
         userId,
         'https://cdn-icons-png.flaticon.com/512/219/219986.png',
@@ -173,8 +173,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.FRONTEND_URL}/success`,
-      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
+      success_url: `${process.env.FRONTEND_URL || 'https://arcxnjo.com.br'}/success`,
+      cancel_url: `${process.env.FRONTEND_URL || 'https://arcxnjo.com.br'}/cancel`,
     });
 
     return res.json({
@@ -235,7 +235,6 @@ app.post('/api/login', async (req, res) => {
 /*
   IMPORTANT:
   This route must come before /api/profile/:username.
-  Otherwise Express treats "me" as a public username.
 */
 app.get('/api/profile/me', authenticateToken, async (req, res) => {
   try {
@@ -269,7 +268,11 @@ app.get('/api/profile/me', authenticateToken, async (req, res) => {
     });
 
     const user = userResult.rows[0] || {};
-    const ownerBypassEmail = (process.env.OWNER_BYPASS_EMAIL || '').trim().toLowerCase();
+    const profile = profileResult.rows[0] || {};
+    const ownerBypassEmail = (process.env.OWNER_BYPASS_EMAIL || '')
+      .trim()
+      .toLowerCase();
+
     const isOwnerBypass =
       ownerBypassEmail &&
       String(user.email || '').trim().toLowerCase() === ownerBypassEmail;
@@ -280,7 +283,7 @@ app.get('/api/profile/me', authenticateToken, async (req, res) => {
       plan: user.plan || 'free',
       role: user.role || 'user',
       owner_bypass: Boolean(isOwnerBypass),
-      ...profileResult.rows[0],
+      ...profile,
       socialMedia,
     });
   } catch (error) {
@@ -313,9 +316,13 @@ app.put('/api/profile/badges', authenticateToken, async (req, res) => {
     const row = userResult.rows[0] || {};
     const plan = row.plan || 'free';
     const email = String(row.email || '').trim().toLowerCase();
-    const currentBadges = Array.isArray(row.profile_badges) ? row.profile_badges : [];
+    const currentBadges = Array.isArray(row.profile_badges)
+      ? row.profile_badges
+      : [];
 
-    const ownerBypassEmail = (process.env.OWNER_BYPASS_EMAIL || '').trim().toLowerCase();
+    const ownerBypassEmail = (process.env.OWNER_BYPASS_EMAIL || '')
+      .trim()
+      .toLowerCase();
     const isOwnerBypass = ownerBypassEmail && email === ownerBypassEmail;
 
     let editableAllowed = [...freeBadges];
@@ -374,6 +381,143 @@ app.put('/api/profile/badges', authenticateToken, async (req, res) => {
   }
 });
 
+/*
+  Discord OAuth
+  Frontend must redirect to:
+  https://api.arcxnjo.com.br/api/auth/discord?token=JWT_TOKEN
+*/
+app.get('/api/auth/discord', async (req, res) => {
+  const token = req.query.token;
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token not provided' });
+  }
+
+  if (
+    !process.env.DISCORD_CLIENT_ID ||
+    !process.env.DISCORD_CLIENT_SECRET ||
+    !process.env.DISCORD_REDIRECT_URI
+  ) {
+    return res.status(500).json({
+      error: 'Discord OAuth environment variables are missing.',
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(String(token), JWT_SECRET);
+
+    const oauthState = jwt.sign(
+      {
+        userId: decoded.userId,
+        type: 'discord_oauth',
+      },
+      JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    const redirect =
+      `https://discord.com/oauth2/authorize` +
+      `?client_id=${encodeURIComponent(process.env.DISCORD_CLIENT_ID)}` +
+      `&response_type=code` +
+      `&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}` +
+      `&scope=identify` +
+      `&state=${encodeURIComponent(oauthState)}`;
+
+    return res.redirect(redirect);
+  } catch (err) {
+    console.error('Discord auth start error:', err.message);
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+});
+
+app.get('/api/auth/discord/callback', async (req, res) => {
+  const code = req.query.code;
+  const state = req.query.state;
+
+  if (!code || !state) {
+    return res.status(400).send('Missing code or state');
+  }
+
+  try {
+    const decodedState = jwt.verify(String(state), JWT_SECRET);
+
+    if (decodedState.type !== 'discord_oauth' || !decodedState.userId) {
+      return res.status(403).send('Invalid OAuth state');
+    }
+
+    const userId = decodedState.userId;
+
+    const tokenResponse = await axios.post(
+      'https://discord.com/api/oauth2/token',
+      new URLSearchParams({
+        client_id: process.env.DISCORD_CLIENT_ID,
+        client_secret: process.env.DISCORD_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code: String(code),
+        redirect_uri: process.env.DISCORD_REDIRECT_URI,
+      }),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    const userResponse = await axios.get('https://discord.com/api/users/@me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const discordUser = userResponse.data;
+
+    await pool.query(
+      `UPDATE user_profiles
+       SET discord_id = $1
+       WHERE user_id = $2`,
+      [discordUser.id, userId]
+    );
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://arcxnjo.com.br';
+
+    return res.redirect(`${frontendUrl}/dashboard`);
+  } catch (err) {
+    console.error('Discord OAuth error:', err.response?.data || err.message);
+    return res.status(500).send('Discord auth failed');
+  }
+});
+
+app.get('/api/profile/:username/guestbook', async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const userResult = await pool.query(
+      'SELECT id FROM users WHERE username = $1',
+      [username]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const userId = userResult.rows[0].id;
+
+    const guestbookResult = await pool.query(
+      `SELECT id, visitor_name, message, created_at
+       FROM guestbook_entries
+       WHERE profile_user_id = $1
+       ORDER BY created_at DESC
+       LIMIT 30`,
+      [userId]
+    );
+
+    return res.json(guestbookResult.rows);
+  } catch (error) {
+    console.error('Guestbook fetch error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/profile/:username/guestbook', async (req, res) => {
   const { username } = req.params;
   const { visitorName, message } = req.body;
@@ -414,14 +558,6 @@ app.post('/api/profile/:username/guestbook', async (req, res) => {
     console.error('Guestbook create error:', error);
     return res.status(500).json({ error: error.message });
   }
-});
-
-app.get('/api/auth/discord', authenticateToken, (req, res) => {
-  const state = req.userId;
-
-  const redirect = `https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&scope=identify&state=${state}`;
-
-  res.redirect(redirect);
 });
 
 app.get('/api/profile/:username', async (req, res) => {
@@ -552,10 +688,7 @@ app.put('/api/profile/bio', authenticateToken, async (req, res) => {
 app.put('/api/profile/username', authenticateToken, async (req, res) => {
   const { username } = req.body;
 
-  const cleanUsername = String(username || '')
-    .trim()
-    .toLowerCase();
-
+  const cleanUsername = String(username || '').trim().toLowerCase();
   const usernameRegex = /^[a-z0-9._-]{3,20}$/;
 
   if (!usernameRegex.test(cleanUsername)) {
@@ -681,59 +814,6 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Profile details update error:', error);
     return res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/auth/discord/callback', async (req, res) => {
-  const code = req.query.code;
-  const state = req.query.state;
-
-  if (!code || !state) {
-    return res.status(400).send('Missing code or state');
-  }
-
-  try {
-    // state = userId
-    const userId = state;
-
-    const tokenResponse = await axios.post(
-      'https://discord.com/api/oauth2/token',
-      new URLSearchParams({
-        client_id: process.env.DISCORD_CLIENT_ID,
-        client_secret: process.env.DISCORD_CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: process.env.DISCORD_REDIRECT_URI,
-      }),
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }
-    );
-
-    const accessToken = tokenResponse.data.access_token;
-
-    const userResponse = await axios.get(
-      'https://discord.com/api/users/@me',
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    const discordUser = userResponse.data;
-
-    await pool.query(
-      `UPDATE user_profiles
-       SET discord_id = $1
-       WHERE user_id = $2`,
-      [discordUser.id, userId]
-    );
-
-    return res.redirect('https://arcxnjo.com.br/dashboard');
-  } catch (err) {
-    console.error('Discord OAuth error:', err.response?.data || err.message);
-    return res.status(500).send('Discord auth failed');
   }
 });
 
