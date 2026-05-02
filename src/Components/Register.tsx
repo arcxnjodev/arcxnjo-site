@@ -1,27 +1,77 @@
 import Logo from "../assets/images/logo.webp";
 import { useFormik } from "formik";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import registerSchema from "../Shemas/registerSchema";
+import { useDispatch } from "react-redux";
+import { loginUser } from "../Store/userSlice";
 import { DiscordAuthButton } from "./Ui/DiscordAuthButton";
 
 export const Register = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
+
   const queryParams = new URLSearchParams(location.search);
   const usernameParam = queryParams.get("username");
-  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
+  const [discordLoading, setDiscordLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+
+  useEffect(() => {
+    const handleDiscordRedirect = async () => {
+      const queryParams = new URLSearchParams(location.search);
+      const discordToken = queryParams.get("discord_token");
+
+      if (!discordToken) return;
+
+      setDiscordLoading(true);
+      setMessage("");
+
+      try {
+        localStorage.setItem("token", discordToken);
+
+        const response = await axios.get(`${API_URL}/api/profile/me`, {
+          headers: {
+            Authorization: `Bearer ${discordToken}`,
+          },
+        });
+
+        const user = {
+          username: response.data.username,
+          email: response.data.email,
+        };
+
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("email", response.data.email || "");
+
+        dispatch(loginUser(response.data.email || response.data.username || "discord"));
+
+        navigate("/panel", { replace: true });
+      } catch (error) {
+        console.error("Discord register finish error:", error);
+        localStorage.removeItem("token");
+        setIsSuccess(false);
+        setMessage("Erro ao finalizar cadastro com Discord. Tente novamente.");
+      } finally {
+        setDiscordLoading(false);
+      }
+    };
+
+    handleDiscordRedirect();
+  }, [location.search, navigate, dispatch, API_URL]);
 
   const onSubmit = async () => {
     setLoading(true);
     setMessage("");
 
     try {
-      await axios.post("https://api.arcxnjo.com.br/api/register", {
+      await axios.post(`${API_URL}/api/register`, {
         email: values.email,
         username: values.username,
         password: values.password,
@@ -69,6 +119,12 @@ export const Register = () => {
             }`}
           >
             {message}
+          </div>
+        )}
+
+        {discordLoading && (
+          <div className="mt-4 p-2 rounded text-center w-full bg-[#5865F2]">
+            Entrando com Discord...
           </div>
         )}
 
@@ -136,7 +192,7 @@ export const Register = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || discordLoading}
               className="bg-purple-700 text-black font-bold w-full rounded-lg p-2 mt-5 border-purple-950 border-4 border-solid disabled:opacity-50 hover:bg-purple-600 transition"
             >
               {loading ? "Creating account..." : "Sign Up"}
