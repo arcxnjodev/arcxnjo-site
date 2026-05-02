@@ -2,10 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import type { IconType } from "react-icons";
 import {
-  FaBolt,
-  FaRocket,
-  FaTag,
-  FaGem,
   FaDiscord,
   FaGlobe,
   FaInstagram,
@@ -148,6 +144,11 @@ const badgeMap: Record<string, { label: string; image: string }> = {
     label: "Founder",
     image: "https://cdn.discordapp.com/emojis/1257354981384650873.webp",
   },
+};
+
+const discordProfileIcons = {
+  nitro: "https://cdn3.emoji.gg/emojis/595827-nitro-fantastic-animated.gif",
+  boost: "https://cdn3.emoji.gg/emojis/12141-booster.png",
 };
 
 const profileTemplates = {
@@ -418,32 +419,32 @@ export const UserPanel = () => {
   }, [username, API_URL]);
 
   useEffect(() => {
-  if (!data?.profile?.discord_id) return;
+    if (!data?.profile?.discord_id) return;
 
-  const fetchDiscordPresence = async () => {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/discord-presence/${data.profile.discord_id}`
-      );
+    const fetchDiscordPresence = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/discord-presence/${data.profile.discord_id}`
+        );
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (result.success) {
-        setDiscordData(result);
+        if (result.success) {
+          setDiscordData(result);
+        }
+      } catch (error) {
+        console.error("Discord presence error:", error);
       }
-    } catch (error) {
-      console.error("Discord presence error:", error);
-    }
-  };
+    };
 
-  fetchDiscordPresence();
+    fetchDiscordPresence();
 
-  const interval = window.setInterval(fetchDiscordPresence, 30000);
+    const interval = window.setInterval(fetchDiscordPresence, 30000);
 
-  return () => {
-    window.clearInterval(interval);
-  };
-}, [data?.profile?.discord_id, API_URL]);;
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [data?.profile?.discord_id, API_URL]);
 
   useEffect(() => {
     const fetchGuestbook = async () => {
@@ -659,19 +660,24 @@ export const UserPanel = () => {
       (activity: any) => activity.type !== 4 && activity.name !== "Spotify"
     ) || null;
 
-    const hasNitro = Boolean(discordData?.nitro);
-    const hasServerBoost = Boolean(discordData?.server_boosted);
-    const serverRole = discordData?.server_role || null;
-    const primaryGuild = discordData?.primary_guild || null;
+  const hasNitro = Boolean(discordData?.nitro);
+  const hasServerBoost = Boolean(discordData?.server_boosted);
+  const serverRole = discordData?.server_role || null;
+  const primaryGuild = discordData?.primary_guild || null;
 
-    const nitroLabel =
-      discordData?.premium_type === 1
-        ? "Nitro Classic"
-        : discordData?.premium_type === 2
-        ? "Nitro"
-        : discordData?.premium_type === 3
-        ? "Nitro Basic"
-        : "Nitro";
+  const nitroLabel =
+    discordData?.premium_type === 1
+      ? "Nitro Classic"
+      : discordData?.premium_type === 2
+      ? "Nitro"
+      : discordData?.premium_type === 3
+      ? "Nitro Basic"
+      : "Nitro";
+
+  const primaryGuildBadgeUrl =
+    primaryGuild?.identity_guild_id && primaryGuild?.badge
+      ? `https://cdn.discordapp.com/guild-tag-badges/${primaryGuild.identity_guild_id}/${primaryGuild.badge}.png?size=32`
+      : null;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
@@ -972,114 +978,138 @@ export const UserPanel = () => {
             )}
 
             {discordData && discordUser && (
-  <div className={`mt-5 rounded-2xl p-4 text-left ${template.infoCard}`}>
-    <div className="flex items-center gap-3">
-      <div className="relative shrink-0">
-        <img
-          src={discordAvatar}
-          alt={discordDisplayName}
-          className="w-14 h-14 rounded-full object-cover bg-black"
-        />
+              <div className={`mt-5 rounded-2xl p-4 text-left ${template.infoCard}`}>
+                <div className="flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <img
+                      src={discordAvatar}
+                      alt={discordDisplayName}
+                      className="w-14 h-14 rounded-full object-cover bg-black"
+                    />
 
-        <span
-          className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-black ${discordStatusClass}`}
-        />
-      </div>
+                    <span
+                      className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-black ${discordStatusClass}`}
+                    />
+                  </div>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <FaDiscord className={`text-sm ${template.infoIcon}`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <FaDiscord className={`text-sm ${template.infoIcon}`} />
 
-          <p className="text-base font-semibold text-white truncate">
-            {discordDisplayName}
-          </p>
-        </div>
+                      <p className="text-base font-semibold text-white truncate">
+                        {discordDisplayName}
+                      </p>
+                    </div>
 
-        <p className="text-xs text-white/55 truncate">
-          @{discordUser.username}
-        </p>
+                    <p className="text-xs text-white/55 truncate">
+                      @{discordUser.username}
+                    </p>
 
-        <div className="mt-2 flex flex-wrap gap-2">
-          {hasNitro && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#5865F2]/25 px-2.5 py-1 text-[11px] font-semibold text-[#d7dcff] shadow-[0_0_12px_rgba(88,101,242,0.18)]">
-              <FaGem className="text-[10px]" />
-              {nitroLabel}
-            </span>
-          )}
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {hasNitro && (
+                        <span
+                          title={nitroLabel}
+                          className="inline-flex items-center justify-center"
+                        >
+                          <img
+                            src={discordProfileIcons.nitro}
+                            alt={nitroLabel}
+                            className="w-5 h-5 object-contain"
+                            draggable={false}
+                          />
+                        </span>
+                      )}
 
-          {hasServerBoost && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-pink-500/20 px-2.5 py-1 text-[11px] font-semibold text-pink-200 shadow-[0_0_12px_rgba(236,72,153,0.18)]">
-              <FaRocket className="text-[10px]" />
-              Boost
-            </span>
-          )}
+                      {hasServerBoost && (
+                        <span
+                          title="Server Booster"
+                          className="inline-flex items-center justify-center"
+                        >
+                          <img
+                            src={discordProfileIcons.boost}
+                            alt="Server Booster"
+                            className="w-5 h-5 object-contain"
+                            draggable={false}
+                          />
+                        </span>
+                      )}
 
-          {primaryGuild?.identity_enabled && primaryGuild?.tag && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white">
-              <FaTag className="text-[10px]" />
-              {primaryGuild.tag}
-            </span>
-          )}
+                      {primaryGuild?.identity_enabled && primaryGuild?.tag && (
+                        <span
+                          title={primaryGuild.tag}
+                          className="inline-flex items-center gap-1 rounded-md bg-white/10 px-1.5 py-0.5 text-[11px] font-bold text-white"
+                        >
+                          {primaryGuildBadgeUrl && (
+                            <img
+                              src={primaryGuildBadgeUrl}
+                              alt={primaryGuild.tag}
+                              className="w-4 h-4 object-contain"
+                              draggable={false}
+                            />
+                          )}
+                          {primaryGuild.tag}
+                        </span>
+                      )}
 
-          {serverRole && (
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
-              style={{
-                backgroundColor: `${serverRole.color}33`,
-                boxShadow: `0 0 12px ${serverRole.color}22`,
-              }}
-            >
-              <FaBolt className="text-[10px]" />
-              {serverRole.name}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
+                      {serverRole && (
+                        <span
+                          title={serverRole.name}
+                          className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-white"
+                          style={{
+                            backgroundColor: `${serverRole.color}33`,
+                            boxShadow: `0 0 10px ${serverRole.color}22`,
+                          }}
+                        >
+                          {serverRole.name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-    {discordData.spotify ? (
-      <div className="mt-4 rounded-xl bg-black/20 p-3 flex items-center gap-3">
-        {discordData.spotify.album_art_url && (
-          <img
-            src={discordData.spotify.album_art_url}
-            alt={discordData.spotify.song}
-            className="w-11 h-11 rounded-lg object-cover"
-          />
-        )}
+                {discordData.spotify ? (
+                  <div className="mt-4 rounded-xl bg-black/20 p-3 flex items-center gap-3">
+                    {discordData.spotify.album_art_url && (
+                      <img
+                        src={discordData.spotify.album_art_url}
+                        alt={discordData.spotify.song}
+                        className="w-11 h-11 rounded-lg object-cover"
+                      />
+                    )}
 
-        <div className="min-w-0">
-          <p className="text-xs text-white/50">Listening to Spotify</p>
+                    <div className="min-w-0">
+                      <p className="text-xs text-white/50">Listening to Spotify</p>
 
-          <p className="mt-1 text-sm font-semibold text-white truncate">
-            {discordData.spotify.song}
-          </p>
+                      <p className="mt-1 text-sm font-semibold text-white truncate">
+                        {discordData.spotify.song}
+                      </p>
 
-          <p className="text-xs text-white/60 truncate">
-            {discordData.spotify.artist}
-          </p>
-        </div>
-      </div>
-    ) : activeDiscordActivity ? (
-      <div className="mt-4 rounded-xl bg-black/20 p-3">
-        <p className="text-xs text-white/50">Activity</p>
+                      <p className="text-xs text-white/60 truncate">
+                        {discordData.spotify.artist}
+                      </p>
+                    </div>
+                  </div>
+                ) : activeDiscordActivity ? (
+                  <div className="mt-4 rounded-xl bg-black/20 p-3">
+                    <p className="text-xs text-white/50">Activity</p>
 
-        <p className="mt-1 text-sm font-semibold text-white truncate">
-          {activeDiscordActivity.name}
-        </p>
+                    <p className="mt-1 text-sm font-semibold text-white truncate">
+                      {activeDiscordActivity.name}
+                    </p>
 
-        {(activeDiscordActivity.details || activeDiscordActivity.state) && (
-          <p className="text-xs text-white/60 truncate">
-            {activeDiscordActivity.details || activeDiscordActivity.state}
-          </p>
-        )}
-      </div>
-    ) : (
-      <div className="mt-4 rounded-xl bg-black/20 p-3">
-        <p className="text-xs text-white/60">Online on Discord</p>
-      </div>
-    )}
-  </div>
-)}
+                    {(activeDiscordActivity.details || activeDiscordActivity.state) && (
+                      <p className="text-xs text-white/60 truncate">
+                        {activeDiscordActivity.details || activeDiscordActivity.state}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-xl bg-black/20 p-3">
+                    <p className="text-xs text-white/60">Online on Discord</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <p className={`mt-3 text-sm ${template.views}`}>
               {data.stats?.profile_views || 0} views
