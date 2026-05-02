@@ -4,43 +4,43 @@ import axios from "axios";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import registerSchema from "../Shemas/registerSchema";
+import { DiscordAuthButton } from "./Ui/DiscordAuthButton";
 
 export const Register = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const usernameParam = queryParams.get("username");
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
   const onSubmit = async () => {
-  setLoading(true);
-  setMessage("");
-  
-  try {
-    await axios.post("https://api.arcxnjo.com.br/api/register", {
-      email: values.email,
-      username: values.username,
-      password: values.password,
-    });
-    
-    setIsSuccess(true);
-    setMessage("Successfully registered! Redirecting to login...");
-    
-    setTimeout(() => {
-      navigate("/login?email=" + values.email);
-    }, 2000);
-    
-  } catch (error: any) {
-    setMessage(error.response?.data?.error || "Registration failed");
-    setIsSuccess(false);
-  } finally {
-    setLoading(false);
-  }
-};
-  
+    setLoading(true);
+    setMessage("");
+
+    try {
+      await axios.post("https://api.arcxnjo.com.br/api/register", {
+        email: values.email,
+        username: values.username,
+        password: values.password,
+      });
+
+      setIsSuccess(true);
+      setMessage("Successfully registered! Redirecting to login...");
+
+      setTimeout(() => {
+        navigate("/login?email=" + values.email);
+      }, 2000);
+    } catch (error: any) {
+      setMessage(error.response?.data?.error || "Registration failed");
+      setIsSuccess(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const { values, errors, handleSubmit, handleChange } = useFormik({
     initialValues: {
       email: "",
@@ -51,22 +51,36 @@ export const Register = () => {
     onSubmit,
     validationSchema: registerSchema,
   });
-  
+
   return (
     <div className="w-full flex flex-col items-center justify-center min-h-screen bg-black">
       <div className="text-white w-[400px] bg-slate-900 rounded-xl flex flex-col items-center p-10">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center text-center">
           <img src={Logo} className="w-1/4 inline-block mb-3" />
-          <p className="font-semibold text-lg">Create your ARCXNJO.COM account</p>
+          <p className="font-semibold text-lg">
+            Create your ARCXNJO.COM account
+          </p>
         </div>
-        
+
         {message && (
-          <div className={`mt-4 p-2 rounded text-center w-full ${isSuccess ? "bg-green-600" : "bg-red-600"}`}>
+          <div
+            className={`mt-4 p-2 rounded text-center w-full ${
+              isSuccess ? "bg-green-600" : "bg-red-600"
+            }`}
+          >
             {message}
           </div>
         )}
-        
+
         <div className="w-[300px] mt-6">
+          <DiscordAuthButton text="Criar conta com Discord" />
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-xs text-white/40">ou</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
           <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1">
               <span>Email</span>
@@ -80,7 +94,7 @@ export const Register = () => {
               />
               <p className="text-red-600 text-sm">{errors.email}</p>
             </div>
-            
+
             <div className="flex flex-col gap-1">
               <span>Password</span>
               <input
@@ -93,7 +107,7 @@ export const Register = () => {
               />
               <p className="text-red-600 text-sm">{errors.password}</p>
             </div>
-            
+
             <div className="flex flex-col gap-1">
               <span>Username</span>
               <input
@@ -106,7 +120,7 @@ export const Register = () => {
               />
               <p className="text-red-600 text-sm">{errors.username}</p>
             </div>
-            
+
             <div className="flex items-center gap-2 mt-2">
               <input
                 type="checkbox"
@@ -117,16 +131,17 @@ export const Register = () => {
               />
               <p className="text-sm">I agree to the Terms of Service.</p>
             </div>
+
             <p className="text-red-600 text-sm">{errors.control}</p>
-            
+
             <button
-  type="submit"
-  disabled={loading}
-  className="bg-purple-700 text-black font-bold w-full rounded-lg p-2 mt-5 border-purple-950 border-4 border-solid disabled:opacity-50 hover:bg-purple-600 transition"
->
-  {loading ? "Creating account..." : "Sign Up"}
-</button>
-            
+              type="submit"
+              disabled={loading}
+              className="bg-purple-700 text-black font-bold w-full rounded-lg p-2 mt-5 border-purple-950 border-4 border-solid disabled:opacity-50 hover:bg-purple-600 transition"
+            >
+              {loading ? "Creating account..." : "Sign Up"}
+            </button>
+
             <div className="text-center">
               <p className="text-sm">
                 Already have an account?{" "}

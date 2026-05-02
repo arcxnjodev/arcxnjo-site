@@ -1,29 +1,58 @@
 import Logo from "../assets/images/logo.webp";
 import { useFormik } from "formik";
 import axios from "axios";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import loginSchema from "../Shemas/loginSchema";
 import { useDispatch } from "react-redux";
 import { loginUser } from "../Store/userSlice";
+import { DiscordAuthButton } from "./Ui/DiscordAuthButton";
 
 export const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const discordToken = queryParams.get("discord_token");
+    const username = queryParams.get("username");
+
+    if (discordToken) {
+      localStorage.setItem("token", discordToken);
+
+      if (username) {
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            username,
+          })
+        );
+      }
+
+      navigate("/panel");
+    }
+  }, [location.search, navigate]);
 
   const onSubmit = async () => {
     setLoading(true);
     setError("");
+
     try {
       const response = await axios.post("https://api.arcxnjo.com.br/api/login", {
         email: values.email,
         password: values.password,
       });
+
       const { user } = response.data;
+
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("email", user.email);
+      localStorage.setItem("user", JSON.stringify(user));
+
       dispatch(loginUser(user.email));
       navigate("/panel");
     } catch (error: any) {
@@ -42,28 +71,73 @@ export const Login = () => {
   return (
     <div className="w-full flex flex-col items-center justify-center min-h-screen bg-black">
       <div className="text-white w-[400px] bg-slate-900 rounded-xl flex flex-col items-center p-10">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center text-center">
           <img src={Logo} className="w-1/4 inline-block mb-3" />
-          <p className="font-semibold text-lg">Sign in to your ARCXNJO.COM account</p>
+          <p className="font-semibold text-lg">
+            Sign in to your ARCXNJO.COM account
+          </p>
         </div>
-        {error && <div className="mt-4 p-2 rounded text-center w-full bg-red-600">{error}</div>}
+
+        {error && (
+          <div className="mt-4 p-2 rounded text-center w-full bg-red-600">
+            {error}
+          </div>
+        )}
+
         <div className="w-[300px] mt-6">
+          <DiscordAuthButton text="Entrar com Discord" />
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-xs text-white/40">ou</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
           <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1">
               <span>Email</span>
-              <input name="email" type="email" onChange={handleChange} value={values.email} className="rounded-lg bg-gray-950 p-2 outline-none text-white focus:ring-2 focus:ring-purple-500" required />
+              <input
+                name="email"
+                type="email"
+                onChange={handleChange}
+                value={values.email}
+                className="rounded-lg bg-gray-950 p-2 outline-none text-white focus:ring-2 focus:ring-purple-500"
+                required
+              />
               <p className="text-red-600 text-sm">{errors.email}</p>
             </div>
+
             <div className="flex flex-col gap-1">
               <span>Password</span>
-              <input name="password" type="password" onChange={handleChange} value={values.password} className="rounded-lg bg-gray-950 p-2 outline-none text-white focus:ring-2 focus:ring-purple-500" required />
+              <input
+                name="password"
+                type="password"
+                onChange={handleChange}
+                value={values.password}
+                className="rounded-lg bg-gray-950 p-2 outline-none text-white focus:ring-2 focus:ring-purple-500"
+                required
+              />
               <p className="text-red-600 text-sm">{errors.password}</p>
             </div>
-            <button type="submit" disabled={loading} className="bg-purple-700 w-full rounded-lg p-2 mt-5 border-purple-950 border-4 border-solid disabled:opacity-50 hover:bg-purple-600 transition">
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-purple-700 w-full rounded-lg p-2 mt-5 border-purple-950 border-4 border-solid disabled:opacity-50 hover:bg-purple-600 transition"
+            >
               {loading ? "Logging in..." : "Login"}
             </button>
+
             <div className="text-center">
-              <p className="text-sm">Don't have an account? <Link to="/register" className="text-purple-700 hover:underline">Sign Up</Link></p>
+              <p className="text-sm">
+                Don't have an account?{" "}
+                <Link
+                  to="/register"
+                  className="text-purple-700 hover:underline"
+                >
+                  Sign Up
+                </Link>
+              </p>
             </div>
           </form>
         </div>
