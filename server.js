@@ -89,6 +89,32 @@ function authenticateToken(req, res, next) {
   });
 }
 
+function parseDiscordFlags(flags = 0) {
+  const badges = [];
+
+  const badgeMap = [
+    { bit: 1 << 0, id: 'staff', label: 'Discord Staff' },
+    { bit: 1 << 1, id: 'partner', label: 'Partner' },
+    { bit: 1 << 2, id: 'hypesquad-events', label: 'HypeSquad Events' },
+    { bit: 1 << 3, id: 'bug-hunter-1', label: 'Bug Hunter' },
+    { bit: 1 << 6, id: 'hypesquad-bravery', label: 'House Bravery' },
+    { bit: 1 << 7, id: 'hypesquad-brilliance', label: 'House Brilliance' },
+    { bit: 1 << 8, id: 'hypesquad-balance', label: 'House Balance' },
+    { bit: 1 << 9, id: 'early-supporter', label: 'Early Supporter' },
+    { bit: 1 << 14, id: 'bug-hunter-2', label: 'Bug Hunter Gold' },
+    { bit: 1 << 17, id: 'early-dev', label: 'Early Verified Bot Developer' },
+    { bit: 1 << 18, id: 'moderator-alumni', label: 'Moderator Alumni' },
+    { bit: 1 << 22, id: 'active-developer', label: 'Active Developer' },
+  ];
+
+  badgeMap.forEach((badge) => {
+    if ((flags & badge.bit) === badge.bit) {
+      badges.push(badge);
+    }
+  });
+
+  return badges;
+}
 /* =========================================================
    DISCORD BOT PRESENCE SYSTEM
 ========================================================= */
@@ -639,11 +665,21 @@ app.get('/api/auth/discord/callback', async (req, res) => {
   `UPDATE user_profiles
    SET discord_id = $1,
        discord_premium_type = $2,
-       discord_primary_guild = $3::jsonb
-   WHERE user_id = $4`,
+       discord_public_flags = $3,
+       discord_banner = $4,
+       discord_accent_color = $5,
+       discord_avatar_decoration = $6::jsonb,
+       discord_collectibles = $7::jsonb,
+       discord_primary_guild = $8::jsonb
+   WHERE user_id = $9`,
   [
     discordUser.id,
     discordUser.premium_type || 0,
+    discordUser.public_flags || 0,
+    discordUser.banner || null,
+    discordUser.accent_color || null,
+    JSON.stringify(discordUser.avatar_decoration_data || null),
+    JSON.stringify(discordUser.collectibles || null),
     JSON.stringify(discordUser.primary_guild || null),
     userId,
   ]
@@ -680,20 +716,40 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
     let serverBoosted = false;
     let serverBoostSince = null;
     let serverRole = null;
+
     let premiumType = 0;
+    let publicFlags = 0;
+    let discordBanner = null;
+    let discordAccentColor = null;
+    let avatarDecoration = null;
+    let collectibles = null;
     let primaryGuild = null;
 
     try {
       const dbResult = await pool.query(
-        `SELECT discord_premium_type, discord_primary_guild
+        `SELECT
+          discord_premium_type,
+          discord_public_flags,
+          discord_banner,
+          discord_accent_color,
+          discord_avatar_decoration,
+          discord_collectibles,
+          discord_primary_guild
          FROM user_profiles
          WHERE discord_id = $1
          LIMIT 1`,
         [discordId]
       );
 
-      premiumType = dbResult.rows[0]?.discord_premium_type || 0;
-      primaryGuild = dbResult.rows[0]?.discord_primary_guild || null;
+      const row = dbResult.rows[0] || {};
+
+      premiumType = row.discord_premium_type || 0;
+      publicFlags = row.discord_public_flags || 0;
+      discordBanner = row.discord_banner || null;
+      discordAccentColor = row.discord_accent_color || null;
+      avatarDecoration = row.discord_avatar_decoration || null;
+      collectibles = row.discord_collectibles || null;
+      primaryGuild = row.discord_primary_guild || null;
     } catch (dbError) {
       console.error('Discord metadata lookup error:', dbError.message);
     }
@@ -759,9 +815,10 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
     };
 
     return res.json({
-      debug_version: 'discord-card-v2',
+      debug_version: 'discord-profile-v3',
       success: true,
       monitored: isGuildMember,
+
       discord_user: discordUser,
       discord_status: presence.discord_status,
       activities: presence.activities,
@@ -770,9 +827,19 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
 
       nitro: premiumType > 0,
       premium_type: premiumType,
+
       server_boosted: serverBoosted,
       server_boost_since: serverBoostSince,
+
       server_role: serverRole,
+
+      public_flags: publicFlags,
+      discord_badges: parseDiscordFlags(publicFlags),
+
+      banner: discordBanner,
+      accent_color: discordAccentColor,
+      avatar_decoration: avatarDecoration,
+      collectibles,
       primary_guild: primaryGuild,
     });
   } catch (error) {
