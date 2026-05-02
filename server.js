@@ -89,34 +89,8 @@ function authenticateToken(req, res, next) {
   });
 }
 
-function parseDiscordFlags(flags = 0) {
-  const badges = [];
-
-  const badgeMap = [
-    { bit: 1 << 0, id: 'staff', label: 'Discord Staff' },
-    { bit: 1 << 1, id: 'partner', label: 'Partner' },
-    { bit: 1 << 2, id: 'hypesquad-events', label: 'HypeSquad Events' },
-    { bit: 1 << 3, id: 'bug-hunter-1', label: 'Bug Hunter' },
-    { bit: 1 << 6, id: 'hypesquad-bravery', label: 'House Bravery' },
-    { bit: 1 << 7, id: 'hypesquad-brilliance', label: 'House Brilliance' },
-    { bit: 1 << 8, id: 'hypesquad-balance', label: 'House Balance' },
-    { bit: 1 << 9, id: 'early-supporter', label: 'Early Supporter' },
-    { bit: 1 << 14, id: 'bug-hunter-2', label: 'Bug Hunter Gold' },
-    { bit: 1 << 17, id: 'early-dev', label: 'Early Verified Bot Developer' },
-    { bit: 1 << 18, id: 'moderator-alumni', label: 'Moderator Alumni' },
-    { bit: 1 << 22, id: 'active-developer', label: 'Active Developer' },
-  ];
-
-  badgeMap.forEach((badge) => {
-    if ((flags & badge.bit) === badge.bit) {
-      badges.push(badge);
-    }
-  });
-
-  return badges;
-}
 /* =========================================================
-   DISCORD BOT PRESENCE SYSTEM
+   DISCORD HELPERS
 ========================================================= */
 
 const discordPresenceCache = new Map();
@@ -204,6 +178,207 @@ function savePresence(presence) {
     updated_at: new Date().toISOString(),
   });
 }
+
+function parseDiscordFlags(flags = 0) {
+  const badges = [];
+
+  const badgeMap = [
+    { bit: 1 << 0, id: 'staff', label: 'Discord Staff' },
+    { bit: 1 << 1, id: 'partner', label: 'Partner' },
+    { bit: 1 << 2, id: 'hypesquad-events', label: 'HypeSquad Events' },
+    { bit: 1 << 3, id: 'bug-hunter-1', label: 'Bug Hunter' },
+    { bit: 1 << 6, id: 'hypesquad-bravery', label: 'House Bravery' },
+    { bit: 1 << 7, id: 'hypesquad-brilliance', label: 'House Brilliance' },
+    { bit: 1 << 8, id: 'hypesquad-balance', label: 'House Balance' },
+    { bit: 1 << 9, id: 'early-supporter', label: 'Early Supporter' },
+    { bit: 1 << 14, id: 'bug-hunter-2', label: 'Bug Hunter Gold' },
+    { bit: 1 << 17, id: 'early-dev', label: 'Early Verified Bot Developer' },
+    { bit: 1 << 18, id: 'moderator-alumni', label: 'Moderator Alumni' },
+    { bit: 1 << 22, id: 'active-developer', label: 'Active Developer' },
+  ];
+
+  badgeMap.forEach((badge) => {
+    if ((flags & badge.bit) === badge.bit) {
+      badges.push(badge);
+    }
+  });
+
+  return badges;
+}
+
+function cleanDiscordUsername(value) {
+  const clean = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, '')
+    .slice(0, 18);
+
+  return clean.length >= 3 ? clean : `user${Date.now().toString().slice(-6)}`;
+}
+
+async function generateUniqueUsername(baseUsername) {
+  const base = cleanDiscordUsername(baseUsername);
+  let username = base;
+  let attempt = 0;
+
+  while (true) {
+    const existing = await pool.query(
+      'SELECT id FROM users WHERE LOWER(username) = LOWER($1) LIMIT 1',
+      [username]
+    );
+
+    if (existing.rows.length === 0) {
+      return username;
+    }
+
+    attempt += 1;
+    username = `${base}${attempt}`.slice(0, 20);
+  }
+}
+
+async function saveDiscordProfileMetadata(userId, discordUser) {
+  await pool.query(
+    `UPDATE user_profiles
+     SET discord_id = $1,
+         discord_premium_type = $2,
+         discord_public_flags = $3,
+         discord_banner = $4,
+         discord_accent_color = $5,
+         discord_avatar_decoration = $6::jsonb,
+         discord_collectibles = $7::jsonb,
+         discord_primary_guild = $8::jsonb
+     WHERE user_id = $9`,
+    [
+      discordUser.id,
+      discordUser.premium_type || 0,
+      discordUser.public_flags || 0,
+      discordUser.banner || null,
+      discordUser.accent_color || null,
+      JSON.stringify(discordUser.avatar_decoration_data || null),
+      JSON.stringify(discordUser.collectibles || null),
+      JSON.stringify(discordUser.primary_guild || null),
+      userId,
+    ]
+  );
+}
+
+async function findOrCreateUserFromDiscord(discordUser) {
+  const existingByDiscord = await pool.query(
+    `
+    SELECT u.id, u.username, u.email
+    FROM users u
+    INNER JOIN user_profiles up ON up.user_id = u.id
+    WHERE up.discord_id = $1
+    LIMIT 1
+    `,
+    [discordUser.id]
+  );
+
+  if (existingByDiscord.rows.length > 0) {
+    const user = existingByDiscord.rows[0];
+    await saveDiscordProfileMetadata(user.id, discordUser);
+    return user;
+  }
+
+  const discordEmail =
+    discordUser.email || `discord_${discordUser.id}@arcxnjo.local`;
+
+  const existingByEmail = await pool.query(
+    'SELECT id, username, email FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1',
+    [discordEmail]
+  );
+
+  if (existingByEmail.rows.length > 0) {
+    const user = existingByEmail.rows[0];
+    await saveDiscordProfileMetadata(user.id, discordUser);
+    return user;
+  }
+
+  const username = await generateUniqueUsername(
+    discordUser.global_name ||
+      discordUser.username ||
+      `discord${String(discordUser.id).slice(-5)}`
+  );
+
+  const randomPassword = await bcrypt.hash(
+    `${discordUser.id}-${Date.now()}-${JWT_SECRET}`,
+    10
+  );
+
+  const createdUser = await pool.query(
+    'INSERT INTO users (username, email, password_hash, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id, username, email',
+    [username, discordEmail, randomPassword]
+  );
+
+  const user = createdUser.rows[0];
+
+  const avatarUrl = discordUser.avatar
+    ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.${
+        discordUser.avatar.startsWith('a_') ? 'gif' : 'png'
+      }?size=256`
+    : 'https://cdn-icons-png.flaticon.com/512/219/219986.png';
+
+  await pool.query(
+    `INSERT INTO user_profiles (
+      user_id,
+      profile_image,
+      banner_image,
+      banner_type,
+      theme_color,
+      bio,
+      profile_badges,
+      discord_id,
+      discord_premium_type,
+      discord_public_flags,
+      discord_banner,
+      discord_accent_color,
+      discord_avatar_decoration,
+      discord_collectibles,
+      discord_primary_guild
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, $12, $13::jsonb, $14::jsonb, $15::jsonb)`,
+    [
+      user.id,
+      avatarUrl,
+      '',
+      'image',
+      '#5865F2',
+      '',
+      '[]',
+      discordUser.id,
+      discordUser.premium_type || 0,
+      discordUser.public_flags || 0,
+      discordUser.banner || null,
+      discordUser.accent_color || null,
+      JSON.stringify(discordUser.avatar_decoration_data || null),
+      JSON.stringify(discordUser.collectibles || null),
+      JSON.stringify(discordUser.primary_guild || null),
+    ]
+  );
+
+  await pool.query(
+    `INSERT INTO user_links (user_id, platform, url, display_order) VALUES
+     ($1, 'instagram', '', 1),
+     ($1, 'x', '', 2),
+     ($1, 'youtube', '', 3),
+     ($1, 'twitch', '', 4),
+     ($1, 'kick', '', 5),
+     ($1, 'discord', '', 6),
+     ($1, 'linkedin', '', 7)`,
+    [user.id]
+  );
+
+  await pool.query(
+    'INSERT INTO user_stats (user_id, profile_views) VALUES ($1, 0)',
+    [user.id]
+  );
+
+  return user;
+}
+
+/* =========================================================
+   DISCORD BOT
+========================================================= */
 
 let discordClient = null;
 
@@ -573,7 +748,7 @@ app.put('/api/profile/badges', authenticateToken, async (req, res) => {
 });
 
 /* =========================================================
-   DISCORD OAUTH
+   DISCORD OAUTH - CONNECT EXISTING ACCOUNT
 ========================================================= */
 
 app.get('/api/auth/discord', async (req, res) => {
@@ -610,7 +785,7 @@ app.get('/api/auth/discord', async (req, res) => {
       `?client_id=${encodeURIComponent(process.env.DISCORD_CLIENT_ID)}` +
       `&response_type=code` +
       `&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}` +
-      `&scope=identify` +
+      `&scope=${encodeURIComponent('identify')}` +
       `&state=${encodeURIComponent(oauthState)}`;
 
     return res.redirect(redirect);
@@ -619,6 +794,50 @@ app.get('/api/auth/discord', async (req, res) => {
     return res.status(403).json({ error: 'Invalid token' });
   }
 });
+
+/* =========================================================
+   DISCORD OAUTH - LOGIN / REGISTER
+========================================================= */
+
+app.get('/api/auth/discord/login', async (req, res) => {
+  if (
+    !process.env.DISCORD_CLIENT_ID ||
+    !process.env.DISCORD_CLIENT_SECRET ||
+    !process.env.DISCORD_REDIRECT_URI
+  ) {
+    return res.status(500).json({
+      error: 'Discord OAuth environment variables are missing.',
+    });
+  }
+
+  try {
+    const oauthState = jwt.sign(
+      {
+        type: 'discord_login',
+        mode: req.query.popup === '1' ? 'popup' : 'redirect',
+      },
+      JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    const redirect =
+      `https://discord.com/oauth2/authorize` +
+      `?client_id=${encodeURIComponent(process.env.DISCORD_CLIENT_ID)}` +
+      `&response_type=code` +
+      `&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}` +
+      `&scope=${encodeURIComponent('identify email')}` +
+      `&state=${encodeURIComponent(oauthState)}`;
+
+    return res.redirect(redirect);
+  } catch (error) {
+    console.error('Discord login start error:', error.message);
+    return res.status(500).json({ error: 'Failed to start Discord login.' });
+  }
+});
+
+/* =========================================================
+   DISCORD CALLBACK
+========================================================= */
 
 app.get('/api/auth/discord/callback', async (req, res) => {
   const code = req.query.code;
@@ -630,12 +849,6 @@ app.get('/api/auth/discord/callback', async (req, res) => {
 
   try {
     const decodedState = jwt.verify(String(state), JWT_SECRET);
-
-    if (decodedState.type !== 'discord_oauth' || !decodedState.userId) {
-      return res.status(403).send('Invalid OAuth state');
-    }
-
-    const userId = decodedState.userId;
 
     const tokenResponse = await axios.post(
       'https://discord.com/api/oauth2/token',
@@ -661,29 +874,72 @@ app.get('/api/auth/discord/callback', async (req, res) => {
 
     const discordUser = userResponse.data;
 
-    await pool.query(
-  `UPDATE user_profiles
-   SET discord_id = $1,
-       discord_premium_type = $2,
-       discord_public_flags = $3,
-       discord_banner = $4,
-       discord_accent_color = $5,
-       discord_avatar_decoration = $6::jsonb,
-       discord_collectibles = $7::jsonb,
-       discord_primary_guild = $8::jsonb
-   WHERE user_id = $9`,
-  [
-    discordUser.id,
-    discordUser.premium_type || 0,
-    discordUser.public_flags || 0,
-    discordUser.banner || null,
-    discordUser.accent_color || null,
-    JSON.stringify(discordUser.avatar_decoration_data || null),
-    JSON.stringify(discordUser.collectibles || null),
-    JSON.stringify(discordUser.primary_guild || null),
-    userId,
-  ]
-);
+    if (decodedState.type === 'discord_login') {
+      const user = await findOrCreateUserFromDiscord(discordUser);
+
+      const token = jwt.sign(
+        {
+          userId: user.id,
+          username: user.username,
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      if (discordClient?.isReady()) {
+        try {
+          const fetchedUser = await discordClient.users.fetch(discordUser.id);
+          discordUserCache.set(discordUser.id, normalizeDiscordUser(fetchedUser));
+        } catch (error) {
+          console.error('Discord user cache after login error:', error.message);
+        }
+      }
+
+      const frontendUrl = process.env.FRONTEND_URL || 'https://arcxnjo.com.br';
+
+      if (decodedState.mode === 'popup') {
+        return res.send(`
+          <!doctype html>
+          <html>
+            <head>
+              <title>Discord Login</title>
+            </head>
+            <body style="background:#111;color:white;font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;">
+              <p>Login successful. You can close this window.</p>
+              <script>
+                window.opener?.postMessage(
+                  {
+                    type: "ARCXNJO_DISCORD_LOGIN_SUCCESS",
+                    token: ${JSON.stringify(token)},
+                    user: ${JSON.stringify({
+                      id: user.id,
+                      username: user.username,
+                      email: user.email,
+                    })}
+                  },
+                  ${JSON.stringify(frontendUrl)}
+                );
+                window.close();
+              </script>
+            </body>
+          </html>
+        `);
+      }
+
+      return res.redirect(
+        `${frontendUrl}/login?discord_token=${encodeURIComponent(
+          token
+        )}&username=${encodeURIComponent(user.username)}`
+      );
+    }
+
+    if (decodedState.type !== 'discord_oauth' || !decodedState.userId) {
+      return res.status(403).send('Invalid OAuth state');
+    }
+
+    const userId = decodedState.userId;
+
+    await saveDiscordProfileMetadata(userId, discordUser);
 
     if (discordClient?.isReady()) {
       try {
@@ -815,7 +1071,7 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
     };
 
     return res.json({
-      debug_version: 'discord-profile-v3',
+      debug_version: 'discord-profile-login-v4',
       success: true,
       monitored: isGuildMember,
 
