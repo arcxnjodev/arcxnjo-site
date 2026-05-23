@@ -15,6 +15,10 @@ import {
   FaPalette,
   FaMusic,
   FaCertificate,
+  FaExternalLinkAlt,
+  FaCrown,
+  FaMagic,
+  FaSave,
 } from "react-icons/fa";
 import axios from "axios";
 
@@ -28,6 +32,8 @@ export const AdminPanel = () => {
   const [bio, setBio] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [statusText, setStatusText] = useState<string>("");
+  const [plan, setPlan] = useState<string>("free");
+  const [role, setRole] = useState<string>("user");
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
@@ -56,6 +62,8 @@ export const AdminPanel = () => {
         setBio(response.data.bio || "");
         setLocation(response.data.location || "");
         setStatusText(response.data.status_text || "");
+        setPlan(response.data.plan || "free");
+        setRole(response.data.role || "user");
       } catch (error) {
         console.error("Error fetching user data:", error);
 
@@ -165,6 +173,7 @@ export const AdminPanel = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("email");
+    localStorage.removeItem("user");
     window.location.href = "/login";
   };
 
@@ -172,72 +181,168 @@ export const AdminPanel = () => {
     {
       id: "profile",
       label: "Public Profile",
+      description: "Name, bio and profile details",
       icon: <FaUser />,
       component: null,
     },
     {
       id: "social",
       label: "Social Media",
+      description: "Links and social handles",
       icon: <FaLink />,
       component: <SocialMediaSettings />,
     },
     {
       id: "images",
       label: "Images",
+      description: "Avatar, banner and media",
       icon: <FaImage />,
       component: <ProfileImagesSettings />,
     },
     {
       id: "appearance",
       label: "Appearance",
+      description: "Themes, effects and style",
       icon: <FaPalette />,
       component: <AppearanceSettings />,
     },
     {
       id: "music",
       label: "Music",
+      description: "Profile audio and title",
       icon: <FaMusic />,
       component: <MusicSettings />,
     },
     {
       id: "badges",
       label: "Badges",
+      description: "Profile icons and status",
       icon: <FaCertificate />,
       component: <BadgeSettings />,
     },
   ];
 
+  const activeTabData = tabs.find((tab) => tab.id === activeTab);
+  const safeEmail = email || localStorage.getItem("email") || "discord user";
+  const profileUrl = `https://arcxnjo.com.br/${username || ""}`;
+
+  const glassCard =
+    "rounded-3xl border border-white/10 bg-white/[0.055] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.38)]";
+
+  const inputClass =
+    "w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white placeholder-white/35 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]";
+
+  const labelClass = "block text-sm font-semibold text-white/85 mb-2";
+
+  const SaveButton = ({
+    onClick,
+    children,
+  }: {
+    onClick: () => void;
+    children: string;
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-2 rounded-2xl bg-purple-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0"
+    >
+      <FaSave className="text-xs" />
+      {children}
+    </button>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      <header className="bg-gray-900/50 border-b border-gray-700 sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <a href="/" className="flex items-center hover:opacity-80 transition">
+    <div className="relative min-h-screen overflow-hidden bg-black text-white">
+      <style>{`
+        @keyframes adminFloat {
+          0%, 100% { transform: translate3d(0,0,0) scale(1); opacity: 0.58; }
+          50% { transform: translate3d(24px,-18px,0) scale(1.08); opacity: 0.92; }
+        }
+
+        @keyframes adminPulse {
+          0%, 100% { opacity: 0.12; transform: scaleX(0.88); }
+          50% { opacity: 0.42; transform: scaleX(1); }
+        }
+
+        @keyframes adminGridMove {
+          from { background-position: 0 0; }
+          to { background-position: 80px 80px; }
+        }
+
+        @keyframes adminGlowSweep {
+          0% { transform: translateX(-120%); opacity: 0; }
+          40% { opacity: 0.38; }
+          100% { transform: translateX(120%); opacity: 0; }
+        }
+      `}</style>
+
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(147,51,234,0.28),transparent_34%),radial-gradient(circle_at_85%_15%,rgba(236,72,153,0.16),transparent_32%),radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.12),transparent_35%)]" />
+
+        <div
+          className="absolute inset-0 opacity-[0.09]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+            animation: "adminGridMove 18s linear infinite",
+          }}
+        />
+
+        <div
+          className="absolute left-[-120px] top-[120px] h-80 w-80 rounded-full bg-purple-700/25 blur-3xl"
+          style={{ animation: "adminFloat 8s ease-in-out infinite" }}
+        />
+
+        <div
+          className="absolute bottom-[-140px] right-[-120px] h-96 w-96 rounded-full bg-fuchsia-600/18 blur-3xl"
+          style={{ animation: "adminFloat 10s ease-in-out infinite reverse" }}
+        />
+
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent" />
+      </div>
+
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-black/45 backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
+          <a href="/" className="group flex items-center gap-4">
+            <div className="relative grid h-11 w-11 place-items-center rounded-2xl bg-white/10 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/50 to-pink-500/20 opacity-70 transition group-hover:opacity-100" />
+              <FaMagic className="relative text-white" />
+            </div>
+
+            <div>
               <span
-                className="text-white text-xl md:text-2xl font-bold tracking-[0.25em]"
+                className="block text-xl font-bold tracking-[0.25em] text-white md:text-2xl"
                 style={{ fontFamily: "Orbitron, sans-serif" }}
               >
-                ARC<span className="text-purple-500">X</span>NJO
+                ARC<span className="text-purple-400">X</span>NJO
               </span>
-            </a>
-          </div>
+              <span className="text-xs text-white/45">Control Center</span>
+            </div>
+          </a>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-gray-800 px-3 py-1.5 rounded-full">
-              <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 md:flex">
+              <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-black text-white">
                 {username?.charAt(0).toUpperCase() ||
-                  email?.charAt(0).toUpperCase() ||
+                  safeEmail?.charAt(0).toUpperCase() ||
                   "U"}
               </div>
 
-              <span className="text-white text-sm">
-                {username || email?.split("@")[0]}
-              </span>
+              <div className="leading-tight">
+                <p className="max-w-[160px] truncate text-sm font-semibold text-white">
+                  {displayName || username || safeEmail?.split("@")[0] || "User"}
+                </p>
+                <p className="text-[11px] uppercase tracking-wider text-white/40">
+                  {plan} / {role}
+                </p>
+              </div>
             </div>
 
             <button
+              type="button"
               onClick={handleLogout}
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:border-red-400/30 hover:bg-red-500/10 hover:text-white"
             >
               <FaSignOutAlt />
               <span className="hidden sm:inline">Logout</span>
@@ -246,25 +351,124 @@ export const AdminPanel = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <aside className="lg:w-64 space-y-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
-                  activeTab === tab.id
-                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                }`}
-              >
-                {tab.icon}
-                <span>{tab.label}</span>
-              </button>
-            ))}
+      <div className="relative z-10 mx-auto max-w-7xl px-5 py-8 lg:px-8">
+        <section className={`${glassCard} relative mb-8 overflow-hidden p-6 md:p-8`}>
+          <div
+            className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-purple-500/15 via-white/5 to-transparent"
+            style={{ animation: "adminGlowSweep 5s ease-in-out infinite" }}
+          />
 
-            <div className="pt-4 mt-4 border-t border-gray-700">
+          <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-purple-200">
+                <FaCrown className="text-purple-300" />
+                Creator Dashboard
+              </div>
+
+              <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">
+                Painel do perfil
+              </h1>
+
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">
+                Ajuste seu perfil, links, mídia, visual, música e badges em um
+                só lugar. Um cockpit preto-neon para mexer no seu universo.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
+              <div className="rounded-3xl border border-white/10 bg-black/30 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+                  Username
+                </p>
+                <p className="mt-1 truncate text-lg font-bold text-white">
+                  @{username || "loading"}
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-black/30 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+                  Plan
+                </p>
+                <p className="mt-1 flex items-center gap-2 text-lg font-bold text-white">
+                  <span className="h-2 w-2 rounded-full bg-purple-400 shadow-[0_0_16px_rgba(168,85,247,0.8)]" />
+                  {plan || "free"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+          <aside className={`${glassCard} h-fit p-4 lg:sticky lg:top-24`}>
+            <div className="mb-4 rounded-3xl border border-white/10 bg-black/35 p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 text-xl font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.28)]">
+                  {username?.charAt(0).toUpperCase() ||
+                    safeEmail?.charAt(0).toUpperCase() ||
+                    "U"}
+                </div>
+
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-white">
+                    {displayName || username || "User"}
+                  </p>
+                  <p className="truncate text-xs text-white/45">{safeEmail}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full w-2/3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
+                  style={{ animation: "adminPulse 2.4s ease-in-out infinite" }}
+                />
+              </div>
+            </div>
+
+            <nav className="space-y-2">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`group relative w-full overflow-hidden rounded-2xl border px-4 py-4 text-left transition ${
+                      isActive
+                        ? "border-purple-400/30 bg-purple-500/15 text-white shadow-[0_0_28px_rgba(168,85,247,0.18)]"
+                        : "border-white/5 bg-white/[0.03] text-white/55 hover:border-white/10 hover:bg-white/[0.07] hover:text-white"
+                    }`}
+                  >
+                    {isActive && (
+                      <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-purple-400 to-pink-400" />
+                    )}
+
+                    <span className="flex items-center gap-3">
+                      <span
+                        className={`grid h-10 w-10 place-items-center rounded-2xl transition ${
+                          isActive
+                            ? "bg-purple-500 text-white"
+                            : "bg-black/30 text-white/45 group-hover:text-white"
+                        }`}
+                      >
+                        {tab.icon}
+                      </span>
+
+                      <span className="min-w-0">
+                        <span className="block text-sm font-bold">
+                          {tab.label}
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs text-white/35">
+                          {tab.description}
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            <div className="mt-4 border-t border-white/10 pt-4">
               <button
                 type="button"
                 onClick={() => {
@@ -273,193 +477,273 @@ export const AdminPanel = () => {
                     return;
                   }
 
-                  window.open(`https://arcxnjo.com.br/${username}`, "_blank");
+                  window.open(profileUrl, "_blank");
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition"
+                className="group flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-4 text-left text-white/60 transition hover:border-purple-400/25 hover:bg-purple-500/10 hover:text-white"
               >
-                <FaTachometerAlt />
-                <span>View Profile</span>
+                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 group-hover:bg-purple-500/20">
+                  <FaTachometerAlt />
+                </span>
+
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2 text-sm font-bold">
+                    View Profile
+                    <FaExternalLinkAlt className="text-[10px] opacity-60" />
+                  </span>
+                  <span className="block truncate text-xs text-white/35">
+                    arcxnjo.com.br/{username || "loading"}
+                  </span>
+                </span>
               </button>
             </div>
           </aside>
 
-          <main className="flex-1 space-y-6">
-            {activeTab === "profile" && (
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl shrink-0">
-                    {username.charAt(0).toUpperCase() || "U"}
+          <main className="min-w-0 space-y-6">
+            <div className={`${glassCard} overflow-hidden`}>
+              <div className="border-b border-white/10 bg-black/25 px-5 py-4 md:px-6">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-purple-500/20 text-purple-200">
+                    {activeTabData?.icon}
                   </div>
 
-                  <div className="w-full">
-                    <h3 className="text-xl font-bold">
-                      {displayName || username || "User"}
-                    </h3>
-
-                    <p className="text-white/70 text-sm">{email}</p>
-
-                    <div className="mt-4">
-                      <label className="block text-sm font-semibold mb-2">
-                        Username
-                      </label>
-
-                      <input
-                        type="text"
-                        value={newUsername}
-                        onChange={(e) => setNewUsername(e.target.value)}
-                        placeholder="your-username"
-                        className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 outline-none focus:border-white/40"
-                        maxLength={20}
-                      />
-
-                      <p className="text-xs text-white/60 mt-1">
-                        3-20 characters. Letters, numbers, dots, underscores,
-                        and hyphens only.
-                      </p>
-
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-white/60">
-                          {newUsername.length}/20
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={handleSaveUsername}
-                          className="bg-black/40 hover:bg-black/60 px-4 py-2 rounded-lg text-sm font-semibold transition"
-                        >
-                          Save Username
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <label className="block text-sm font-semibold mb-2">
-                        Display Name
-                      </label>
-
-                      <input
-                        type="text"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="Your display name"
-                        className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 outline-none focus:border-white/40"
-                        maxLength={32}
-                      />
-
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-white/60">
-                          {displayName.length}/32
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={handleSaveDisplayName}
-                          className="bg-black/40 hover:bg-black/60 px-4 py-2 rounded-lg text-sm font-semibold transition"
-                        >
-                          Save Display Name
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <label className="block text-sm font-semibold mb-2">
-                        Bio
-                      </label>
-
-                      <textarea
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        placeholder="Write a short bio..."
-                        className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 resize-none outline-none focus:border-white/40"
-                        rows={3}
-                        maxLength={160}
-                      />
-
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-white/60">
-                          {bio.length}/160
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={handleSaveBio}
-                          className="bg-black/40 hover:bg-black/60 px-4 py-2 rounded-lg text-sm font-semibold transition"
-                        >
-                          Save Bio
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <label className="block text-sm font-semibold mb-2">
-                        Location
-                      </label>
-
-                      <input
-                        type="text"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        placeholder="Your location"
-                        className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 outline-none focus:border-white/40"
-                        maxLength={40}
-                      />
-                    </div>
-
-                    <div className="mt-6">
-                      <label className="block text-sm font-semibold mb-2">
-                        Status
-                      </label>
-
-                      <input
-                        type="text"
-                        value={statusText}
-                        onChange={(e) => setStatusText(e.target.value)}
-                        placeholder="What are you doing now?"
-                        className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/50 outline-none focus:border-white/40"
-                        maxLength={80}
-                      />
-
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-white/60">
-                          {statusText.length}/80
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={handleSaveDetails}
-                          className="bg-black/40 hover:bg-black/60 px-4 py-2 rounded-lg text-sm font-semibold transition"
-                        >
-                          Save Details
-                        </button>
-                      </div>
-                    </div>
+                  <div>
+                    <h2 className="text-lg font-black text-white">
+                      {activeTabData?.label}
+                    </h2>
+                    <p className="text-sm text-white/40">
+                      {activeTabData?.description}
+                    </p>
                   </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-white/20">
-                  <p className="text-sm">Your public profile is at:</p>
-
-                  <code className="text-sm bg-black/30 px-2 py-1 rounded mt-1 inline-block break-all">
-                    https://arcxnjo.com.br/{username || "loading"}
-                  </code>
                 </div>
               </div>
-            )}
 
-            {activeTab === "social" &&
-              tabs.find((t) => t.id === "social")?.component}
+              <div className="p-5 md:p-6">
+                {activeTab === "profile" && (
+                  <div className="space-y-6">
+                    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-purple-600/25 via-black/35 to-pink-600/20 p-5 md:p-6">
+                      <div className="absolute right-[-70px] top-[-70px] h-44 w-44 rounded-full bg-purple-500/20 blur-3xl" />
 
-            {activeTab === "images" &&
-              tabs.find((t) => t.id === "images")?.component}
+                      <div className="relative flex flex-col gap-5 md:flex-row md:items-start">
+                        <div className="grid h-20 w-20 shrink-0 place-items-center rounded-3xl bg-white/10 text-3xl font-black text-white shadow-[0_0_30px_rgba(255,255,255,0.08)]">
+                          {username.charAt(0).toUpperCase() || "U"}
+                        </div>
 
-            {activeTab === "appearance" &&
-              tabs.find((t) => t.id === "appearance")?.component}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-2xl font-black text-white">
+                            {displayName || username || "User"}
+                          </h3>
 
-            {activeTab === "music" &&
-              tabs.find((t) => t.id === "music")?.component}
+                          <p className="mt-1 truncate text-sm text-white/50">
+                            {safeEmail}
+                          </p>
 
-            {activeTab === "badges" &&
-              tabs.find((t) => t.id === "badges")?.component}
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-semibold text-white/60">
+                              @{username || "loading"}
+                            </span>
+
+                            <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-100">
+                              {plan} plan
+                            </span>
+
+                            <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-semibold text-pink-100">
+                              {role}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-5 xl:grid-cols-2">
+                      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                        <div className="mb-5">
+                          <h3 className="text-lg font-black text-white">
+                            Identity
+                          </h3>
+                          <p className="text-sm text-white/40">
+                            Username and display name shown on your profile.
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className={labelClass}>Username</label>
+
+                          <input
+                            type="text"
+                            value={newUsername}
+                            onChange={(e) => setNewUsername(e.target.value)}
+                            placeholder="your-username"
+                            className={inputClass}
+                            maxLength={20}
+                          />
+
+                          <p className="mt-2 text-xs text-white/35">
+                            3-20 characters. Letters, numbers, dots,
+                            underscores and hyphens only.
+                          </p>
+
+                          <div className="mt-3 flex items-center justify-between gap-3">
+                            <span className="text-xs text-white/45">
+                              {newUsername.length}/20
+                            </span>
+
+                            <SaveButton onClick={handleSaveUsername}>
+                              Save Username
+                            </SaveButton>
+                          </div>
+                        </div>
+
+                        <div className="mt-6">
+                          <label className={labelClass}>Display Name</label>
+
+                          <input
+                            type="text"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            placeholder="Your display name"
+                            className={inputClass}
+                            maxLength={32}
+                          />
+
+                          <div className="mt-3 flex items-center justify-between gap-3">
+                            <span className="text-xs text-white/45">
+                              {displayName.length}/32
+                            </span>
+
+                            <SaveButton onClick={handleSaveDisplayName}>
+                              Save Display Name
+                            </SaveButton>
+                          </div>
+                        </div>
+                      </section>
+
+                      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                        <div className="mb-5">
+                          <h3 className="text-lg font-black text-white">
+                            Profile Text
+                          </h3>
+                          <p className="text-sm text-white/40">
+                            Bio, location and status for your public page.
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className={labelClass}>Bio</label>
+
+                          <textarea
+                            value={bio}
+                            onChange={(e) => setBio(e.target.value)}
+                            placeholder="Write a short bio..."
+                            className={`${inputClass} min-h-[118px] resize-none`}
+                            rows={3}
+                            maxLength={160}
+                          />
+
+                          <div className="mt-3 flex items-center justify-between gap-3">
+                            <span className="text-xs text-white/45">
+                              {bio.length}/160
+                            </span>
+
+                            <SaveButton onClick={handleSaveBio}>
+                              Save Bio
+                            </SaveButton>
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+
+                    <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                      <div className="mb-5">
+                        <h3 className="text-lg font-black text-white">
+                          Extra Details
+                        </h3>
+                        <p className="text-sm text-white/40">
+                          These can be used by your profile layout or future
+                          modules.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div>
+                          <label className={labelClass}>Location</label>
+
+                          <input
+                            type="text"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="Your location"
+                            className={inputClass}
+                            maxLength={40}
+                          />
+                        </div>
+
+                        <div>
+                          <label className={labelClass}>Status</label>
+
+                          <input
+                            type="text"
+                            value={statusText}
+                            onChange={(e) => setStatusText(e.target.value)}
+                            placeholder="What are you doing now?"
+                            className={inputClass}
+                            maxLength={80}
+                          />
+
+                          <div className="mt-3 flex items-center justify-between gap-3">
+                            <span className="text-xs text-white/45">
+                              {statusText.length}/80
+                            </span>
+
+                            <SaveButton onClick={handleSaveDetails}>
+                              Save Details
+                            </SaveButton>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                      <p className="text-sm font-semibold text-white/70">
+                        Your public profile is at:
+                      </p>
+
+                      <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/35 p-4 md:flex-row md:items-center md:justify-between">
+                        <code className="break-all text-sm text-purple-100">
+                          https://arcxnjo.com.br/{username || "loading"}
+                        </code>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!username) return;
+                            window.open(profileUrl, "_blank");
+                          }}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/15"
+                        >
+                          Open
+                          <FaExternalLinkAlt className="text-xs" />
+                        </button>
+                      </div>
+                    </section>
+                  </div>
+                )}
+
+                {activeTab === "social" &&
+                  tabs.find((t) => t.id === "social")?.component}
+
+                {activeTab === "images" &&
+                  tabs.find((t) => t.id === "images")?.component}
+
+                {activeTab === "appearance" &&
+                  tabs.find((t) => t.id === "appearance")?.component}
+
+                {activeTab === "music" &&
+                  tabs.find((t) => t.id === "music")?.component}
+
+                {activeTab === "badges" &&
+                  tabs.find((t) => t.id === "badges")?.component}
+              </div>
+            </div>
           </main>
         </div>
       </div>
