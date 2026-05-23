@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useSelector } from "react-redux";
 import { userSliceType } from "../Store/userSlice";
 import { SocialMediaSettings } from "./Ui/SocialMediaSettings";
@@ -21,9 +21,11 @@ import {
   FaSave,
 } from "react-icons/fa";
 import axios from "axios";
+import { useI18n } from "../i18n/i18nProvider";
 
 export const AdminPanel = () => {
   const { email } = useSelector((store: { user: userSliceType }) => store.user);
+  const { t } = useI18n();
 
   const [activeTab, setActiveTab] = useState("profile");
   const [username, setUsername] = useState<string>("");
@@ -180,43 +182,43 @@ export const AdminPanel = () => {
   const tabs = [
     {
       id: "profile",
-      label: "Public Profile",
-      description: "Name, bio and profile details",
+      label: t("admin.publicProfile"),
+      description: t("admin.publicProfileDescription"),
       icon: <FaUser />,
       component: null,
     },
     {
       id: "social",
-      label: "Social Media",
-      description: "Links and social handles",
+      label: t("admin.socialMedia"),
+      description: t("admin.socialMediaDescription"),
       icon: <FaLink />,
       component: <SocialMediaSettings />,
     },
     {
       id: "images",
-      label: "Images",
-      description: "Avatar, banner and media",
+      label: t("admin.images"),
+      description: t("admin.imagesDescription"),
       icon: <FaImage />,
       component: <ProfileImagesSettings />,
     },
     {
       id: "appearance",
-      label: "Appearance",
-      description: "Themes, effects and style",
+      label: t("admin.appearance"),
+      description: t("admin.appearanceDescription"),
       icon: <FaPalette />,
       component: <AppearanceSettings />,
     },
     {
       id: "music",
-      label: "Music",
-      description: "Profile audio and title",
+      label: t("admin.music"),
+      description: t("admin.musicDescription"),
       icon: <FaMusic />,
       component: <MusicSettings />,
     },
     {
       id: "badges",
-      label: "Badges",
-      description: "Profile icons and status",
+      label: t("admin.badges"),
+      description: t("admin.badgesDescription"),
       icon: <FaCertificate />,
       component: <BadgeSettings />,
     },
@@ -235,12 +237,12 @@ export const AdminPanel = () => {
   const labelClass = "block text-sm font-semibold text-white/85 mb-2";
 
   const SaveButton = ({
-    onClick,
-    children,
-  }: {
-    onClick: () => void;
-    children: string;
-  }) => (
+  onClick,
+  children,
+}: {
+  onClick: () => void | Promise<void>;
+  children: ReactNode;
+}) => (
     <button
       type="button"
       onClick={onClick}
@@ -317,7 +319,7 @@ export const AdminPanel = () => {
               >
                 ARC<span className="text-purple-400">X</span>NJO
               </span>
-              <span className="text-xs text-white/45">Control Center</span>
+              <span className="text-xs text-white/45">{t("admin.controlCenter")}</span>
             </div>
           </a>
 
@@ -345,7 +347,7 @@ export const AdminPanel = () => {
               className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:border-red-400/30 hover:bg-red-500/10 hover:text-white"
             >
               <FaSignOutAlt />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline">{t("admin.logout")}</span>
             </button>
           </div>
         </div>
@@ -362,16 +364,15 @@ export const AdminPanel = () => {
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-purple-200">
                 <FaCrown className="text-purple-300" />
-                Creator Dashboard
+                {t("admin.creatorDashboard")}
               </div>
 
               <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">
-                Painel do perfil
+                {t("admin.dashboard")}
               </h1>
 
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">
-                Ajuste seu perfil, links, mídia, visual, música e badges em um
-                só lugar. Um cockpit preto-neon para mexer no seu universo.
+                {t("admin.dashboardSubtitle")}
               </p>
             </div>
 
@@ -381,7 +382,7 @@ export const AdminPanel = () => {
                   Username
                 </p>
                 <p className="mt-1 truncate text-lg font-bold text-white">
-                  @{username || "loading"}
+                  @{username || t("admin.loading")}
                 </p>
               </div>
 
@@ -487,11 +488,11 @@ export const AdminPanel = () => {
 
                 <span className="min-w-0">
                   <span className="flex items-center gap-2 text-sm font-bold">
-                    View Profile
+                    {t("admin.viewProfile")}
                     <FaExternalLinkAlt className="text-[10px] opacity-60" />
                   </span>
                   <span className="block truncate text-xs text-white/35">
-                    arcxnjo.com.br/{username || "loading"}
+                    arcxnjo.com.br/{username || t("admin.loading")}
                   </span>
                 </span>
               </button>
@@ -539,7 +540,7 @@ export const AdminPanel = () => {
 
                           <div className="mt-4 flex flex-wrap gap-2">
                             <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-semibold text-white/60">
-                              @{username || "loading"}
+                              @{username || t("admin.loading")}
                             </span>
 
                             <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-100">
@@ -558,15 +559,15 @@ export const AdminPanel = () => {
                       <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
                         <div className="mb-5">
                           <h3 className="text-lg font-black text-white">
-                            Identity
+                            {t("admin.identity")}
                           </h3>
                           <p className="text-sm text-white/40">
-                            Username and display name shown on your profile.
+                            {t("admin.identityDescription")}
                           </p>
                         </div>
 
                         <div>
-                          <label className={labelClass}>Username</label>
+                          <label className={labelClass}>{t("admin.username")}</label>
 
                           <input
                             type="text"
@@ -588,13 +589,13 @@ export const AdminPanel = () => {
                             </span>
 
                             <SaveButton onClick={handleSaveUsername}>
-                              Save Username
+                              {t("admin.saveUsername")}
                             </SaveButton>
                           </div>
                         </div>
 
                         <div className="mt-6">
-                          <label className={labelClass}>Display Name</label>
+                          <label className={labelClass}>{t("admin.displayName")}</label>
 
                           <input
                             type="text"
@@ -611,7 +612,7 @@ export const AdminPanel = () => {
                             </span>
 
                             <SaveButton onClick={handleSaveDisplayName}>
-                              Save Display Name
+                              Save {t("admin.displayName")}
                             </SaveButton>
                           </div>
                         </div>
@@ -620,10 +621,10 @@ export const AdminPanel = () => {
                       <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
                         <div className="mb-5">
                           <h3 className="text-lg font-black text-white">
-                            Profile Text
+                            {t("admin.profileText")}
                           </h3>
                           <p className="text-sm text-white/40">
-                            Bio, location and status for your public page.
+                            {t("admin.profileTextDescription")}
                           </p>
                         </div>
 
@@ -645,7 +646,7 @@ export const AdminPanel = () => {
                             </span>
 
                             <SaveButton onClick={handleSaveBio}>
-                              Save Bio
+                              {t("admin.saveBio")}
                             </SaveButton>
                           </div>
                         </div>
@@ -655,17 +656,16 @@ export const AdminPanel = () => {
                     <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
                       <div className="mb-5">
                         <h3 className="text-lg font-black text-white">
-                          Extra Details
+                          {t("admin.extraDetails")}
                         </h3>
                         <p className="text-sm text-white/40">
-                          These can be used by your profile layout or future
-                          modules.
+                          {t("admin.extraDetailsDescription")}
                         </p>
                       </div>
 
                       <div className="grid gap-5 md:grid-cols-2">
                         <div>
-                          <label className={labelClass}>Location</label>
+                          <label className={labelClass}>{t("admin.location")}</label>
 
                           <input
                             type="text"
@@ -678,7 +678,7 @@ export const AdminPanel = () => {
                         </div>
 
                         <div>
-                          <label className={labelClass}>Status</label>
+                          <label className={labelClass}>{t("admin.status")}</label>
 
                           <input
                             type="text"
@@ -695,7 +695,7 @@ export const AdminPanel = () => {
                             </span>
 
                             <SaveButton onClick={handleSaveDetails}>
-                              Save Details
+                              {t("admin.saveDetails")}
                             </SaveButton>
                           </div>
                         </div>
@@ -704,12 +704,12 @@ export const AdminPanel = () => {
 
                     <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
                       <p className="text-sm font-semibold text-white/70">
-                        Your public profile is at:
+                        {t("admin.publicUrl")}
                       </p>
 
                       <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/35 p-4 md:flex-row md:items-center md:justify-between">
                         <code className="break-all text-sm text-purple-100">
-                          https://arcxnjo.com.br/{username || "loading"}
+                          https://arcxnjo.com.br/{username || t("admin.loading")}
                         </code>
 
                         <button

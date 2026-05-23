@@ -7,11 +7,13 @@ import registerSchema from "../Shemas/registerSchema";
 import { useDispatch } from "react-redux";
 import { loginUser } from "../Store/userSlice";
 import { DiscordAuthButton } from "./Ui/DiscordAuthButton";
+import { useI18n } from "../i18n/i18nProvider";
 
 export const Register = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { t } = useI18n();
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
@@ -57,14 +59,14 @@ export const Register = () => {
         console.error("Discord register finish error:", error);
         localStorage.removeItem("token");
         setIsSuccess(false);
-        setMessage("Erro ao finalizar cadastro com Discord. Tente novamente.");
+        setMessage(t("auth.discordRegisterError"));
       } finally {
         setDiscordLoading(false);
       }
     };
 
     handleDiscordRedirect();
-  }, [location.search, navigate, dispatch, API_URL]);
+  }, [location.search, navigate, dispatch, API_URL, t]);
 
   const onSubmit = async () => {
     setLoading(true);
@@ -78,13 +80,13 @@ export const Register = () => {
       });
 
       setIsSuccess(true);
-      setMessage("Successfully registered! Redirecting to login...");
+      setMessage(t("auth.registerSuccess"));
 
       setTimeout(() => {
         navigate("/login?email=" + values.email);
       }, 2000);
     } catch (error: any) {
-      setMessage(error.response?.data?.error || "Registration failed");
+      setMessage(error.response?.data?.error || t("auth.registerFailed"));
       setIsSuccess(false);
     } finally {
       setLoading(false);
@@ -104,12 +106,10 @@ export const Register = () => {
 
   return (
     <div className="w-full flex flex-col items-center justify-center min-h-screen bg-black">
-      <div className="text-white w-[400px] bg-slate-900 rounded-xl flex flex-col items-center p-10">
+      <div className="text-white w-[400px] max-w-[92vw] bg-slate-900 rounded-xl flex flex-col items-center p-10">
         <div className="flex flex-col items-center text-center">
           <img src={Logo} className="w-1/4 inline-block mb-3" />
-          <p className="font-semibold text-lg">
-            Create your ARCXNJO.COM account
-          </p>
+          <p className="font-semibold text-lg">{t("auth.registerTitle")}</p>
         </div>
 
         {message && (
@@ -124,22 +124,22 @@ export const Register = () => {
 
         {discordLoading && (
           <div className="mt-4 p-2 rounded text-center w-full bg-[#5865F2]">
-            Entrando com Discord...
+            {t("auth.discordLoading")}
           </div>
         )}
 
-        <div className="w-[300px] mt-6">
-          <DiscordAuthButton text="Criar conta com Discord" />
+        <div className="w-[300px] max-w-full mt-6">
+          <DiscordAuthButton text={t("auth.signupWithDiscord")} />
 
           <div className="my-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-white/10" />
-            <span className="text-xs text-white/40">ou</span>
+            <span className="text-xs text-white/40">{t("common.or")}</span>
             <div className="h-px flex-1 bg-white/10" />
           </div>
 
           <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1">
-              <span>Email</span>
+              <span>{t("auth.email")}</span>
               <input
                 name="email"
                 type="email"
@@ -152,7 +152,7 @@ export const Register = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span>Password</span>
+              <span>{t("auth.password")}</span>
               <input
                 name="password"
                 type="password"
@@ -165,7 +165,7 @@ export const Register = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span>Username</span>
+              <span>{t("auth.username")}</span>
               <input
                 name="username"
                 type="text"
@@ -185,7 +185,7 @@ export const Register = () => {
                 checked={values.control}
                 className="w-4 h-4"
               />
-              <p className="text-sm">I agree to the Terms of Service.</p>
+              <p className="text-sm">{t("auth.terms")}</p>
             </div>
 
             <p className="text-red-600 text-sm">{errors.control}</p>
@@ -195,14 +195,14 @@ export const Register = () => {
               disabled={loading || discordLoading}
               className="bg-purple-700 text-black font-bold w-full rounded-lg p-2 mt-5 border-purple-950 border-4 border-solid disabled:opacity-50 hover:bg-purple-600 transition"
             >
-              {loading ? "Creating account..." : "Sign Up"}
+              {loading ? t("auth.creatingAccount") : t("auth.signup")}
             </button>
 
             <div className="text-center">
               <p className="text-sm">
-                Already have an account?{" "}
+                {t("auth.hasAccount")}{" "}
                 <Link to="/login" className="text-purple-700 hover:underline">
-                  Login
+                  {t("auth.login")}
                 </Link>
               </p>
             </div>

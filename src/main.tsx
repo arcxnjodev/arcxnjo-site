@@ -3,8 +3,12 @@ import "./index.css";
 import App from "./App.tsx";
 import { Provider } from "react-redux";
 import { store } from "./Store/store.tsx";
+import { I18nProvider } from "./i18n/i18nProvider";
+
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
-    <App />
+    <I18nProvider>
+      <App />
+    </I18nProvider>
   </Provider>
 );

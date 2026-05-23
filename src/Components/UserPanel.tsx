@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import type { IconType } from "react-icons";
+import { useI18n } from "../i18n/i18nProvider";
 import {
   FaDiscord,
   FaGlobe,
@@ -373,6 +374,7 @@ export const UserPanel = () => {
   const locationPath = useLocation();
   const username = locationPath.pathname.replace("/", "");
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
+  const { t } = useI18n();
 
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -402,7 +404,7 @@ export const UserPanel = () => {
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || "Profile not found.");
+          throw new Error(result.error || t("profile.notFound"));
         }
 
         setData(result);
@@ -564,7 +566,7 @@ export const UserPanel = () => {
     e.preventDefault();
 
     if (!visitorName.trim() || !guestbookMessage.trim()) {
-      setGuestbookFeedback("Please fill in your name and message.");
+      setGuestbookFeedback(t("profile.fillNameAndMessage"));
       return;
     }
 
@@ -597,7 +599,7 @@ export const UserPanel = () => {
 
       setVisitorName("");
       setGuestbookMessage("");
-      setGuestbookFeedback("Message sent!");
+      setGuestbookFeedback(t("profile.messageSent"));
     } catch (error: any) {
       setGuestbookFeedback(error.message || "Failed to send message.");
     } finally {
@@ -608,7 +610,7 @@ export const UserPanel = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white">
-        Loading profile...
+        {t("profile.loading")}
       </div>
     );
   }
@@ -616,7 +618,7 @@ export const UserPanel = () => {
   if (!data) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white">
-        Profile not found.
+        {t("profile.notFound")}
       </div>
     );
   }
@@ -732,11 +734,11 @@ export const UserPanel = () => {
           className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/70 text-white text-center px-4"
         >
           <span className="text-4xl md:text-5xl font-extrabold tracking-widest drop-shadow-[0_0_18px_rgba(168,85,247,0.9)]">
-            CLICK TO ENTER
+            {t("profile.clickToEnter")}
           </span>
 
           <span className="mt-4 text-sm md:text-base text-white/60">
-            Tap to load profile
+            {t("profile.tapToLoad")}
           </span>
         </button>
       )}
@@ -767,21 +769,21 @@ export const UserPanel = () => {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-white truncate">
                       {hasMusic
-                        ? data.profile.music_title || "Profile Music"
-                        : "Background Video Audio"}
+                        ? data.profile.music_title || t("profile.profileMusic")
+                        : t("profile.videoAudio")}
                     </p>
 
                     <p className="text-xs text-white/50 mt-0.5">
                       {muted || volume === 0
-                        ? "Muted"
-                        : `Volume ${Math.round(volume * 100)}%`}
+                        ? t("profile.muted")
+                        : `${t("profile.volume")} ${Math.round(volume * 100)}%`}
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-white/60">Volume</span>
+                    <span className="text-xs text-white/60">{t("profile.volume")}</span>
                     <span className="text-xs text-white/60">
                       {Math.round(volume * 100)}%
                     </span>
@@ -805,7 +807,7 @@ export const UserPanel = () => {
                     className="mt-4 flex items-center justify-center gap-2 w-full rounded-xl bg-white/10 hover:bg-white/20 py-2.5 text-sm font-medium text-white transition"
                   >
                     <FaDownload />
-                    Download Music
+                    {t("profile.downloadMusic")}
                   </a>
                 )}
               </div>
@@ -836,7 +838,7 @@ export const UserPanel = () => {
                 </>
               ) : (
                 <p className="text-xs text-white/70 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
-                  No comments yet
+                  {t("profile.noComments")}
                 </p>
               )}
             </div>
@@ -858,7 +860,7 @@ export const UserPanel = () => {
                       type="text"
                       value={visitorName}
                       onChange={(e) => setVisitorName(e.target.value)}
-                      placeholder="Your name"
+                      placeholder={t("profile.yourName")}
                       maxLength={32}
                       className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm text-white placeholder-white/45 outline-none"
                     />
@@ -866,7 +868,7 @@ export const UserPanel = () => {
                     <textarea
                       value={guestbookMessage}
                       onChange={(e) => setGuestbookMessage(e.target.value)}
-                      placeholder="Leave a message..."
+                      placeholder={t("profile.leaveMessage")}
                       maxLength={180}
                       rows={3}
                       className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm text-white placeholder-white/45 outline-none resize-none"
@@ -883,7 +885,7 @@ export const UserPanel = () => {
                         className="inline-flex items-center gap-2 rounded-xl bg-white/12 hover:bg-white/20 px-4 py-2.5 text-sm font-medium text-white transition disabled:opacity-50"
                       >
                         <FaPaperPlane className="text-xs" />
-                        {guestbookSubmitting ? "Sending..." : "Send"}
+                        {guestbookSubmitting ? t("profile.sending") : t("profile.send")}
                       </button>
                     </div>
 
@@ -1088,7 +1090,7 @@ export const UserPanel = () => {
                     )}
 
                     <div className="min-w-0">
-                      <p className="text-xs text-white/50">Listening to Spotify</p>
+                      <p className="text-xs text-white/50">{t("profile.listeningSpotify")}</p>
 
                       <p className="mt-1 text-sm font-semibold text-white truncate">
                         {discordData.spotify.song}
@@ -1101,7 +1103,7 @@ export const UserPanel = () => {
                   </div>
                 ) : activeDiscordActivity ? (
                   <div className="mt-4 rounded-xl bg-black/20 p-3">
-                    <p className="text-xs text-white/50">Activity</p>
+                    <p className="text-xs text-white/50">{t("profile.activity")}</p>
 
                     <p className="mt-1 text-sm font-semibold text-white truncate">
                       {activeDiscordActivity.name}
@@ -1115,7 +1117,7 @@ export const UserPanel = () => {
                   </div>
                 ) : (
                   <div className="mt-4 rounded-xl bg-black/20 p-3">
-                    <p className="text-xs text-white/60">Online on Discord</p>
+                    <p className="text-xs text-white/60">{t("profile.onlineOnDiscord")}</p>
                   </div>
                 )}
               </div>
