@@ -1,5 +1,13 @@
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
+import {
+  FaCheckCircle,
+  FaCrown,
+  FaDiscord,
+  FaLock,
+  FaSave,
+  FaShieldAlt,
+} from "react-icons/fa";
 
 type UserPlan = "free" | "pro";
 
@@ -248,139 +256,228 @@ export const BadgeSettings = () => {
     manual: allBadges.filter((badge) => badge.group === "manual"),
   };
 
-  const renderGroup = (
+  const renderBadgeGroup = (
     title: string,
+    description: string,
     badges: BadgeDef[],
     lockedGroup = false
   ) => (
-    <div className="mt-6">
-      <p className="text-white font-semibold mb-3">{title}</p>
+    <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h4 className="text-lg font-black text-white">{title}</h4>
+          <p className="mt-1 text-sm text-white/40">{description}</p>
+        </div>
 
-      <div className="flex flex-wrap gap-3">
+        {lockedGroup && !ownerBypass && (
+          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 text-white/35">
+            <FaLock />
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {badges.map((badge) => {
           const selected =
             selectedBadges.includes(badge.id) ||
             lockedBadges.includes(badge.id);
 
-          const clickable =
-            !lockedGroup && allowedBadges.includes(badge.id);
+          const clickable = !lockedGroup && allowedBadges.includes(badge.id);
+          const isLockedManual = lockedGroup && !ownerBypass;
 
           return (
             <button
               key={badge.id}
               type="button"
               onClick={() => clickable && toggleBadge(badge.id)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-full transition ${
+              disabled={!clickable}
+              className={`group relative overflow-hidden rounded-3xl border p-4 text-left transition ${
                 selected
-                  ? "bg-white/20 scale-[1.03] shadow-[0_0_18px_rgba(255,255,255,0.14)]"
+                  ? "border-purple-400/40 bg-purple-500/15 shadow-[0_0_28px_rgba(168,85,247,0.18)]"
                   : clickable
-                  ? "bg-white/10 hover:bg-white/20"
-                  : "bg-white/5 opacity-45 cursor-not-allowed"
+                  ? "border-white/10 bg-white/[0.035] hover:border-purple-400/25 hover:bg-white/[0.06]"
+                  : "cursor-not-allowed border-white/5 bg-white/[0.02] opacity-45"
               }`}
             >
-              <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                <img
-                  src={badge.image}
-                  alt={badge.label}
-                  className="w-7 h-7 object-contain"
-                  draggable={false}
-                />
-              </div>
+              {selected && (
+                <div className="absolute right-3 top-3 text-green-300">
+                  <FaCheckCircle />
+                </div>
+              )}
 
-              <div className="text-left">
-                <span className="block text-white text-sm font-semibold">
-                  {badge.label}
-                </span>
+              <div className="flex items-center gap-4">
+                <div className="relative grid h-14 w-14 place-items-center rounded-2xl bg-white/10">
+                  <div className="absolute inset-0 rounded-2xl bg-purple-500/10 opacity-0 transition group-hover:opacity-100" />
 
-                <span className="block text-white/45 text-xs">
-                  {badge.group === "manual"
-                    ? ownerBypass
-                      ? "Owner"
-                      : "Neon only"
-                    : badge.group === "pro"
-                    ? "Pro"
-                    : "Free"}
-                </span>
+                  <img
+                    src={badge.image}
+                    alt={badge.label}
+                    className="relative h-9 w-9 object-contain"
+                    draggable={false}
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-white">
+                    {badge.label}
+                  </p>
+
+                  <p className="mt-1 text-xs text-white/40">
+                    {badge.group === "manual"
+                      ? ownerBypass
+                        ? "Owner bypass"
+                        : "Neon only"
+                      : badge.group === "pro"
+                      ? "Pro badge"
+                      : "Free badge"}
+                  </p>
+
+                  {isLockedManual && (
+                    <p className="mt-1 text-[11px] text-white/25">
+                      Given manually
+                    </p>
+                  )}
+                </div>
               </div>
             </button>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 
   return (
-    <div className="bg-purple-700 p-10 rounded-lg m-5">
-      <p className="text-2xl font-bold mb-2 text-white">Badges</p>
+    <div className="space-y-6">
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-purple-600/20 via-black/30 to-pink-600/10 p-5 md:p-6">
+        <div className="absolute right-[-80px] top-[-80px] h-52 w-52 rounded-full bg-purple-500/20 blur-3xl" />
 
-      <p className="text-white/70 text-sm">
-        Select up to 3 badges for your profile.
-      </p>
+        <div className="relative">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-purple-200">
+            <FaShieldAlt />
+            Badge System
+          </div>
 
-      <div className="mt-5 rounded-2xl bg-black/20 p-5 flex flex-col items-center text-center">
-        <button
-          type="button"
-          onClick={handleConnectDiscord}
-          className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] transition px-5 py-2.5 rounded-xl text-white font-semibold shadow-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="currentColor"
+          <h3 className="text-2xl font-black text-white">Badges do perfil</h3>
+
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
+            Escolha até 3 badges para aparecerem no seu perfil público. Badges
+            manuais ficam bloqueadas para usuários comuns e só podem ser dadas
+            pelo owner.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+            Plan
+          </p>
+          <p className="mt-2 text-2xl font-black text-white">{plan}</p>
+        </div>
+
+        <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+            Bypass
+          </p>
+          <p className="mt-2 text-2xl font-black text-white">
+            {ownerBypass ? "enabled" : "disabled"}
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+            Selected
+          </p>
+          <p className="mt-2 text-2xl font-black text-white">
+            {totalSelected}/3
+          </p>
+        </div>
+      </div>
+
+      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <div className="flex items-center gap-2">
+              <FaDiscord className="text-[#5865F2]" />
+              <h4 className="text-lg font-black text-white">
+                Discord Connection
+              </h4>
+            </div>
+
+            <p className="mt-1 max-w-2xl text-sm text-white/45">
+              Conecte seu Discord para mostrar status, boost, Spotify e presença
+              no perfil público.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleConnectDiscord}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#5865F2] px-5 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(88,101,242,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4752C4] hover:shadow-[0_0_38px_rgba(88,101,242,0.35)] active:translate-y-0"
           >
-            <path d="M20.317 4.369A19.791 19.791 0 0 0 16.885 3c-.161.287-.343.671-.471.973a18.27 18.27 0 0 0-5.828 0 10.8 10.8 0 0 0-.48-.973 19.736 19.736 0 0 0-3.432 1.37C2.533 9.045 1.555 13.58 2.013 18.057a19.9 19.9 0 0 0 5.993 3.02c.486-.66.92-1.356 1.296-2.082-.713-.27-1.39-.605-2.033-.998.17-.123.338-.25.5-.381a13.913 13.913 0 0 0 11.464 0c.163.131.33.258.5.381-.644.393-1.32.728-2.034.998.377.726.81 1.422 1.297 2.082a19.89 19.89 0 0 0 5.993-3.02c.54-5.177-.9-9.674-3.683-13.688zM9.545 15.735c-1.18 0-2.145-1.085-2.145-2.419 0-1.333.945-2.419 2.145-2.419 1.2 0 2.164 1.096 2.145 2.419 0 1.334-.945 2.419-2.145 2.419zm4.91 0c-1.18 0-2.145-1.085-2.145-2.419 0-1.333.945-2.419 2.145-2.419 1.2 0 2.164 1.096 2.145 2.419 0 1.334-.945 2.419-2.145 2.419z" />
-          </svg>
-
-          Connect Discord
-        </button>
-
-        <p className="text-xs text-white/60 mt-3 max-w-[280px]">
-          Connect your Discord to show your live status on your public profile.
-        </p>
-      </div>
-
-      <div className="mt-5 flex flex-wrap gap-3 text-sm">
-        <span className="bg-black/25 text-white px-3 py-1 rounded-full">
-          Plan: {plan}
-        </span>
-
-        <span className="bg-black/25 text-white px-3 py-1 rounded-full">
-          Bypass: {ownerBypass ? "enabled" : "disabled"}
-        </span>
-
-        <span className="bg-black/25 text-white px-3 py-1 rounded-full">
-          Selected: {totalSelected}/3
-        </span>
-      </div>
+            <FaDiscord />
+            Connect Discord
+          </button>
+        </div>
+      </section>
 
       {message && (
         <div
-          className={`mt-4 p-2 rounded text-center ${
-            message.includes("✅") ? "bg-green-500" : "bg-red-500"
-          } text-white`}
+          className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${
+            message.includes("✅")
+              ? "border-green-400/20 bg-green-500/10 text-green-200"
+              : "border-red-400/20 bg-red-500/10 text-red-200"
+          }`}
         >
           {message}
         </div>
       )}
 
-      {renderGroup("Free Badges", grouped.free)}
-      {renderGroup("Pro Badges", grouped.pro)}
-      {renderGroup(
+      {renderBadgeGroup(
+        "Free Badges",
+        "Badges disponíveis para qualquer conta.",
+        grouped.free
+      )}
+
+      {renderBadgeGroup(
+        "Pro Badges",
+        "Badges liberadas para usuários Pro.",
+        grouped.pro
+      )}
+
+      {renderBadgeGroup(
         "Owner-only / Manual Badges",
+        ownerBypass
+          ? "Seu bypass está ativo. Você pode selecionar badges manuais."
+          : "Essas badges são dadas manualmente pelo owner através do Neon.",
         grouped.manual,
         !ownerBypass
       )}
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={loading}
-        className="bg-purple-900 w-full p-3 rounded-md mt-8 text-white hover:bg-purple-800 transition disabled:opacity-50"
-      >
-        {loading ? "Saving..." : "Save Badges"}
-      </button>
+      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <p className="flex items-center gap-2 text-sm font-bold text-white">
+              <FaCrown className="text-yellow-300" />
+              Ready to publish
+            </p>
+
+            <p className="mt-1 text-xs text-white/40">
+              Salve para atualizar as badges do perfil público.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <FaSave className="text-xs" />
+            {loading ? "Saving..." : "Save Badges"}
+          </button>
+        </div>
+      </section>
     </div>
   );
 };
