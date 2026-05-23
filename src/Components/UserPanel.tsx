@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { IconType } from "react-icons";
 import {
   FaDiscord,
@@ -18,6 +18,7 @@ import {
   FaMusic,
   FaBookOpen,
   FaPaperPlane,
+  FaHome,
 } from "react-icons/fa";
 
 type ProfileEffect = "none" | "stars" | "snow" | "sparkles" | "hearts";
@@ -681,6 +682,15 @@ export const UserPanel = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-4 py-10">
+      <Link
+  to="/"
+  title="Home"
+  aria-label="Go to home"
+  className="fixed top-5 right-5 z-[60] w-11 h-11 rounded-2xl bg-black/15 hover:bg-black/30 backdrop-blur-xl flex items-center justify-center text-white/55 hover:text-white opacity-60 hover:opacity-100 transition shadow-[0_8px_25px_rgba(0,0,0,0.22)]"
+>
+  <FaHome className="text-base" />
+</Link>
+
       {isVideoBackground ? (
         <video
           ref={backgroundVideoRef}
