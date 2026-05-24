@@ -53,10 +53,14 @@ const allowedFileTypes = [
   'audio/webm',
 ];
 
+const MB = 1024 * 1024;
+const FREE_UPLOAD_LIMIT_MB = 25;
+const PRO_VIDEO_UPLOAD_LIMIT_MB = 50;
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 25 * 1024 * 1024,
+    fileSize: PRO_VIDEO_UPLOAD_LIMIT_MB * MB,
   },
   fileFilter: (req, file, cb) => {
     if (allowedFileTypes.includes(file.mimetype)) {
@@ -1454,48 +1458,84 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
    UPLOAD
 ========================================================= */
 
-app.post('/api/upload', authenticateToken, upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
-    }
+app.post(
+  '/api/upload',
+  authenticateToken,
+  (req, res, next) => {
+    upload.single('file')(req, res, (error) => {
+      if (error) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+          return res.status(413).json({
+            error: 'File is too large. Maximum size is 50MB.',
+          });
+        }
 
-    const uploadToCloudinary = () => {
-      return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: 'arcxnjo/profile-media',
-            resource_type: 'auto',
-          },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-          }
-        );
+        return res.status(400).json({
+          error: error.message || 'Upload failed.',
+        });
+      }
 
-        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      next();
+    });
+  },
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+      }
+
+      const userResult = await pool.query(
+        "SELECT COALESCE(plan, 'free') AS plan FROM users WHERE id = $1",
+        [req.userId]
+      );
+
+      const plan = userResult.rows[0]?.plan || 'free';
+      const isVideo = req.file.mimetype.startsWith('video/');
+
+      const maxUploadMb =
+        isVideo && plan === 'pro'
+          ? PRO_VIDEO_UPLOAD_LIMIT_MB
+          : FREE_UPLOAD_LIMIT_MB;
+
+      if (req.file.size > maxUploadMb * MB) {
+        return res.status(413).json({
+          error: isVideo
+            ? `Video upload limit is ${maxUploadMb}MB for your plan.`
+            : `File upload limit is ${maxUploadMb}MB.`,
+        });
+      }
+
+      const uploadToCloudinary = () => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'arcxnjo/profile-media',
+              resource_type: 'auto',
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            }
+          );
+
+          streamifier.createReadStream(req.file.buffer).pipe(stream);
+        });
+      };
+
+      const result = await uploadToCloudinary();
+
+      return res.json({
+        url: result.secure_url,
+        mimetype: req.file.mimetype,
+        publicId: result.public_id,
+        resourceType: result.resource_type,
       });
-    };
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
 
-    const result = await uploadToCloudinary();
-
-    return res.json({
-      url: result.secure_url,
-      mimetype: req.file.mimetype,
-      publicId: result.public_id,
-      resourceType: result.resource_type,
-    });
-  } catch (error) {
-    console.error('Cloudinary upload error:', error);
-
-    return res.status(500).json({
-      error: error.message || 'Upload failed.',
-    });
+      return res.status(500).json({
+        error: error.message || 'Upload failed.',
+      });
+    }
   }
-});
-
-const PORT = process.env.PORT || 3001;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+);

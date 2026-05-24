@@ -24,6 +24,7 @@ export const ProfileImagesSettings = () => {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingBackground, setUploadingBackground] = useState(false);
   const [message, setMessage] = useState("");
+  const [plan, setPlan] = useState<"free" | "pro">("free");
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
@@ -43,10 +44,16 @@ export const ProfileImagesSettings = () => {
       );
     }
 
-    if (file.size > 25 * 1024 * 1024) {
-      throw new Error("File is too large. Maximum size is 25MB.");
-    }
+    const isVideo = file.type.startsWith("video/");
+const maxSizeMb = isVideo && plan === "pro" ? 50 : 25;
 
+if (file.size > maxSizeMb * 1024 * 1024) {
+  throw new Error(
+    isVideo
+      ? `Video is too large. Maximum size is ${maxSizeMb}MB for your plan.`
+      : `File is too large. Maximum size is ${maxSizeMb}MB.`
+  );
+}
     const token = localStorage.getItem("token");
     const formData = new FormData();
 
@@ -112,8 +119,9 @@ export const ProfileImagesSettings = () => {
         const response = await axios.get(`${API_URL}/api/profile/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        setValues({
+     setPlan(response.data.plan === "pro" ? "pro" : "free");
+        
+     setValues({
           profileImage: response.data.profile_image || "",
           bannerType: response.data.banner_type || "image",
           bannerImage: response.data.banner_image || "",
@@ -385,7 +393,7 @@ export const ProfileImagesSettings = () => {
             </label>
 
             <p className="mt-3 text-xs text-white/35">
-              Allowed formats: JPG, PNG, WEBP, GIF, MP4, WEBM. Max 25MB.
+              Allowed formats: JPG, PNG, WEBP, GIF, MP4, WEBM. Videos up to 50MB on Pro.
             </p>
 
             {values.bannerType === "image" ? (
