@@ -149,8 +149,8 @@ const badgeMap: Record<string, { label: string; image: string }> = {
 };
 
 const discordProfileIcons = {
-  nitro: "https://cdn3.emoji.gg/emojis/595827-nitro-fantastic-animated.gif",
-  boost: "https://cdn3.emoji.gg/emojis/12141-booster.png",
+  nitro: "https://emoji.discadia.com/emojis/d34cc966-5dce-4c77-9a83-bc360696de63.GIF",
+  boost: "https://emoji.discadia.com/emojis/ade7b907-bead-460e-8463-a9a9ab7a053e.GIF",
 };
 
 const profileTemplates = {
