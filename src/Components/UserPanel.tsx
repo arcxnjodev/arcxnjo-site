@@ -663,7 +663,14 @@ export const UserPanel = () => {
       (activity: any) => activity.type !== 4 && activity.name !== "Spotify"
     ) || null;
 
-  const hasNitro = Boolean(discordData?.nitro);
+  const hasNitro = Boolean(
+  discordData?.nitro ||
+    Number(discordData?.premium_type) > 0 ||
+    discordData?.discord_user?.avatar?.startsWith("a_") ||
+    discordData?.banner?.startsWith("a_") ||
+    discordData?.avatar_decoration ||
+    discordData?.collectibles
+);
   const hasServerBoost = Boolean(discordData?.server_boosted);
   const serverRole = discordData?.server_role || null;
   const primaryGuild = discordData?.primary_guild || null;
