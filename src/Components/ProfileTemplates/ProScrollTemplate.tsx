@@ -22,18 +22,9 @@ const fallbackLyrics = [
 ];
 
 const scrollSections = [
-  {
-    id: "profile",
-    label: "Profile",
-  },
-  {
-    id: "activity",
-    label: "Activity",
-  },
-  {
-    id: "music",
-    label: "Music",
-  },
+  { id: "profile", label: "Profile" },
+  { id: "activity", label: "Activity" },
+  { id: "music", label: "Music" },
 ];
 
 const ScrollDots = ({
@@ -53,15 +44,15 @@ const ScrollDots = ({
             key={section.id}
             type="button"
             onClick={() => onSelect(section.id)}
-            className="group flex h-4 w-4 items-center justify-center"
+            className="group flex h-5 w-5 items-center justify-center"
             aria-label={section.label}
             title={section.label}
           >
             <span
               className={`rounded-full transition-all duration-300 ${
                 active
-                  ? "h-3 w-3 bg-white shadow-[0_0_14px_rgba(255,255,255,0.95)]"
-                  : "h-1.5 w-1.5 bg-white/35 group-hover:h-2.5 group-hover:w-2.5 group-hover:bg-white/80 group-hover:shadow-[0_0_10px_rgba(255,255,255,0.75)]"
+                  ? "h-3 w-3 bg-white shadow-[0_0_16px_rgba(255,255,255,0.95)]"
+                  : "h-1.5 w-1.5 bg-white/40 group-hover:h-2.5 group-hover:w-2.5 group-hover:bg-white group-hover:shadow-[0_0_12px_rgba(255,255,255,0.8)]"
               }`}
             />
           </button>
@@ -83,12 +74,13 @@ export const ProScrollTemplate = ({
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
   const [now, setNow] = useState(new Date());
-  const [activeSection, setActiveSection] = useState("profile");
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const isAutoScrollingRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
+  const isChangingSectionRef = useRef(false);
+  const touchStartYRef = useRef<number | null>(null);
 
   const hasMusic = Boolean(data?.profile.music_url);
   const isVideoBackground = Boolean(
@@ -112,6 +104,8 @@ export const ProScrollTemplate = ({
       (activity: any) => activity.type !== 4 && activity.name !== "Spotify"
     ) || null;
 
+  const activeSection = scrollSections[currentSectionIndex]?.id || "profile";
+
   const timeLabel = new Intl.DateTimeFormat(undefined, {
     hour: "2-digit",
     minute: "2-digit",
@@ -127,6 +121,31 @@ export const ProScrollTemplate = ({
   const timeZoneLabel =
     Intl.DateTimeFormat().resolvedOptions().timeZone || "Local timezone";
 
+  const goToSectionIndex = (nextIndex: number) => {
+    const clampedIndex = Math.min(
+      Math.max(nextIndex, 0),
+      scrollSections.length - 1
+    );
+
+    if (clampedIndex === currentSectionIndex || isChangingSectionRef.current) {
+      return;
+    }
+
+    isChangingSectionRef.current = true;
+    setCurrentSectionIndex(clampedIndex);
+
+    window.setTimeout(() => {
+      isChangingSectionRef.current = false;
+    }, 920);
+  };
+
+  const scrollToSection = (id: string) => {
+    const nextIndex = scrollSections.findIndex((section) => section.id === id);
+    if (nextIndex === -1) return;
+
+    goToSectionIndex(nextIndex);
+  };
+
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 1000);
 
@@ -136,100 +155,64 @@ export const ProScrollTemplate = ({
   }, []);
 
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    let frame = 0;
-
-    const updateActiveSection = () => {
-      cancelAnimationFrame(frame);
-
-      frame = requestAnimationFrame(() => {
-        const containerMiddle = container.scrollTop + container.clientHeight / 2;
-
-        let closestSection = scrollSections[0].id;
-        let closestDistance = Number.POSITIVE_INFINITY;
-
-        scrollSections.forEach((section) => {
-          const element = container.querySelector<HTMLElement>(
-            `#pro-${section.id}`
-          );
-
-          if (!element) return;
-
-          const sectionMiddle = element.offsetTop + element.clientHeight / 2;
-          const distance = Math.abs(containerMiddle - sectionMiddle);
-
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestSection = section.id;
-          }
-        });
-
-        setActiveSection(closestSection);
-      });
-    };
-
-    updateActiveSection();
-    container.addEventListener("scroll", updateActiveSection, { passive: true });
-
-    return () => {
-      cancelAnimationFrame(frame);
-      container.removeEventListener("scroll", updateActiveSection);
-    };
-  }, []);
-
-  const scrollToSection = (id: string) => {
-    const container = scrollContainerRef.current;
-    const element = container?.querySelector<HTMLElement>(`#pro-${id}`);
-
-    if (!container || !element) return;
-
-    isAutoScrollingRef.current = true;
-    setActiveSection(id);
-
-    container.scrollTo({
-      top: element.offsetTop,
-      behavior: "smooth",
-    });
-
-    window.setTimeout(() => {
-      isAutoScrollingRef.current = false;
-    }, 720);
-  };
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
+    const container = containerRef.current;
     if (!container) return;
 
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
 
-      if (isAutoScrollingRef.current) return;
-
-      const currentIndex = scrollSections.findIndex(
-        (section) => section.id === activeSection
-      );
+      if (Math.abs(event.deltaY) < 12) return;
 
       const direction = event.deltaY > 0 ? 1 : -1;
-      const nextIndex = Math.min(
-        Math.max(currentIndex + direction, 0),
-        scrollSections.length - 1
-      );
+      goToSectionIndex(currentSectionIndex + direction);
+    };
 
-      const nextSection = scrollSections[nextIndex];
+    const handleTouchStart = (event: TouchEvent) => {
+      touchStartYRef.current = event.touches[0]?.clientY || null;
+    };
 
-      if (!nextSection || nextSection.id === activeSection) return;
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (touchStartYRef.current === null) return;
 
-      scrollToSection(nextSection.id);
+      const endY = event.changedTouches[0]?.clientY || touchStartYRef.current;
+      const distance = touchStartYRef.current - endY;
+
+      touchStartYRef.current = null;
+
+      if (Math.abs(distance) < 45) return;
+
+      const direction = distance > 0 ? 1 : -1;
+      goToSectionIndex(currentSectionIndex + direction);
     };
 
     container.addEventListener("wheel", handleWheel, { passive: false });
+    container.addEventListener("touchstart", handleTouchStart, { passive: true });
+    container.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     return () => {
       container.removeEventListener("wheel", handleWheel);
+      container.removeEventListener("touchstart", handleTouchStart);
+      container.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [activeSection]);
+  }, [currentSectionIndex]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown" || event.key === "PageDown") {
+        goToSectionIndex(currentSectionIndex + 1);
+      }
+
+      if (event.key === "ArrowUp" || event.key === "PageUp") {
+        goToSectionIndex(currentSectionIndex - 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentSectionIndex]);
 
   useEffect(() => {
     if (controlsTarget === "music" && audioRef.current) {
@@ -301,15 +284,9 @@ export const ProScrollTemplate = ({
 
   return (
     <div
-      ref={scrollContainerRef}
-      className="profile-pro-scroll relative h-screen overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth bg-black text-white [scrollbar-width:none]"
+      ref={containerRef}
+      className="relative h-screen overflow-hidden bg-black text-white"
     >
-      <style>{`
-        .profile-pro-scroll::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-
       <ScrollDots activeSection={activeSection} onSelect={scrollToSection} />
 
       <Link
@@ -359,10 +336,15 @@ export const ProScrollTemplate = ({
       )}
 
       {entered && (
-        <main className="relative z-10">
+        <main
+          className="absolute inset-0 z-10 transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
+          style={{
+            transform: `translate3d(0, -${currentSectionIndex * 100}vh, 0)`,
+          }}
+        >
           <section
             id="pro-profile"
-            className="flex min-h-screen items-center justify-center px-4 py-16"
+            className="flex h-screen items-center justify-center px-4 py-16"
           >
             <div className="w-full max-w-xl text-center">
               <img
@@ -397,7 +379,7 @@ export const ProScrollTemplate = ({
 
           <section
             id="pro-activity"
-            className="mx-auto grid min-h-screen max-w-5xl content-center gap-5 px-4 py-16 md:grid-cols-2"
+            className="mx-auto grid h-screen max-w-5xl content-center gap-5 px-4 py-16 md:grid-cols-2"
           >
             <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
               <div className="mb-4 flex items-center gap-3">
@@ -485,7 +467,7 @@ export const ProScrollTemplate = ({
 
           <section
             id="pro-music"
-            className="mx-auto flex min-h-screen max-w-4xl items-center px-4 py-16"
+            className="mx-auto flex h-screen max-w-4xl items-center px-4 py-16"
           >
             <div className="w-full rounded-[2rem] border border-white/10 bg-black/45 p-5 shadow-[0_25px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:p-8">
               <div className="mb-6 flex items-center gap-4">
