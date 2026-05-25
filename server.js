@@ -1381,6 +1381,7 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
     'minimal-dark',
     'red-glow',
     'blue-ice',
+    'pro-scroll',
   ];
 
   const allowedEffects = ['none', 'stars', 'snow', 'sparkles', 'hearts'];
