@@ -1251,39 +1251,114 @@ app.get('/api/profile/:username', async (req, res) => {
 ========================================================= */
 
 app.put('/api/profile/social-media', authenticateToken, async (req, res) => {
-  const { instagram, x, youtube, twitch, kick, discord, linkedIn } = req.body;
+  const allowedPlatforms = [
+    'snapchat',
+    'youtube',
+    'discord',
+    'spotify',
+    'instagram',
+    'x',
+    'twitter',
+    'tiktok',
+    'telegram',
+    'soundcloud',
+    'paypal',
+    'github',
+    'roblox',
+    'cashapp',
+    'venmo',
+    'playstation',
+    'xbox',
+    'applemusic',
+    'gitlab',
+    'twitch',
+    'reddit',
+    'vk',
+    'steam',
+    'kick',
+    'pinterest',
+    'facebook',
+    'threads',
+    'patreon',
+    'signal',
+    'bitcoin',
+    'ethereum',
+    'litecoin',
+    'solana',
+    'email',
+    'website',
+    'linkedin',
+  ];
+
+  const legacyLinks = [
+    { platform: 'instagram', url: req.body.instagram, displayOrder: 1 },
+    { platform: 'x', url: req.body.x, displayOrder: 2 },
+    { platform: 'youtube', url: req.body.youtube, displayOrder: 3 },
+    { platform: 'twitch', url: req.body.twitch, displayOrder: 4 },
+    { platform: 'kick', url: req.body.kick, displayOrder: 5 },
+    { platform: 'discord', url: req.body.discord, displayOrder: 6 },
+    { platform: 'linkedin', url: req.body.linkedIn || req.body.linkedin, displayOrder: 7 },
+  ];
+
+  const rawLinks = Array.isArray(req.body.links) ? req.body.links : legacyLinks;
+
+  const seen = new Set();
+  const cleanLinks = [];
+
+  rawLinks.forEach((link, index) => {
+    const platform = String(link.platform || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '');
+
+    const url = String(link.url || '').trim().slice(0, 500);
+
+    if (!platform || !url) return;
+    if (!allowedPlatforms.includes(platform)) return;
+    if (seen.has(platform)) return;
+
+    seen.add(platform);
+
+    cleanLinks.push({
+      platform,
+      url,
+      displayOrder: Number(link.displayOrder || index + 1),
+    });
+  });
+
+  const client = await pool.connect();
 
   try {
-    await pool.query(
-      `UPDATE user_links SET url = CASE platform
-        WHEN 'instagram' THEN $1
-        WHEN 'x' THEN $2
-        WHEN 'youtube' THEN $3
-        WHEN 'twitch' THEN $4
-        WHEN 'kick' THEN $5
-        WHEN 'discord' THEN $6
-        WHEN 'linkedin' THEN $7
-      END
-      WHERE user_id = $8
-      AND platform IN ('instagram', 'x', 'youtube', 'twitch', 'kick', 'discord', 'linkedin')`,
-      [
-        instagram || '',
-        x || '',
-        youtube || '',
-        twitch || '',
-        kick || '',
-        discord || '',
-        linkedIn || '',
-        req.userId,
-      ]
-    );
+    await client.query('BEGIN');
 
-    return res.json({ message: 'Social media saved successfully!' });
+    await client.query('DELETE FROM user_links WHERE user_id = $1', [req.userId]);
+
+    for (let index = 0; index < cleanLinks.length; index += 1) {
+      const link = cleanLinks[index];
+
+      await client.query(
+        `INSERT INTO user_links (user_id, platform, url, display_order)
+         VALUES ($1, $2, $3, $4)`,
+        [req.userId, link.platform, link.url, link.displayOrder || index + 1]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    return res.json({
+      message: 'Links saved successfully!',
+      links: cleanLinks,
+    });
   } catch (error) {
-    console.error('Social media save error:', error);
+    await client.query('ROLLBACK');
+
+    console.error('Links save error:', error);
     return res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
+
 
 app.put('/api/profile/images', authenticateToken, async (req, res) => {
   const { profileImage, bannerImage, bannerVideo, bannerType } = req.body;
