@@ -5,91 +5,231 @@ import {
   FaBan,
   FaCheckCircle,
   FaHeart,
+  FaLock,
   FaMagic,
   FaPalette,
   FaSave,
   FaSnowflake,
   FaStar,
 } from "react-icons/fa";
+import { useI18n } from "../../i18n/i18nProvider";
 
-const templates = [
+type TemplateDef = {
+  id: string;
+  name: string;
+  description: {
+    pt: string;
+    en: string;
+    es: string;
+  };
+  preview: string;
+  proOnly?: boolean;
+};
+
+const templates: TemplateDef[] = [
   {
     id: "neon-purple",
     name: "Neon Purple",
-    description: "Dark glass card with purple glow.",
+    description: {
+      pt: "Card escuro com brilho roxo.",
+      en: "Dark glass card with purple glow.",
+      es: "Tarjeta oscura con brillo morado.",
+    },
     preview: "from-purple-700 to-black",
   },
   {
     id: "cyber-glass",
     name: "Cyber Glass",
-    description: "Transparent futuristic style.",
+    description: {
+      pt: "Estilo transparente e futurista.",
+      en: "Transparent futuristic style.",
+      es: "Estilo transparente y futurista.",
+    },
     preview: "from-cyan-500 to-purple-700",
   },
   {
     id: "minimal-dark",
     name: "Minimal Dark",
-    description: "Simple and clean dark layout.",
+    description: {
+      pt: "Layout escuro simples e limpo.",
+      en: "Simple and clean dark layout.",
+      es: "Diseño oscuro simple y limpio.",
+    },
     preview: "from-gray-900 to-black",
   },
   {
     id: "red-glow",
     name: "Red Glow",
-    description: "Dark profile with red highlight.",
+    description: {
+      pt: "Perfil escuro com destaque vermelho.",
+      en: "Dark profile with red highlight.",
+      es: "Perfil oscuro con destaque rojo.",
+    },
     preview: "from-red-700 to-black",
   },
   {
     id: "blue-ice",
     name: "Blue Ice",
-    description: "Cold blue futuristic style.",
+    description: {
+      pt: "Estilo azul frio e futurista.",
+      en: "Cold blue futuristic style.",
+      es: "Estilo azul frío y futurista.",
+    },
     preview: "from-blue-600 to-slate-950",
+  },
+  {
+    id: "pro-scroll",
+    name: "Pro Scroll",
+    description: {
+      pt: "Template Pro com scroll, horário, atividade Discord e seção de música.",
+      en: "Pro template with scroll, local time, Discord activity and music section.",
+      es: "Template Pro con scroll, horario, actividad de Discord y sección de música.",
+    },
+    preview: "from-black via-zinc-950 to-white/20",
+    proOnly: true,
   },
 ];
 
 const effects: {
   id: string;
-  name: string;
-  description: string;
+  name: {
+    pt: string;
+    en: string;
+    es: string;
+  };
+  description: {
+    pt: string;
+    en: string;
+    es: string;
+  };
   icon: IconType;
 }[] = [
   {
     id: "none",
-    name: "None",
-    description: "No animated particles.",
+    name: { pt: "Nenhum", en: "None", es: "Ninguno" },
+    description: {
+      pt: "Sem partículas animadas.",
+      en: "No animated particles.",
+      es: "Sin partículas animadas.",
+    },
     icon: FaBan,
   },
   {
     id: "stars",
-    name: "Stars",
-    description: "Twinkling stars in the background.",
+    name: { pt: "Estrelas", en: "Stars", es: "Estrellas" },
+    description: {
+      pt: "Estrelas brilhando no fundo.",
+      en: "Twinkling stars in the background.",
+      es: "Estrellas brillando en el fondo.",
+    },
     icon: FaStar,
   },
   {
     id: "snow",
-    name: "Snow",
-    description: "Soft falling snow effect.",
+    name: { pt: "Neve", en: "Snow", es: "Nieve" },
+    description: {
+      pt: "Efeito suave de neve caindo.",
+      en: "Soft falling snow effect.",
+      es: "Efecto suave de nieve cayendo.",
+    },
     icon: FaSnowflake,
   },
   {
     id: "sparkles",
-    name: "Sparkles",
-    description: "Small shining sparkles.",
+    name: { pt: "Brilhos", en: "Sparkles", es: "Destellos" },
+    description: {
+      pt: "Pequenos brilhos animados.",
+      en: "Small shining sparkles.",
+      es: "Pequeños destellos brillantes.",
+    },
     icon: FaMagic,
   },
   {
     id: "hearts",
-    name: "Hearts",
-    description: "Floating hearts effect.",
+    name: { pt: "Corações", en: "Hearts", es: "Corazones" },
+    description: {
+      pt: "Corações flutuando no fundo.",
+      en: "Floating hearts effect.",
+      es: "Corazones flotando en el fondo.",
+    },
     icon: FaHeart,
   },
 ];
 
+const copy = {
+  pt: {
+    badge: "Appearance Lab",
+    title: "Visual do perfil",
+    subtitle:
+      "Escolha o template e o efeito animado do perfil público. Templates Pro aparecem bloqueados para usuários Free.",
+    templates: "Templates",
+    templatesDesc: "Escolha a estrutura visual do seu perfil.",
+    effects: "Efeitos",
+    effectsDesc: "Escolha partículas animadas para o fundo do perfil.",
+    currentStyle: "Estilo atual",
+    template: "Template",
+    effect: "Efeito",
+    proOnly: "PRO",
+    locked: "Disponível no plano Pro",
+    save: "Salvar aparência",
+    saving: "Salvando...",
+    success: "✅ Aparência atualizada com sucesso!",
+    error: "❌ Erro ao salvar: ",
+  },
+  en: {
+    badge: "Appearance Lab",
+    title: "Profile appearance",
+    subtitle:
+      "Choose the template and animated effect for your public profile. Pro templates appear locked for Free users.",
+    templates: "Templates",
+    templatesDesc: "Choose your profile visual structure.",
+    effects: "Effects",
+    effectsDesc: "Choose animated particles for the profile background.",
+    currentStyle: "Current style",
+    template: "Template",
+    effect: "Effect",
+    proOnly: "PRO",
+    locked: "Available on the Pro plan",
+    save: "Save Appearance",
+    saving: "Saving...",
+    success: "✅ Appearance updated successfully!",
+    error: "❌ Error saving: ",
+  },
+  es: {
+    badge: "Appearance Lab",
+    title: "Apariencia del perfil",
+    subtitle:
+      "Elige el template y el efecto animado del perfil público. Los templates Pro aparecen bloqueados para usuarios Free.",
+    templates: "Templates",
+    templatesDesc: "Elige la estructura visual de tu perfil.",
+    effects: "Efectos",
+    effectsDesc: "Elige partículas animadas para el fondo del perfil.",
+    currentStyle: "Estilo actual",
+    template: "Template",
+    effect: "Efecto",
+    proOnly: "PRO",
+    locked: "Disponible en el plan Pro",
+    save: "Guardar apariencia",
+    saving: "Guardando...",
+    success: "✅ Apariencia actualizada con éxito!",
+    error: "❌ Error al guardar: ",
+  },
+};
+
 export const AppearanceSettings = () => {
+  const { language } = useI18n();
+
   const [selectedTemplate, setSelectedTemplate] = useState("neon-purple");
   const [selectedEffect, setSelectedEffect] = useState("none");
+  const [plan, setPlan] = useState<"free" | "pro">("free");
+  const [ownerBypass, setOwnerBypass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
+  const text = copy[language];
+
+  const canUseProTemplates = plan === "pro" || ownerBypass;
 
   useEffect(() => {
     const fetchAppearance = async () => {
@@ -103,6 +243,8 @@ export const AppearanceSettings = () => {
 
         setSelectedTemplate(response.data.profile_template || "neon-purple");
         setSelectedEffect(response.data.profile_effect || "none");
+        setPlan(response.data.plan === "pro" ? "pro" : "free");
+        setOwnerBypass(Boolean(response.data.owner_bypass));
       } catch (error) {
         console.error("Error fetching appearance:", error);
       }
@@ -129,13 +271,10 @@ export const AppearanceSettings = () => {
         }
       );
 
-      setMessage("✅ Appearance updated successfully!");
+      setMessage(text.success);
       setTimeout(() => setMessage(""), 3000);
     } catch (error: any) {
-      setMessage(
-        "❌ Error saving: " +
-          (error.response?.data?.error || error.message)
-      );
+      setMessage(text.error + (error.response?.data?.error || error.message));
     } finally {
       setLoading(false);
     }
@@ -156,14 +295,13 @@ export const AppearanceSettings = () => {
         <div className="relative">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-purple-200">
             <FaPalette />
-            Appearance Lab
+            {text.badge}
           </div>
 
-          <h3 className="text-2xl font-black text-white">Visual do perfil</h3>
+          <h3 className="text-2xl font-black text-white">{text.title}</h3>
 
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
-            Escolha o template e o efeito animado do perfil público. Aqui é onde
-            o perfil ganha clima, brilho e personalidade.
+            {text.subtitle}
           </p>
         </div>
       </div>
@@ -182,29 +320,34 @@ export const AppearanceSettings = () => {
 
       <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
         <div className="mb-5">
-          <h4 className="text-lg font-black text-white">Templates</h4>
-          <p className="mt-1 text-sm text-white/40">
-            Escolha a estrutura visual do seu perfil.
-          </p>
+          <h4 className="text-lg font-black text-white">{text.templates}</h4>
+          <p className="mt-1 text-sm text-white/40">{text.templatesDesc}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {templates.map((template) => {
             const isSelected = selectedTemplate === template.id;
+            const isLocked = Boolean(template.proOnly && !canUseProTemplates);
 
             return (
               <button
                 key={template.id}
                 type="button"
-                onClick={() => setSelectedTemplate(template.id)}
+                onClick={() => {
+                  if (isLocked) return;
+                  setSelectedTemplate(template.id);
+                }}
+                disabled={isLocked}
                 className={`group overflow-hidden rounded-3xl border text-left transition ${
                   isSelected
                     ? "border-purple-400/50 bg-purple-500/15 shadow-[0_0_28px_rgba(168,85,247,0.18)]"
+                    : isLocked
+                    ? "cursor-not-allowed border-white/5 bg-white/[0.025] opacity-55"
                     : "border-white/10 bg-white/[0.035] hover:border-purple-400/25 hover:bg-white/[0.06]"
                 }`}
               >
                 <div
-                  className={`relative h-32 bg-gradient-to-br ${template.preview} flex items-center justify-center`}
+                  className={`relative flex h-32 items-center justify-center bg-gradient-to-br ${template.preview}`}
                 >
                   <div className="absolute inset-0 bg-black/10" />
 
@@ -214,7 +357,19 @@ export const AppearanceSettings = () => {
                     <div className="mx-auto mt-2 h-2 w-10 rounded-full bg-white/15" />
                   </div>
 
-                  {isSelected && (
+                  {template.proOnly && (
+                    <div className="absolute left-3 top-3 rounded-full bg-black/45 px-2 py-1 text-[10px] font-black tracking-widest text-white backdrop-blur-md">
+                      {text.proOnly}
+                    </div>
+                  )}
+
+                  {isLocked && (
+                    <div className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-2xl bg-black/40 text-white">
+                      <FaLock />
+                    </div>
+                  )}
+
+                  {isSelected && !isLocked && (
                     <div className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-2xl bg-green-500/20 text-green-200">
                       <FaCheckCircle />
                     </div>
@@ -222,12 +377,10 @@ export const AppearanceSettings = () => {
                 </div>
 
                 <div className="p-4">
-                  <p className="text-sm font-black text-white">
-                    {template.name}
-                  </p>
+                  <p className="text-sm font-black text-white">{template.name}</p>
 
                   <p className="mt-1 text-xs leading-relaxed text-white/45">
-                    {template.description}
+                    {isLocked ? text.locked : template.description[language]}
                   </p>
                 </div>
               </button>
@@ -238,10 +391,8 @@ export const AppearanceSettings = () => {
 
       <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
         <div className="mb-5">
-          <h4 className="text-lg font-black text-white">Effects</h4>
-          <p className="mt-1 text-sm text-white/40">
-            Escolha partículas animadas para o fundo do perfil.
-          </p>
+          <h4 className="text-lg font-black text-white">{text.effects}</h4>
+          <p className="mt-1 text-sm text-white/40">{text.effectsDesc}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -273,11 +424,11 @@ export const AppearanceSettings = () => {
 
                   <div className="min-w-0">
                     <p className="text-sm font-black text-white">
-                      {effect.name}
+                      {effect.name[language]}
                     </p>
 
                     <p className="mt-1 text-xs text-white/40">
-                      {effect.description}
+                      {effect.description[language]}
                     </p>
                   </div>
                 </div>
@@ -290,11 +441,11 @@ export const AppearanceSettings = () => {
       <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <p className="text-sm font-bold text-white">Current style</p>
+            <p className="text-sm font-bold text-white">{text.currentStyle}</p>
 
             <p className="mt-1 text-xs text-white/40">
-              Template: {selectedTemplateData.name} · Effect:{" "}
-              {selectedEffectData.name}
+              {text.template}: {selectedTemplateData.name} · {text.effect}:{" "}
+              {selectedEffectData.name[language]}
             </p>
           </div>
 
@@ -305,7 +456,7 @@ export const AppearanceSettings = () => {
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FaSave className="text-xs" />
-            {loading ? "Saving..." : "Save Appearance"}
+            {loading ? text.saving : text.save}
           </button>
         </div>
       </section>
