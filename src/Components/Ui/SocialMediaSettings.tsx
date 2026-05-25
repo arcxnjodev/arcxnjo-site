@@ -15,7 +15,6 @@ import {
   FaGlobe,
   FaInstagram,
   FaLink,
-  FaLinkedin,
   FaMusic,
   FaPaypal,
   FaPinterestP,
