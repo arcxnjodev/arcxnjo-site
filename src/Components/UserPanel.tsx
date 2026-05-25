@@ -942,51 +942,59 @@ export const UserPanel = () => {
             )}
 
             {profileBadges.length > 0 && (
-              <div className="mt-4 flex flex-wrap justify-center gap-3">
-                {profileBadges.map((badgeId) => {
-                  const badge = badgeMap[badgeId];
-                  if (!badge) return null;
+              <div className="mt-4 flex justify-center">
+                <div className="relative inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-[22px] border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl shadow-[0_10px_35px_rgba(0,0,0,0.28)]">
+                  <div className="pointer-events-none absolute inset-0 rounded-[22px] bg-white/[0.035]" />
+                  <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
 
-                  const isOpen = openBadgeId === badgeId;
+                  {profileBadges.map((badgeId) => {
+                    const badge = badgeMap[badgeId];
+                    if (!badge) return null;
 
-                  return (
-                    <button
-                      key={badgeId}
-                      type="button"
-                      onClick={() =>
-                        setOpenBadgeId((prev) =>
-                          prev === badgeId ? null : badgeId
-                        )
-                      }
-                      onBlur={() => {
-                        setTimeout(() => {
+                    const isOpen = openBadgeId === badgeId;
+
+                    return (
+                      <button
+                        key={badgeId}
+                        type="button"
+                        onClick={() =>
                           setOpenBadgeId((prev) =>
-                            prev === badgeId ? null : prev
-                          );
-                        }, 120);
-                      }}
-                      className="group relative flex items-center justify-center w-12 h-12 rounded-full bg-white/10 backdrop-blur-md"
-                      title={badge.label}
-                    >
-                      <img
-                        src={badge.image}
-                        alt={badge.label}
-                        className="w-7 h-7 object-contain"
-                        draggable={false}
-                      />
-
-                      <span
-                        className={`pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black/80 px-2 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 ${
-                          isOpen
-                            ? "opacity-100 translate-y-0"
-                            : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
-                        }`}
+                            prev === badgeId ? null : badgeId
+                          )
+                        }
+                        onBlur={() => {
+                          setTimeout(() => {
+                            setOpenBadgeId((prev) =>
+                              prev === badgeId ? null : prev
+                            );
+                          }, 120);
+                        }}
+                        className="group relative z-10 flex h-10 w-10 items-center justify-center rounded-full transition duration-200 hover:-translate-y-0.5"
+                        title={badge.label}
                       >
-                        {badge.label}
-                      </span>
-                    </button>
-                  );
-                })}
+                        <span className="absolute inset-0 rounded-full bg-black/35 opacity-70 backdrop-blur-sm transition group-hover:bg-black/45 group-hover:opacity-100" />
+                        <span className="absolute inset-[-3px] rounded-full bg-white/10 blur-md opacity-45 transition group-hover:opacity-90" />
+
+                        <img
+                          src={badge.image}
+                          alt={badge.label}
+                          className="relative h-7 w-7 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.24)] transition duration-200 group-hover:scale-110"
+                          draggable={false}
+                        />
+
+                        <span
+                          className={`pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/10 bg-black/80 px-2.5 py-1 text-[11px] font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-md transition-all duration-200 ${
+                            isOpen
+                              ? "opacity-100 translate-y-0"
+                              : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
+                          }`}
+                        >
+                          {badge.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -1131,7 +1139,7 @@ export const UserPanel = () => {
             )}
 
             <p className={`mt-3 text-sm ${template.views}`}>
-              {data.stats?.profile_views || 0} views
+              {data.stats?.profile_views || 0} {t("profile.views")}
             </p>
 
             {socialEntries.length > 0 && (
@@ -1147,9 +1155,10 @@ export const UserPanel = () => {
                       rel="noreferrer"
                       title={platform}
                       aria-label={platform}
-                      className={`w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-xl text-white transition ${template.icon}`}
+                      className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-black/70 text-[26px] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_0_22px_rgba(255,255,255,0.22),0_12px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition duration-200 hover:-translate-y-1 hover:bg-black/85 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.38),0_0_34px_rgba(255,255,255,0.34),0_16px_38px_rgba(0,0,0,0.45)]"
                     >
-                      <Icon />
+                      <span className="absolute inset-0 rounded-full bg-white/[0.035] opacity-70 transition group-hover:opacity-100" />
+                      <Icon className="relative drop-shadow-[0_0_9px_rgba(255,255,255,0.55)] transition duration-200 group-hover:scale-110" />
                     </a>
                   );
                 })}
