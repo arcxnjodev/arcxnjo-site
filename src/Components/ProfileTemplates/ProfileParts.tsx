@@ -1,3 +1,4 @@
+import type React from "react";
 import { useEffect, useState, type FormEvent, type RefObject } from "react";
 import {
   FaBookOpen,
@@ -37,14 +38,14 @@ export const BackgroundLayer = ({
     <>
       {isVideoBackground ? (
         <video
-          ref={backgroundVideoRef}
-          src={data.profile.banner_video || ""}
-          className="absolute inset-0 h-full w-full object-cover"
-          muted={controlsTarget !== "video" ? true : muted}
-          loop
-          autoPlay={false}
-          playsInline
-        />
+  ref={backgroundVideoRef as React.LegacyRef<HTMLVideoElement>}
+  src={data.profile.banner_video}
+  className="absolute inset-0 h-full w-full object-cover"
+  muted={controlsTarget !== "video" ? true : muted}
+  loop
+  autoPlay={false}
+  playsInline
+/>
       ) : data.profile.banner_image ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
