@@ -15,16 +15,20 @@ import {
 import { getTemplateStyle } from "./profileUtils";
 import type { ProfileEffect, ProfileTemplateProps } from "./types";
 
-const fallbackLyrics = [
-  "Lyrics area ready",
-  "Add synced lyrics later through a lyrics field/API",
-  "This section stays focused on the currently playing track",
-];
 
 const scrollSections = [
-  { id: "profile", label: "Profile" },
-  { id: "activity", label: "Activity" },
-  { id: "music", label: "Music" },
+  {
+    id: "profile",
+    label: "Profile",
+  },
+  {
+    id: "activity",
+    label: "Activity",
+  },
+  {
+    id: "music",
+    label: "Music",
+  },
 ];
 
 const ScrollDots = ({
@@ -35,29 +39,35 @@ const ScrollDots = ({
   onSelect: (id: string) => void;
 }) => {
   return (
-    <div className="fixed right-5 top-1/2 z-[80] hidden -translate-y-1/2 flex-col items-center gap-3 md:flex">
-      {scrollSections.map((section) => {
-        const active = activeSection === section.id;
+    <div className="fixed right-5 top-1/2 z-[80] hidden -translate-y-1/2 flex-col items-center md:flex">
+      <div className="rounded-full border border-white/10 bg-black/30 px-2 py-3 shadow-[0_0_35px_rgba(255,255,255,0.08)] backdrop-blur-2xl">
+        {scrollSections.map((section) => {
+          const active = activeSection === section.id;
 
-        return (
-          <button
-            key={section.id}
-            type="button"
-            onClick={() => onSelect(section.id)}
-            className="group flex h-5 w-5 items-center justify-center"
-            aria-label={section.label}
-            title={section.label}
-          >
-            <span
-              className={`rounded-full transition-all duration-300 ${
-                active
-                  ? "h-3 w-3 bg-white shadow-[0_0_16px_rgba(255,255,255,0.95)]"
-                  : "h-1.5 w-1.5 bg-white/40 group-hover:h-2.5 group-hover:w-2.5 group-hover:bg-white group-hover:shadow-[0_0_12px_rgba(255,255,255,0.8)]"
-              }`}
-            />
-          </button>
-        );
-      })}
+          return (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => onSelect(section.id)}
+              className="group relative my-2 flex h-6 w-6 items-center justify-center"
+              aria-label={section.label}
+              title={section.label}
+            >
+              <span
+                className={`absolute rounded-full transition-all duration-300 ${
+                  active
+                    ? "h-5 w-5 bg-white shadow-[0_0_20px_rgba(255,255,255,0.95)]"
+                    : "h-2.5 w-2.5 bg-white/35 group-hover:h-3.5 group-hover:w-3.5 group-hover:bg-white/80 group-hover:shadow-[0_0_14px_rgba(255,255,255,0.7)]"
+                }`}
+              />
+
+              {active && (
+                <span className="absolute h-8 w-8 animate-ping rounded-full bg-white/15" />
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -74,13 +84,11 @@ export const ProScrollTemplate = ({
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
   const [now, setNow] = useState(new Date());
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [activeSection, setActiveSection] = useState("profile");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
-  const isChangingSectionRef = useRef(false);
-  const touchStartYRef = useRef<number | null>(null);
 
   const hasMusic = Boolean(data?.profile.music_url);
   const isVideoBackground = Boolean(
@@ -104,8 +112,6 @@ export const ProScrollTemplate = ({
       (activity: any) => activity.type !== 4 && activity.name !== "Spotify"
     ) || null;
 
-  const activeSection = scrollSections[currentSectionIndex]?.id || "profile";
-
   const timeLabel = new Intl.DateTimeFormat(undefined, {
     hour: "2-digit",
     minute: "2-digit",
@@ -121,31 +127,6 @@ export const ProScrollTemplate = ({
   const timeZoneLabel =
     Intl.DateTimeFormat().resolvedOptions().timeZone || "Local timezone";
 
-  const goToSectionIndex = (nextIndex: number) => {
-    const clampedIndex = Math.min(
-      Math.max(nextIndex, 0),
-      scrollSections.length - 1
-    );
-
-    if (clampedIndex === currentSectionIndex || isChangingSectionRef.current) {
-      return;
-    }
-
-    isChangingSectionRef.current = true;
-    setCurrentSectionIndex(clampedIndex);
-
-    window.setTimeout(() => {
-      isChangingSectionRef.current = false;
-    }, 920);
-  };
-
-  const scrollToSection = (id: string) => {
-    const nextIndex = scrollSections.findIndex((section) => section.id === id);
-    if (nextIndex === -1) return;
-
-    goToSectionIndex(nextIndex);
-  };
-
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 1000);
 
@@ -155,64 +136,60 @@ export const ProScrollTemplate = ({
   }, []);
 
   useEffect(() => {
-    const container = containerRef.current;
+    const container = scrollContainerRef.current;
     if (!container) return;
 
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
+    let frame = 0;
 
-      if (Math.abs(event.deltaY) < 12) return;
+    const updateActiveSection = () => {
+      cancelAnimationFrame(frame);
 
-      const direction = event.deltaY > 0 ? 1 : -1;
-      goToSectionIndex(currentSectionIndex + direction);
+      frame = requestAnimationFrame(() => {
+        const containerMiddle = container.scrollTop + container.clientHeight / 2;
+
+        let closestSection = scrollSections[0].id;
+        let closestDistance = Number.POSITIVE_INFINITY;
+
+        scrollSections.forEach((section) => {
+          const element = container.querySelector<HTMLElement>(
+            `#pro-${section.id}`
+          );
+
+          if (!element) return;
+
+          const sectionMiddle = element.offsetTop + element.clientHeight / 2;
+          const distance = Math.abs(containerMiddle - sectionMiddle);
+
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestSection = section.id;
+          }
+        });
+
+        setActiveSection(closestSection);
+      });
     };
 
-    const handleTouchStart = (event: TouchEvent) => {
-      touchStartYRef.current = event.touches[0]?.clientY || null;
-    };
-
-    const handleTouchEnd = (event: TouchEvent) => {
-      if (touchStartYRef.current === null) return;
-
-      const endY = event.changedTouches[0]?.clientY || touchStartYRef.current;
-      const distance = touchStartYRef.current - endY;
-
-      touchStartYRef.current = null;
-
-      if (Math.abs(distance) < 45) return;
-
-      const direction = distance > 0 ? 1 : -1;
-      goToSectionIndex(currentSectionIndex + direction);
-    };
-
-    container.addEventListener("wheel", handleWheel, { passive: false });
-    container.addEventListener("touchstart", handleTouchStart, { passive: true });
-    container.addEventListener("touchend", handleTouchEnd, { passive: true });
+    updateActiveSection();
+    container.addEventListener("scroll", updateActiveSection, { passive: true });
 
     return () => {
-      container.removeEventListener("wheel", handleWheel);
-      container.removeEventListener("touchstart", handleTouchStart);
-      container.removeEventListener("touchend", handleTouchEnd);
+      cancelAnimationFrame(frame);
+      container.removeEventListener("scroll", updateActiveSection);
     };
-  }, [currentSectionIndex]);
+  }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowDown" || event.key === "PageDown") {
-        goToSectionIndex(currentSectionIndex + 1);
-      }
+  const scrollToSection = (id: string) => {
+    const container = scrollContainerRef.current;
+    const element = container?.querySelector<HTMLElement>(`#pro-${id}`);
 
-      if (event.key === "ArrowUp" || event.key === "PageUp") {
-        goToSectionIndex(currentSectionIndex - 1);
-      }
-    };
+    if (!container || !element) return;
 
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [currentSectionIndex]);
+    container.scrollTo({
+      top: element.offsetTop,
+      behavior: "smooth",
+    });
+  };
 
   useEffect(() => {
     if (controlsTarget === "music" && audioRef.current) {
@@ -231,8 +208,11 @@ export const ProScrollTemplate = ({
 
     try {
       if (hasMusic && audioRef.current) {
+        audioRef.current.currentTime = 0;
         audioRef.current.volume = volume;
-        audioRef.current.muted = muted;
+        audioRef.current.muted = false;
+        setMuted(false);
+
         await audioRef.current.play();
         return;
       }
@@ -284,9 +264,27 @@ export const ProScrollTemplate = ({
 
   return (
     <div
-      ref={containerRef}
-      className="relative h-screen overflow-hidden bg-black text-white"
+      ref={scrollContainerRef}
+      className="profile-pro-scroll relative h-screen overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth snap-y snap-proximity bg-black text-white [scrollbar-width:none]"
     >
+      <style>{`
+        .profile-pro-scroll::-webkit-scrollbar {
+          display: none;
+        }
+
+        @keyframes arcxnjoEqualizer {
+          0%, 100% {
+            transform: scaleY(0.35);
+            opacity: 0.35;
+          }
+
+          50% {
+            transform: scaleY(1);
+            opacity: 1;
+          }
+        }
+      `}</style>
+
       <ScrollDots activeSection={activeSection} onSelect={scrollToSection} />
 
       <Link
@@ -312,7 +310,7 @@ export const ProScrollTemplate = ({
       </div>
 
       {hasMusic && (
-        <audio ref={audioRef} src={data.profile.music_url} loop preload="auto" />
+        <audio ref={audioRef} src={data.profile.music_url} loop preload="auto" playsInline />
       )}
 
       {!entered && <EnterOverlay onEnter={handleEnter} />}
@@ -336,15 +334,10 @@ export const ProScrollTemplate = ({
       )}
 
       {entered && (
-        <main
-          className="absolute inset-0 z-10 transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
-          style={{
-            transform: `translate3d(0, -${currentSectionIndex * 100}vh, 0)`,
-          }}
-        >
+        <main className="relative z-10">
           <section
             id="pro-profile"
-            className="flex h-screen items-center justify-center px-4 py-16"
+            className="flex min-h-screen snap-start snap-always items-center justify-center px-4 py-16"
           >
             <div className="w-full max-w-xl text-center">
               <img
@@ -379,7 +372,7 @@ export const ProScrollTemplate = ({
 
           <section
             id="pro-activity"
-            className="mx-auto grid h-screen max-w-5xl content-center gap-5 px-4 py-16 md:grid-cols-2"
+            className="mx-auto grid min-h-screen max-w-5xl snap-start snap-always content-center gap-5 px-4 py-16 md:grid-cols-2"
           >
             <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
               <div className="mb-4 flex items-center gap-3">
@@ -467,7 +460,7 @@ export const ProScrollTemplate = ({
 
           <section
             id="pro-music"
-            className="mx-auto flex h-screen max-w-4xl items-center px-4 py-16"
+            className="mx-auto flex min-h-screen max-w-4xl snap-start snap-always items-center px-4 py-16"
           >
             <div className="w-full rounded-[2rem] border border-white/10 bg-black/45 p-5 shadow-[0_25px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:p-8">
               <div className="mb-6 flex items-center gap-4">
@@ -484,22 +477,47 @@ export const ProScrollTemplate = ({
                 </div>
               </div>
 
-              {hasMusic && (
-                <audio
-                  src={data.profile.music_url}
-                  controls
-                  className="mb-6 w-full"
-                />
+              {hasMusic ? (
+                <div className="mb-6 rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-center text-sm font-semibold text-white/65">
+                  Music starts after CLICK TO ENTER
+                </div>
+              ) : (
+                <div className="mb-6 rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-center text-sm font-semibold text-white/35">
+                  No profile music
+                </div>
               )}
 
               <div className="rounded-3xl border border-white/10 bg-black/35 p-5">
-                <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-white/40">
-                  lyrics
-                </p>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/40">
+                      now playing
+                    </p>
 
-                <div className="space-y-3 text-center text-lg font-semibold leading-relaxed text-white/80 md:text-xl">
-                  {fallbackLyrics.map((line) => (
-                    <p key={line}>{line}</p>
+                    <p className="mt-2 max-w-[260px] truncate text-sm font-semibold text-white/70">
+                      {playingTitle}
+                    </p>
+                  </div>
+
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
+                    live
+                  </span>
+                </div>
+
+                <div className="mt-6 flex h-24 items-end justify-center gap-1.5 overflow-hidden rounded-2xl bg-black/25 px-4 py-4">
+                  {Array.from({ length: 28 }).map((_, index) => (
+                    <span
+                      key={index}
+                      className="w-1.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.55)]"
+                      style={{
+                        height: `${18 + ((index * 13) % 72)}%`,
+                        opacity: 0.35 + ((index % 5) * 0.12),
+                        animation: `arcxnjoEqualizer ${
+                          0.7 + (index % 6) * 0.12
+                        }s ease-in-out infinite`,
+                        animationDelay: `${index * 0.045}s`,
+                      }}
+                    />
                   ))}
                 </div>
               </div>

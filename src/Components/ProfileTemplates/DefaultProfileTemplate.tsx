@@ -64,8 +64,11 @@ export const DefaultProfileTemplate = ({
 
     try {
       if (hasMusic && audioRef.current) {
+        audioRef.current.currentTime = 0;
         audioRef.current.volume = volume;
-        audioRef.current.muted = muted;
+        audioRef.current.muted = false;
+        setMuted(false);
+
         await audioRef.current.play();
         return;
       }
@@ -128,7 +131,7 @@ export const DefaultProfileTemplate = ({
       {entered && <ParticleLayer effect={profileEffect} />}
 
       {hasMusic && (
-        <audio ref={audioRef} src={data.profile.music_url} loop preload="auto" />
+        <audio ref={audioRef} src={data.profile.music_url} loop preload="auto" playsInline />
       )}
 
       {!entered && <EnterOverlay onEnter={handleEnter} />}

@@ -1,9 +1,7 @@
-import type React from "react";
 import { useEffect, useState, type FormEvent, type RefObject } from "react";
 import {
   FaBookOpen,
   FaDiscord,
-  FaDownload,
   FaGlobe,
   FaMusic,
   FaPaperPlane,
@@ -38,14 +36,14 @@ export const BackgroundLayer = ({
     <>
       {isVideoBackground ? (
         <video
-  ref={backgroundVideoRef as React.LegacyRef<HTMLVideoElement>}
-  src={data.profile.banner_video}
-  className="absolute inset-0 h-full w-full object-cover"
-  muted={controlsTarget !== "video" ? true : muted}
-  loop
-  autoPlay={false}
-  playsInline
-/>
+          ref={backgroundVideoRef}
+          src={data.profile.banner_video || ""}
+          className="absolute inset-0 h-full w-full object-cover"
+          muted={controlsTarget !== "video" ? true : muted}
+          loop
+          autoPlay={false}
+          playsInline
+        />
       ) : data.profile.banner_image ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -189,6 +187,7 @@ export const MediaControls = ({
   formatMusicFileName: string;
 }) => {
   const { t } = useI18n();
+  void formatMusicFileName;
 
   if (!controlsTarget) return null;
 
@@ -250,14 +249,9 @@ export const MediaControls = ({
             </div>
 
             {hasMusic && (
-              <a
-                href={data.profile.music_url}
-                download={`${formatMusicFileName}.mp3`}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-medium text-white transition hover:bg-white/20"
-              >
-                <FaDownload />
-                {t("profile.downloadMusic")}
-              </a>
+              <div className="mt-4 rounded-xl bg-white/10 py-2.5 text-center text-sm font-medium text-white/65">
+                Music is playing for visitors after CLICK TO ENTER
+              </div>
             )}
           </div>
         </div>
