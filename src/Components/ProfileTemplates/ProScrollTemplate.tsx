@@ -21,6 +21,62 @@ const fallbackLyrics = [
   "This section stays focused on the currently playing track",
 ];
 
+const scrollSections = [
+  {
+    id: "profile",
+    label: "Profile",
+  },
+  {
+    id: "activity",
+    label: "Activity",
+  },
+  {
+    id: "music",
+    label: "Music",
+  },
+];
+
+const ScrollDots = ({
+  activeSection,
+  onSelect,
+}: {
+  activeSection: string;
+  onSelect: (id: string) => void;
+}) => {
+  return (
+    <div className="fixed right-5 top-1/2 z-[80] hidden -translate-y-1/2 flex-col items-center md:flex">
+      <div className="rounded-full border border-white/10 bg-black/30 px-2 py-3 shadow-[0_0_35px_rgba(255,255,255,0.08)] backdrop-blur-2xl">
+        {scrollSections.map((section) => {
+          const active = activeSection === section.id;
+
+          return (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => onSelect(section.id)}
+              className="group relative my-2 flex h-6 w-6 items-center justify-center"
+              aria-label={section.label}
+              title={section.label}
+            >
+              <span
+                className={`absolute rounded-full transition-all duration-300 ${
+                  active
+                    ? "h-5 w-5 bg-white shadow-[0_0_20px_rgba(255,255,255,0.95)]"
+                    : "h-2.5 w-2.5 bg-white/35 group-hover:h-3.5 group-hover:w-3.5 group-hover:bg-white/80 group-hover:shadow-[0_0_14px_rgba(255,255,255,0.7)]"
+                }`}
+              />
+
+              {active && (
+                <span className="absolute h-8 w-8 animate-ping rounded-full bg-white/15" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 export const ProScrollTemplate = ({
   data,
   username,
@@ -33,8 +89,10 @@ export const ProScrollTemplate = ({
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
   const [now, setNow] = useState(new Date());
+  const [activeSection, setActiveSection] = useState("profile");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const hasMusic = Boolean(data?.profile.music_url);
@@ -81,6 +139,62 @@ export const ProScrollTemplate = ({
       window.clearInterval(interval);
     };
   }, []);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    let frame = 0;
+
+    const updateActiveSection = () => {
+      cancelAnimationFrame(frame);
+
+      frame = requestAnimationFrame(() => {
+        const containerMiddle = container.scrollTop + container.clientHeight / 2;
+
+        let closestSection = scrollSections[0].id;
+        let closestDistance = Number.POSITIVE_INFINITY;
+
+        scrollSections.forEach((section) => {
+          const element = container.querySelector<HTMLElement>(
+            `#pro-${section.id}`
+          );
+
+          if (!element) return;
+
+          const sectionMiddle = element.offsetTop + element.clientHeight / 2;
+          const distance = Math.abs(containerMiddle - sectionMiddle);
+
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestSection = section.id;
+          }
+        });
+
+        setActiveSection(closestSection);
+      });
+    };
+
+    updateActiveSection();
+    container.addEventListener("scroll", updateActiveSection, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      container.removeEventListener("scroll", updateActiveSection);
+    };
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    const container = scrollContainerRef.current;
+    const element = container?.querySelector<HTMLElement>(`#pro-${id}`);
+
+    if (!container || !element) return;
+
+    container.scrollTo({
+      top: element.offsetTop,
+      behavior: "smooth",
+    });
+  };
 
   useEffect(() => {
     if (controlsTarget === "music" && audioRef.current) {
@@ -151,7 +265,18 @@ export const ProScrollTemplate = ({
     (hasMusic ? "ARCXNJO profile audio" : t("profile.onlineOnDiscord"));
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-black text-white">
+    <div
+      ref={scrollContainerRef}
+      className="profile-pro-scroll relative h-screen overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth snap-y snap-proximity bg-black text-white [scrollbar-width:none]"
+    >
+      <style>{`
+        .profile-pro-scroll::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+
+      <ScrollDots activeSection={activeSection} onSelect={scrollToSection} />
+
       <Link
         to="/"
         title="Home"
@@ -200,7 +325,10 @@ export const ProScrollTemplate = ({
 
       {entered && (
         <main className="relative z-10">
-          <section className="flex min-h-screen items-center justify-center px-4 py-16">
+          <section
+            id="pro-profile"
+            className="flex min-h-screen snap-start snap-always items-center justify-center px-4 py-16"
+          >
             <div className="w-full max-w-xl text-center">
               <img
                 src={data.profile.profile_image || "/favicon.png"}
@@ -232,7 +360,10 @@ export const ProScrollTemplate = ({
             </div>
           </section>
 
-          <section className="mx-auto grid min-h-screen max-w-5xl content-center gap-5 px-4 py-16 md:grid-cols-2">
+          <section
+            id="pro-activity"
+            className="mx-auto grid min-h-screen max-w-5xl snap-start snap-always content-center gap-5 px-4 py-16 md:grid-cols-2"
+          >
             <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
               <div className="mb-4 flex items-center gap-3">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-white">
@@ -317,7 +448,10 @@ export const ProScrollTemplate = ({
             </div>
           </section>
 
-          <section className="mx-auto flex min-h-screen max-w-4xl items-center px-4 py-16">
+          <section
+            id="pro-music"
+            className="mx-auto flex min-h-screen max-w-4xl snap-start snap-always items-center px-4 py-16"
+          >
             <div className="w-full rounded-[2rem] border border-white/10 bg-black/45 p-5 shadow-[0_25px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:p-8">
               <div className="mb-6 flex items-center gap-4">
                 <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-white">

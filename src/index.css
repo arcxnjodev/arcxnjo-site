@@ -50,3 +50,22 @@ a {
 a:hover {
   color: #c084fc !important;
 }
+html {
+  scroll-behavior: smooth;
+}
+
+.profile-pro-scroll {
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  overscroll-behavior-y: contain;
+}
+
+.profile-pro-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.pro-scroll-section {
+  min-height: 100vh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
