@@ -11,6 +11,7 @@ import {
   FaSave,
   FaSnowflake,
   FaStar,
+  FaMousePointer,
 } from "react-icons/fa";
 import { useI18n } from "../../i18n/i18nProvider";
 
@@ -155,7 +156,7 @@ const effects: {
     icon: FaHeart,
   },
 ];
-
+  
 const copy = {
   pt: {
     badge: "Appearance Lab",
@@ -225,6 +226,7 @@ export const AppearanceSettings = () => {
   const [ownerBypass, setOwnerBypass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [customCursorUrl, setCustomCursorUrl] = useState("");
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
   const text = copy[language];
@@ -245,6 +247,8 @@ export const AppearanceSettings = () => {
         setSelectedEffect(response.data.profile_effect || "none");
         setPlan(response.data.plan === "pro" ? "pro" : "free");
         setOwnerBypass(Boolean(response.data.owner_bypass));
+        setCustomCursorUrl(response.data.custom_cursor_url || "");
+
       } catch (error) {
         console.error("Error fetching appearance:", error);
       }
@@ -265,6 +269,7 @@ export const AppearanceSettings = () => {
         {
           profileTemplate: selectedTemplate,
           profileEffect: selectedEffect,
+          customCursorUrl: customCursorUrl.trim(),
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -317,6 +322,71 @@ export const AppearanceSettings = () => {
           {message}
         </div>
       )}
+     <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-white/70">
+            <FaMousePointer />
+          </div>
+
+          <div>
+            <h4 className="text-lg font-black text-white">Custom Cursor</h4>
+            <p className="mt-1 text-sm text-white/40">
+              Coloque o link de uma imagem para usar como cursor personalizado no perfil.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-white/85">
+              Cursor image URL
+            </label>
+
+            <input
+              type="text"
+              value={customCursorUrl}
+              onChange={(e) => setCustomCursorUrl(e.target.value)}
+              placeholder="https://site.com/cursor.png"
+              className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]"
+            />
+
+            <p className="mt-2 text-xs text-white/35">
+              Recomendado: PNG, WEBP, GIF ou CUR pequeno. Ideal: 32x32 ou 64x64.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setCustomCursorUrl("")}
+            className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-bold text-white/55 transition hover:border-red-400/25 hover:bg-red-500/10 hover:text-red-200"
+          >
+            Clear Cursor
+          </button>
+        </div>
+
+        {customCursorUrl.trim() && (
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-white/35">
+              Preview
+            </p>
+
+            <div className="flex items-center gap-3">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10">
+                <img
+                  src={customCursorUrl}
+                  alt="Custom cursor preview"
+                  className="max-h-9 max-w-9 object-contain"
+                  draggable={false}
+                />
+              </div>
+
+              <p className="min-w-0 truncate text-sm text-white/50">
+                {customCursorUrl}
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
 
       <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
         <div className="mb-5">
