@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaClock, FaCode, FaHome, FaMapMarkerAlt, FaMusic } from "react-icons/fa";
+import { FaClock, FaHome, FaMapMarkerAlt, FaMusic } from "react-icons/fa";
 import { useI18n } from "../../i18n/i18nProvider";
 import { ParticleLayer } from "./ParticleLayer";
 import {
@@ -101,11 +101,6 @@ export const ProScrollTemplate = ({
   const socialEntries = Object.entries(data.socialMedia || {}).filter(
     ([, url]) => url && url.trim() !== ""
   );
-
-  const activeDiscordActivity =
-    discordData?.activities?.find(
-      (activity: any) => activity.type !== 4 && activity.name !== "Spotify"
-    ) || null;
 
   const timeLabel = new Intl.DateTimeFormat(undefined, {
     hour: "2-digit",
@@ -487,39 +482,7 @@ export const ProScrollTemplate = ({
                 className="shadow-[0_20px_70px_rgba(0,0,0,0.35)]"
               />
             </div>
-
-            <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:col-span-2">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-white">
-                  <FaCode />
-                </div>
-
-                <div>
-                  <p className="text-sm font-bold text-white">Activity</p>
-                  <p className="text-xs text-white/45">Discord / profile activity</p>
-                </div>
-              </div>
-
-              {discordData?.spotify ? (
-                <p className="text-sm text-white/75">
-                  {t("profile.listeningSpotify")}:{" "}
-                  <span className="font-bold text-white">
-                    {discordData.spotify.song}
-                  </span>{" "}
-                  by {discordData.spotify.artist}
-                </p>
-              ) : activeDiscordActivity ? (
-                <p className="text-sm text-white/75">
-                  {activeDiscordActivity.name}
-                  {(activeDiscordActivity.details || activeDiscordActivity.state) &&
-                    ` · ${activeDiscordActivity.details || activeDiscordActivity.state}`}
-                </p>
-              ) : (
-                <p className="text-sm text-white/60">
-                  {t("profile.onlineOnDiscord")}
-                </p>
-              )}
-            </div>
+            
           </section>
 
           <section
