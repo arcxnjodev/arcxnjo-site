@@ -25,6 +25,7 @@ export type ProfileData = {
     location?: string;
     status_text?: string;
     discord_id?: string;
+    custom_cursor_url?: string;
   };
   socialMedia: Record<string, string>;
   stats: {

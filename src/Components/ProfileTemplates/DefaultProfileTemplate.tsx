@@ -99,6 +99,12 @@ export const DefaultProfileTemplate = ({
     }
   };
 
+  const customCursorUrl = data.profile.custom_cursor_url?.trim();
+
+const cursorStyle = customCursorUrl
+  ? `url("${customCursorUrl}") 16 16, auto`
+  : undefined;
+
   const formatMusicFileName = useMemo(() => {
     if (!data?.profile.music_title?.trim()) return "profile-audio";
 
@@ -109,7 +115,8 @@ export const DefaultProfileTemplate = ({
   }, [data?.profile.music_title]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4 py-10 text-white">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4 py-10 text-white"
+         style={{ cursor: cursorStyle }}>
       <Link
         to="/"
         title="Home"

@@ -39,7 +39,7 @@ const ScrollDots = ({
   onSelect: (id: string) => void;
 }) => {
   return (
-    <div className="fixed right-5 top-1/2 z-[80] hidden -translate-y-1/2 flex-col items-center gap-4 md:flex">
+    <div className="fixed right-5 top-1/2 z-[80] hidden -translate-y-1/2 flex-col items-center gap-4 md:flex [&_*]:cursor-inherit">
       {scrollSections.map((section) => {
         const active = activeSection === section.id;
 
@@ -328,11 +328,17 @@ export const ProScrollTemplate = ({
     discordData?.spotify?.artist ||
     (hasMusic ? "ARCXNJO profile audio" : t("profile.onlineOnDiscord"));
 
+    const customCursorUrl = data.profile.custom_cursor_url?.trim();
+
+    const cursorStyle = customCursorUrl
+      ? `url("${customCursorUrl}") 16 16, auto`
+      : undefined;
+      
   return (
     <div
       ref={scrollContainerRef}
-      className="profile-pro-scroll relative h-screen overflow-y-auto overflow-x-hidden overscroll-contain bg-black text-white [scrollbar-width:none]"
-    >
+      className="profile-pro-scroll relative h-screen overflow-y-auto overflow-x-hidden overscroll-contain bg-black text-white [scrollbar-width:none] [&_*]:cursor-inherit"
+      style={{ cursor: cursorStyle }}>
       <style>{`
         .profile-pro-scroll::-webkit-scrollbar {
           display: none;
