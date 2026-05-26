@@ -39,7 +39,7 @@ const ScrollDots = ({
   onSelect: (id: string) => void;
 }) => {
   return (
-    <div className="fixed right-5 top-1/2 z-[80] hidden -translate-y-1/2 flex-col items-center gap-3 md:flex">
+    <div className="fixed right-5 top-1/2 z-[80] hidden -translate-y-1/2 flex-col items-center gap-4 md:flex">
       {scrollSections.map((section) => {
         const active = activeSection === section.id;
 
@@ -55,8 +55,8 @@ const ScrollDots = ({
             <span
               className={`rounded-full transition-all duration-300 ${
                 active
-                  ? "h-3 w-3 bg-white shadow-[0_0_16px_rgba(255,255,255,0.95)]"
-                  : "h-1.5 w-1.5 bg-white/35 group-hover:h-2.5 group-hover:w-2.5 group-hover:bg-white/85 group-hover:shadow-[0_0_12px_rgba(255,255,255,0.75)]"
+                  ? "h-3.5 w-3.5 bg-white shadow-[0_0_16px_rgba(255,255,255,0.95)]"
+                  : "h-2 w-2 bg-white/35 group-hover:bg-white/80 group-hover:shadow-[0_0_10px_rgba(255,255,255,0.75)]"
               }`}
             />
           </button>
@@ -482,7 +482,7 @@ export const ProScrollTemplate = ({
                 className="shadow-[0_20px_70px_rgba(0,0,0,0.35)]"
               />
             </div>
-            
+
           </section>
 
           <section
