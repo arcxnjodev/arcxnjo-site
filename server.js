@@ -1448,8 +1448,21 @@ app.put('/api/profile/username', authenticateToken, async (req, res) => {
 });
 
 app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
-  const { profileTemplate, profileEffect } = req.body;
+  const { profileTemplate, profileEffect, customCursorUrl } = req.body;
 
+  const cleanCustomCursorUrl = String(customCursorUrl || '').trim();
+
+  if (
+    cleanCustomCursorUrl &&
+    !cleanCustomCursorUrl.startsWith('http://') &&
+    !cleanCustomCursorUrl.startsWith('https://') &&
+    !cleanCustomCursorUrl.startsWith('/')
+  ) {
+    return res.status(400).json({
+      error: 'Invalid cursor URL.',
+    });
+  }
+  
   const allowedTemplates = [
     'neon-purple',
     'cyber-glass',
@@ -1471,9 +1484,13 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
 
   try {
     await pool.query(
-      'UPDATE user_profiles SET profile_template = $1, profile_effect = $2 WHERE user_id = $3',
-      [profileTemplate, profileEffect, req.userId]
-    );
+  `UPDATE user_profiles
+   SET profile_template = $1,
+       profile_effect = $2,
+       custom_cursor_url = $3
+   WHERE user_id = $4`,
+  [profileTemplate, profileEffect, cleanCustomCursorUrl, req.userId]
+);
 
     return res.json({ message: 'Appearance updated successfully!' });
   } catch (error) {
