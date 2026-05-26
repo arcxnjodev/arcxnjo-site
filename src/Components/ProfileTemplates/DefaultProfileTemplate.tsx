@@ -13,6 +13,7 @@ import {
   SocialLinks,
 } from "./ProfileParts";
 import { getTemplateStyle } from "./profileUtils";
+import { ProfileCursor } from "./ProfileCursor";
 import type { ProfileEffect, ProfileTemplateProps } from "./types";
 
 export const DefaultProfileTemplate = ({
@@ -100,10 +101,7 @@ export const DefaultProfileTemplate = ({
   };
 
   const customCursorUrl = data.profile.custom_cursor_url?.trim();
-
-const cursorStyle = customCursorUrl
-  ? `url("${customCursorUrl}") 16 16, auto`
-  : undefined;
+  const hasCustomCursor = Boolean(customCursorUrl);
 
   const formatMusicFileName = useMemo(() => {
     if (!data?.profile.music_title?.trim()) return "profile-audio";
@@ -115,8 +113,12 @@ const cursorStyle = customCursorUrl
   }, [data?.profile.music_title]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4 py-10 text-white"
-         style={{ cursor: cursorStyle }}>
+    <div
+      className={`relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4 py-10 text-white ${
+        hasCustomCursor ? "cursor-none [&_*]:cursor-none" : ""
+      }`}
+    >
+      <ProfileCursor cursorUrl={customCursorUrl} />
       <Link
         to="/"
         title="Home"
