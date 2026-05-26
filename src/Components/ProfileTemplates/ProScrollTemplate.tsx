@@ -39,35 +39,29 @@ const ScrollDots = ({
   onSelect: (id: string) => void;
 }) => {
   return (
-    <div className="fixed right-5 top-1/2 z-[80] hidden -translate-y-1/2 flex-col items-center md:flex">
-      <div className="rounded-full border border-white/10 bg-black/30 px-2 py-3 shadow-[0_0_35px_rgba(255,255,255,0.08)] backdrop-blur-2xl">
-        {scrollSections.map((section) => {
-          const active = activeSection === section.id;
+    <div className="fixed right-5 top-1/2 z-[80] hidden -translate-y-1/2 flex-col items-center gap-3 md:flex">
+      {scrollSections.map((section) => {
+        const active = activeSection === section.id;
 
-          return (
-            <button
-              key={section.id}
-              type="button"
-              onClick={() => onSelect(section.id)}
-              className="group relative my-2 flex h-6 w-6 items-center justify-center"
-              aria-label={section.label}
-              title={section.label}
-            >
-              <span
-                className={`absolute rounded-full transition-all duration-300 ${
-                  active
-                    ? "h-5 w-5 bg-white shadow-[0_0_20px_rgba(255,255,255,0.95)]"
-                    : "h-2.5 w-2.5 bg-white/35 group-hover:h-3.5 group-hover:w-3.5 group-hover:bg-white/80 group-hover:shadow-[0_0_14px_rgba(255,255,255,0.7)]"
-                }`}
-              />
-
-              {active && (
-                <span className="absolute h-8 w-8 animate-ping rounded-full bg-white/15" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+        return (
+          <button
+            key={section.id}
+            type="button"
+            onClick={() => onSelect(section.id)}
+            className="group flex h-4 w-4 items-center justify-center"
+            aria-label={section.label}
+            title={section.label}
+          >
+            <span
+              className={`rounded-full transition-all duration-300 ${
+                active
+                  ? "h-3 w-3 bg-white shadow-[0_0_16px_rgba(255,255,255,0.95)]"
+                  : "h-1.5 w-1.5 bg-white/35 group-hover:h-2.5 group-hover:w-2.5 group-hover:bg-white/85 group-hover:shadow-[0_0_12px_rgba(255,255,255,0.75)]"
+              }`}
+            />
+          </button>
+        );
+      })}
     </div>
   );
 };
@@ -88,6 +82,7 @@ export const ProScrollTemplate = ({
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const isAutoScrollingRef = useRef(false);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const hasMusic = Boolean(data?.profile.music_url);
@@ -179,17 +174,86 @@ export const ProScrollTemplate = ({
     };
   }, []);
 
+  const animateScrollTo = (targetTop: number) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const startTop = container.scrollTop;
+    const distance = targetTop - startTop;
+    const duration = 850;
+    const startTime = performance.now();
+
+    isAutoScrollingRef.current = true;
+
+    const easeInOutCubic = (value: number) => {
+      return value < 0.5
+        ? 4 * value * value * value
+        : 1 - Math.pow(-2 * value + 2, 3) / 2;
+    };
+
+    const step = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeInOutCubic(progress);
+
+      container.scrollTop = startTop + distance * easedProgress;
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+        return;
+      }
+
+      window.setTimeout(() => {
+        isAutoScrollingRef.current = false;
+      }, 120);
+    };
+
+    requestAnimationFrame(step);
+  };
+
   const scrollToSection = (id: string) => {
     const container = scrollContainerRef.current;
     const element = container?.querySelector<HTMLElement>(`#pro-${id}`);
 
     if (!container || !element) return;
 
-    container.scrollTo({
-      top: element.offsetTop,
-      behavior: "smooth",
-    });
+    setActiveSection(id);
+    animateScrollTo(element.offsetTop);
   };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+
+      if (isAutoScrollingRef.current) return;
+
+      const currentIndex = scrollSections.findIndex(
+        (section) => section.id === activeSection
+      );
+
+      const direction = event.deltaY > 0 ? 1 : -1;
+
+      const nextIndex = Math.min(
+        Math.max(currentIndex + direction, 0),
+        scrollSections.length - 1
+      );
+
+      const nextSection = scrollSections[nextIndex];
+
+      if (!nextSection || nextSection.id === activeSection) return;
+
+      scrollToSection(nextSection.id);
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+    };
+  }, [activeSection]);
 
   useEffect(() => {
     if (controlsTarget === "music" && audioRef.current) {
@@ -265,7 +329,7 @@ export const ProScrollTemplate = ({
   return (
     <div
       ref={scrollContainerRef}
-      className="profile-pro-scroll relative h-screen overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth snap-y snap-proximity bg-black text-white [scrollbar-width:none]"
+      className="profile-pro-scroll relative h-screen overflow-y-auto overflow-x-hidden overscroll-contain bg-black text-white [scrollbar-width:none]"
     >
       <style>{`
         .profile-pro-scroll::-webkit-scrollbar {
@@ -337,7 +401,7 @@ export const ProScrollTemplate = ({
         <main className="relative z-10">
           <section
             id="pro-profile"
-            className="flex min-h-screen snap-start snap-always items-center justify-center px-4 py-16"
+            className="flex min-h-screen items-center justify-center px-4 py-16"
           >
             <div className="w-full max-w-xl text-center">
               <img
@@ -372,7 +436,7 @@ export const ProScrollTemplate = ({
 
           <section
             id="pro-activity"
-            className="mx-auto grid min-h-screen max-w-5xl snap-start snap-always content-center gap-5 px-4 py-16 md:grid-cols-2"
+            className="mx-auto grid min-h-screen max-w-5xl content-center gap-5 px-4 py-16 md:grid-cols-2"
           >
             <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
               <div className="mb-4 flex items-center gap-3">
@@ -460,7 +524,7 @@ export const ProScrollTemplate = ({
 
           <section
             id="pro-music"
-            className="mx-auto flex min-h-screen max-w-4xl snap-start snap-always items-center px-4 py-16"
+            className="mx-auto flex min-h-screen max-w-4xl items-center px-4 py-16"
           >
             <div className="w-full rounded-[2rem] border border-white/10 bg-black/45 p-5 shadow-[0_25px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:p-8">
               <div className="mb-6 flex items-center gap-4">
