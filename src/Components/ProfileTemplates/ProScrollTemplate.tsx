@@ -44,22 +44,29 @@ const ScrollDots = ({
         const active = activeSection === section.id;
 
         return (
-          <button
+          <span
             key={section.id}
-            type="button"
+            role="button"
+            tabIndex={0}
             onClick={() => onSelect(section.id)}
-            className="group flex h-4 w-4 items-center justify-center"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onSelect(section.id);
+              }
+            }}
             aria-label={section.label}
             title={section.label}
+            className="group flex cursor-pointer items-center justify-center"
           >
             <span
-              className={`rounded-full transition-all duration-300 ${
+              className={`block rounded-full transition-all duration-300 ${
                 active
                   ? "h-3.5 w-3.5 bg-white shadow-[0_0_16px_rgba(255,255,255,0.95)]"
                   : "h-2 w-2 bg-white/35 group-hover:bg-white/80 group-hover:shadow-[0_0_10px_rgba(255,255,255,0.75)]"
               }`}
             />
-          </button>
+          </span>
         );
       })}
     </div>
