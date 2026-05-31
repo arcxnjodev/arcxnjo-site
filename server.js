@@ -1373,11 +1373,14 @@ app.put('/api/admin/community/templates/:id/status', authenticateToken, requireA
   try {
     const result = await pool.query(
       `UPDATE community_templates
-       SET status = $1,
-           rejection_reason = $2,
-           is_public = $3,
-           approved_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE approved_at END
-       WHERE id = $4
+       SET status = $1::varchar,
+           rejection_reason = $2::text,
+           is_public = $3::boolean,
+           approved_at = CASE
+             WHEN $1::varchar = 'approved' THEN NOW()
+             ELSE NULL
+           END
+       WHERE id = $4::integer
        RETURNING
         id,
         name,
