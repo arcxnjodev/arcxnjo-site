@@ -754,20 +754,7 @@ export const AdminPanel = () => {
                   </div>
                 )}
 
-                {activeTab === "social" &&
-                  tabs.find((t) => t.id === "social")?.component}
-
-                {activeTab === "images" &&
-                  tabs.find((t) => t.id === "images")?.component}
-
-                {activeTab === "appearance" &&
-                  tabs.find((t) => t.id === "appearance")?.component}
-
-                {activeTab === "music" &&
-                  tabs.find((t) => t.id === "music")?.component}
-
-                {activeTab === "badges" &&
-                  tabs.find((t) => t.id === "badges")?.component}
+                {activeTab !== "profile" && activeTabData?.component}
               </div>
             </div>
           </main>
