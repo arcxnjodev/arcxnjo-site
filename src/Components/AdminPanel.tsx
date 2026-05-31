@@ -6,6 +6,8 @@ import { ProfileImagesSettings } from "./Ui/ProfileImagesSettings";
 import { AppearanceSettings } from "./Ui/AppearanceSettings";
 import { BadgeSettings } from "./Ui/BadgeSettings";
 import { MusicSettings } from "./Ui/MusicSettings";
+import { CommunityTemplatesSettings } from "./Ui/CommunityTemplatesSettings";
+import { AdminCommunityTemplates } from "./Ui/AdminCommunityTemplates";
 import {
   FaUser,
   FaLink,
@@ -19,6 +21,8 @@ import {
   FaCrown,
   FaMagic,
   FaSave,
+  FaUsers,
+  FaShieldAlt,
 } from "react-icons/fa";
 import axios from "axios";
 import { useI18n } from "../i18n/i18nProvider";
@@ -36,6 +40,7 @@ export const AdminPanel = () => {
   const [statusText, setStatusText] = useState<string>("");
   const [plan, setPlan] = useState<string>("free");
   const [role, setRole] = useState<string>("user");
+  const [ownerBypass, setOwnerBypass] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
@@ -66,6 +71,7 @@ export const AdminPanel = () => {
         setStatusText(response.data.status_text || "");
         setPlan(response.data.plan || "free");
         setRole(response.data.role || "user");
+        setOwnerBypass(Boolean(response.data.owner_bypass));
       } catch (error) {
         console.error("Error fetching user data:", error);
 
@@ -179,6 +185,8 @@ export const AdminPanel = () => {
     window.location.href = "/login";
   };
 
+  const isAdminUser = ["admin", "owner", "staff"].includes(role.toLowerCase()) || ownerBypass;
+
   const tabs = [
     {
       id: "profile",
@@ -222,6 +230,24 @@ export const AdminPanel = () => {
       icon: <FaCertificate />,
       component: <BadgeSettings />,
     },
+    {
+      id: "community",
+      label: "Comunidade",
+      description: "Crie templates e envie para aprovação",
+      icon: <FaUsers />,
+      component: <CommunityTemplatesSettings />,
+    },
+    ...(isAdminUser
+      ? [
+          {
+            id: "community-admin",
+            label: "Aprovação",
+            description: "Revise templates enviados pela comunidade",
+            icon: <FaShieldAlt />,
+            component: <AdminCommunityTemplates />,
+          },
+        ]
+      : []),
   ];
 
   const activeTabData = tabs.find((tab) => tab.id === activeTab);

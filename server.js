@@ -32,7 +32,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -91,6 +91,62 @@ function authenticateToken(req, res, next) {
     req.userId = decoded.userId;
     next();
   });
+}
+
+async function requireAdmin(req, res, next) {
+  try {
+    const userResult = await pool.query(
+      "SELECT id, email, COALESCE(role, 'user') AS role FROM users WHERE id = $1 LIMIT 1",
+      [req.userId]
+    );
+
+    const user = userResult.rows[0];
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const ownerBypassEmail = (process.env.OWNER_BYPASS_EMAIL || '')
+      .trim()
+      .toLowerCase();
+
+    const email = String(user.email || '').trim().toLowerCase();
+    const role = String(user.role || 'user').trim().toLowerCase();
+
+    const isAllowed =
+      ['admin', 'owner', 'staff'].includes(role) ||
+      (ownerBypassEmail && email === ownerBypassEmail);
+
+    if (!isAllowed) {
+      return res.status(403).json({ error: 'Admin access required.' });
+    }
+
+    req.adminUser = user;
+    next();
+  } catch (error) {
+    console.error('Admin auth error:', error.message);
+    return res.status(500).json({ error: 'Failed to verify admin access.' });
+  }
+}
+
+function cleanCommunityTemplatePayload(body = {}) {
+  const name = String(body.name || '').trim().slice(0, 80);
+  const description = String(body.description || '').trim().slice(0, 500);
+  const previewImage = String(body.previewImage || body.preview_image || '')
+    .trim()
+    .slice(0, 500);
+  const htmlCode = String(body.htmlCode || body.html_code || '').trim();
+  const cssCode = String(body.cssCode || body.css_code || '').trim();
+  const jsCode = String(body.jsCode || body.js_code || '').trim();
+
+  return {
+    name,
+    description,
+    previewImage,
+    htmlCode: htmlCode.slice(0, 120000),
+    cssCode: cssCode.slice(0, 120000),
+    jsCode: jsCode.slice(0, 120000),
+  };
 }
 
 /* =========================================================
@@ -1109,6 +1165,280 @@ app.get('/api/discord-presence/:discordId', async (req, res) => {
       success: false,
       error: 'Failed to load Discord presence.',
     });
+  }
+});
+
+
+/* =========================================================
+   COMMUNITY TEMPLATES
+========================================================= */
+
+app.post('/api/community/templates', authenticateToken, async (req, res) => {
+  const payload = cleanCommunityTemplatePayload(req.body);
+
+  if (!payload.name) {
+    return res.status(400).json({ error: 'Template name is required.' });
+  }
+
+  if (!payload.htmlCode) {
+    return res.status(400).json({ error: 'HTML code is required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO community_templates (
+        creator_user_id,
+        name,
+        description,
+        preview_image,
+        html_code,
+        css_code,
+        js_code,
+        status,
+        is_public
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', false)
+      RETURNING
+        id,
+        name,
+        description,
+        preview_image,
+        html_code,
+        css_code,
+        js_code,
+        status,
+        rejection_reason,
+        is_public,
+        created_at,
+        approved_at`,
+      [
+        req.userId,
+        payload.name,
+        payload.description,
+        payload.previewImage,
+        payload.htmlCode,
+        payload.cssCode,
+        payload.jsCode,
+      ]
+    );
+
+    return res.status(201).json({
+      message: 'Template sent for approval!',
+      template: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Community template create error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/community/templates/me', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+        id,
+        name,
+        description,
+        preview_image,
+        html_code,
+        css_code,
+        js_code,
+        status,
+        rejection_reason,
+        is_public,
+        created_at,
+        approved_at
+       FROM community_templates
+       WHERE creator_user_id = $1
+       ORDER BY created_at DESC
+       LIMIT 50`,
+      [req.userId]
+    );
+
+    return res.json(result.rows);
+  } catch (error) {
+    console.error('Community templates me error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/community/templates/public', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+        ct.id,
+        ct.name,
+        ct.description,
+        ct.preview_image,
+        ct.html_code,
+        ct.css_code,
+        ct.js_code,
+        ct.status,
+        ct.is_public,
+        ct.created_at,
+        ct.approved_at,
+        u.username AS creator_username
+       FROM community_templates ct
+       LEFT JOIN users u ON u.id = ct.creator_user_id
+       WHERE ct.status = 'approved'
+       AND ct.is_public = true
+       ORDER BY ct.approved_at DESC NULLS LAST, ct.created_at DESC
+       LIMIT 60`
+    );
+
+    return res.json(result.rows);
+  } catch (error) {
+    console.error('Public community templates error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/community/templates', authenticateToken, requireAdmin, async (req, res) => {
+  const status = String(req.query.status || 'pending').trim().toLowerCase();
+
+  const allowedStatuses = ['pending', 'approved', 'rejected', 'all'];
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status filter.' });
+  }
+
+  try {
+    const params = [];
+    let whereClause = '';
+
+    if (status !== 'all') {
+      params.push(status);
+      whereClause = 'WHERE ct.status = $1';
+    }
+
+    const result = await pool.query(
+      `SELECT
+        ct.id,
+        ct.creator_user_id,
+        ct.name,
+        ct.description,
+        ct.preview_image,
+        ct.html_code,
+        ct.css_code,
+        ct.js_code,
+        ct.status,
+        ct.rejection_reason,
+        ct.is_public,
+        ct.created_at,
+        ct.approved_at,
+        u.username AS creator_username,
+        u.email AS creator_email
+       FROM community_templates ct
+       LEFT JOIN users u ON u.id = ct.creator_user_id
+       ${whereClause}
+       ORDER BY
+        CASE ct.status
+          WHEN 'pending' THEN 0
+          WHEN 'approved' THEN 1
+          ELSE 2
+        END,
+        ct.created_at DESC
+       LIMIT 100`,
+      params
+    );
+
+    return res.json(result.rows);
+  } catch (error) {
+    console.error('Admin community templates fetch error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/admin/community/templates/:id/status', authenticateToken, requireAdmin, async (req, res) => {
+  const templateId = Number(req.params.id);
+  const status = String(req.body.status || '').trim().toLowerCase();
+  const rejectionReason = String(req.body.rejectionReason || req.body.rejection_reason || '')
+    .trim()
+    .slice(0, 500);
+
+  const allowedStatuses = ['pending', 'approved', 'rejected'];
+
+  if (!Number.isInteger(templateId) || templateId <= 0) {
+    return res.status(400).json({ error: 'Invalid template id.' });
+  }
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Invalid template status.' });
+  }
+
+  if (status === 'rejected' && !rejectionReason) {
+    return res.status(400).json({ error: 'Rejection reason is required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE community_templates
+       SET status = $1,
+           rejection_reason = $2,
+           is_public = $3,
+           approved_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE approved_at END
+       WHERE id = $4
+       RETURNING
+        id,
+        name,
+        description,
+        preview_image,
+        html_code,
+        css_code,
+        js_code,
+        status,
+        rejection_reason,
+        is_public,
+        created_at,
+        approved_at`,
+      [
+        status,
+        status === 'rejected' ? rejectionReason : '',
+        status === 'approved',
+        templateId,
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Template not found.' });
+    }
+
+    return res.json({
+      message:
+        status === 'approved'
+          ? 'Template approved!'
+          : status === 'rejected'
+          ? 'Template rejected.'
+          : 'Template moved to pending.',
+      template: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Admin community template status error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/admin/community/templates/:id', authenticateToken, requireAdmin, async (req, res) => {
+  const templateId = Number(req.params.id);
+
+  if (!Number.isInteger(templateId) || templateId <= 0) {
+    return res.status(400).json({ error: 'Invalid template id.' });
+  }
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM community_templates WHERE id = $1 RETURNING id',
+      [templateId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Template not found.' });
+    }
+
+    return res.json({ message: 'Template deleted.' });
+  } catch (error) {
+    console.error('Admin community template delete error:', error);
+    return res.status(500).json({ error: error.message });
   }
 });
 
