@@ -7,8 +7,11 @@ const { Pool } = require('pg');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const { Client, GatewayIntentBits, ActivityType } = require('discord.js');
+const crypto = require('crypto');
 
 const app = express();
+
+app.set('trust proxy', true);
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -147,6 +150,28 @@ function cleanCommunityTemplatePayload(body = {}) {
     cssCode: cssCode.slice(0, 120000),
     jsCode: jsCode.slice(0, 120000),
   };
+}
+
+function getProfileVisitorKey(req) {
+  const forwardedFor = String(req.headers['x-forwarded-for'] || '')
+    .split(',')[0]
+    .trim();
+
+  const ip =
+    forwardedFor ||
+    req.ip ||
+    req.socket?.remoteAddress ||
+    'unknown-ip';
+
+  const userAgent = String(req.headers['user-agent'] || 'unknown-agent').slice(
+    0,
+    300
+  );
+
+  return crypto
+    .createHash('sha256')
+    .update(`${ip}|${userAgent}`)
+    .digest('hex');
 }
 
 /* =========================================================
@@ -1623,15 +1648,35 @@ app.get('/api/profile/:username', async (req, res) => {
       [user.id, '']
     );
 
-    const statsResult = await pool.query(
-      'SELECT profile_views FROM user_stats WHERE user_id = $1',
-      [user.id]
-    );
+    const visitorKey = getProfileVisitorKey(req);
 
-    await pool.query(
-      'UPDATE user_stats SET profile_views = profile_views + 1 WHERE user_id = $1',
-      [user.id]
-    );
+const viewEventResult = await pool.query(
+  `
+  INSERT INTO profile_view_events (
+    profile_user_id,
+    visitor_key,
+    last_viewed_at
+  )
+  VALUES ($1, $2, NOW())
+  ON CONFLICT (profile_user_id, visitor_key)
+  DO UPDATE SET last_viewed_at = NOW()
+  WHERE profile_view_events.last_viewed_at < NOW() - INTERVAL '12 hours'
+  RETURNING id
+  `,
+  [user.id, visitorKey]
+);
+
+if (viewEventResult.rows.length > 0) {
+  await pool.query(
+    'UPDATE user_stats SET profile_views = profile_views + 1 WHERE user_id = $1',
+    [user.id]
+  );
+}
+
+const statsResult = await pool.query(
+  'SELECT profile_views FROM user_stats WHERE user_id = $1',
+  [user.id]
+);
 
     const socialMedia = {};
 
