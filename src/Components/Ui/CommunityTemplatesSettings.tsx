@@ -28,15 +28,68 @@ type CommunityTemplate = {
   creator_username?: string;
 };
 
+type CommunityView = "gallery" | "submit";
+
+type CodeEditorProps = {
+  label: string;
+  icon?: React.ReactNode;
+  value: string;
+  onChange: (value: string) => void;
+  rows: number;
+  placeholder?: string;
+};
+
 const statusClass: Record<string, string> = {
   pending: "border-yellow-400/20 bg-yellow-500/10 text-yellow-200",
   approved: "border-green-400/20 bg-green-500/10 text-green-200",
   rejected: "border-red-400/20 bg-red-500/10 text-red-200",
 };
 
+const codePanelClass =
+  "rounded-[1.35rem] border border-white/10 bg-[#050505]/90 shadow-[0_20px_70px_rgba(0,0,0,0.36)]";
+
+const fieldClass =
+  "w-full rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-purple-400/60 focus:bg-black/55 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]";
+
+const CodeEditor = ({
+  label,
+  icon,
+  value,
+  onChange,
+  rows,
+  placeholder,
+}: CodeEditorProps) => {
+  return (
+    <div className={codePanelClass}>
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-white/50">
+          {icon}
+          {label}
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />
+          <span className="h-2.5 w-2.5 rounded-full bg-yellow-300/80" />
+          <span className="h-2.5 w-2.5 rounded-full bg-green-400/80" />
+        </div>
+      </div>
+
+      <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        rows={rows}
+        spellCheck={false}
+        placeholder={placeholder}
+        className="block w-full resize-y border-0 bg-transparent px-4 py-4 font-mono text-xs leading-relaxed text-white outline-none placeholder-white/20"
+      />
+    </div>
+  );
+};
+
 export const CommunityTemplatesSettings = () => {
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
+  const [activeView, setActiveView] = useState<CommunityView>("gallery");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [previewImage, setPreviewImage] = useState("");
@@ -80,7 +133,9 @@ p {
   const [jsCode, setJsCode] = useState("");
   const [myTemplates, setMyTemplates] = useState<CommunityTemplate[]>([]);
   const [publicTemplates, setPublicTemplates] = useState<CommunityTemplate[]>([]);
-  const [currentCommunityTemplateId, setCurrentCommunityTemplateId] = useState<number | null>(null);
+  const [currentCommunityTemplateId, setCurrentCommunityTemplateId] = useState<
+    number | null
+  >(null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [usingTemplateId, setUsingTemplateId] = useState<number | null>(null);
@@ -142,6 +197,17 @@ p {
     return name.trim().length >= 3 && htmlCode.trim().length > 0;
   }, [name, htmlCode]);
 
+  const codeStats = useMemo(() => {
+    const lines = [htmlCode, cssCode, jsCode]
+      .join("\n")
+      .split("\n")
+      .filter(Boolean).length;
+
+    const chars = htmlCode.length + cssCode.length + jsCode.length;
+
+    return { lines, chars };
+  }, [htmlCode, cssCode, jsCode]);
+
   const handleSubmit = async () => {
     if (!canSubmit) {
       setMessage("❌ Dê um nome e coloque pelo menos o HTML do template.");
@@ -172,6 +238,7 @@ p {
       setDescription("");
       setPreviewImage("");
       setJsCode("");
+      setActiveView("submit");
       await fetchMyTemplates();
     } catch (error: any) {
       setMessage(
@@ -209,23 +276,54 @@ p {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-purple-600/20 via-black/30 to-pink-600/10 p-5 md:p-6">
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-purple-600/20 via-black/40 to-pink-600/10 p-5 md:p-6">
         <div className="absolute right-[-80px] top-[-80px] h-52 w-52 rounded-full bg-purple-500/20 blur-3xl" />
+        <div className="absolute bottom-[-90px] left-[-80px] h-52 w-52 rounded-full bg-fuchsia-500/10 blur-3xl" />
 
-        <div className="relative">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-purple-200">
-            <FaUsers />
-            Comunidade
+        <div className="relative flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-purple-200">
+              <FaUsers />
+              Comunidade
+            </div>
+
+            <h3 className="text-2xl font-black text-white md:text-3xl">
+              Templates da comunidade
+            </h3>
+
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
+              Use templates aprovados ou envie seu próprio código em uma área
+              separada, com preview isolado e vibe de editor.
+            </p>
           </div>
 
-          <h3 className="text-2xl font-black text-white">
-            Templates da comunidade
-          </h3>
+          <div className="grid gap-2 rounded-3xl border border-white/10 bg-black/30 p-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setActiveView("gallery")}
+              className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition ${
+                activeView === "gallery"
+                  ? "bg-white text-black shadow-[0_0_24px_rgba(255,255,255,0.16)]"
+                  : "text-white/45 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <FaEye />
+              Galeria aprovada
+            </button>
 
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
-            Use templates aprovados no seu perfil ou envie seu próprio HTML, CSS
-            e JavaScript para aprovação.
-          </p>
+            <button
+              type="button"
+              onClick={() => setActiveView("submit")}
+              className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition ${
+                activeView === "submit"
+                  ? "bg-purple-600 text-white shadow-[0_0_28px_rgba(147,51,234,0.28)]"
+                  : "text-white/45 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <FaCode />
+              Enviar código
+            </button>
+          </div>
         </div>
       </section>
 
@@ -241,284 +339,319 @@ p {
         </div>
       )}
 
-      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
-        <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-center">
-          <div>
-            <h4 className="text-xl font-black text-white">
-              Galeria aprovada
-            </h4>
-            <p className="mt-1 text-sm text-white/40">
-              Templates liberados aparecem aqui depois da aprovação.
-            </p>
-          </div>
-
-          <span className="w-fit rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-xs font-bold text-white/45">
-            {publicTemplates.length} público(s)
-          </span>
-        </div>
-
-        {publicTemplates.length > 0 ? (
-          <div className="grid gap-5 xl:grid-cols-2">
-            {publicTemplates.map((template) => {
-              const isCurrent = currentCommunityTemplateId === template.id;
-              const isLoading = usingTemplateId === template.id;
-
-              return (
-                <article
-                  key={template.id}
-                  className="overflow-hidden rounded-3xl border border-white/10 bg-black/30"
-                >
-                  {template.preview_image ? (
-                    <img
-                      src={template.preview_image}
-                      alt={template.name}
-                      className="h-48 w-full object-cover"
-                    />
-                  ) : (
-                    <CommunityTemplatePreview
-                      htmlCode={template.html_code}
-                      cssCode={template.css_code}
-                      jsCode={template.js_code}
-                      height="220px"
-                    />
-                  )}
-
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h5 className="truncate text-lg font-black text-white">
-                          {template.name}
-                        </h5>
-                        <p className="mt-1 text-xs text-white/35">
-                          por @{template.creator_username || "unknown"}
-                        </p>
-                      </div>
-
-                      {isCurrent && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-green-400/20 bg-green-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-200">
-                          <FaCheck />
-                          usando
-                        </span>
-                      )}
-                    </div>
-
-                    {template.description && (
-                      <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-white/55">
-                        {template.description}
-                      </p>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => handleUseTemplate(template)}
-                      disabled={isLoading || isCurrent}
-                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-purple-600 px-4 py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(147,51,234,0.2)] transition hover:-translate-y-0.5 hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isLoading ? (
-                        <FaSpinner className="animate-spin" />
-                      ) : isCurrent ? (
-                        <FaCheck />
-                      ) : (
-                        <FaEye />
-                      )}
-                      {isCurrent ? "Template em uso" : "Usar no meu perfil"}
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm text-white/35">
-            Ainda não tem template aprovado. Quando você aprovar um template, ele
-            aparece aqui para todo mundo usar.
-          </p>
-        )}
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1fr_420px]">
-        <div className="space-y-5 rounded-3xl border border-white/10 bg-black/25 p-5">
-          <div>
-            <h4 className="text-xl font-black text-white">
-              Enviar novo template
-            </h4>
-            <p className="mt-1 text-sm text-white/40">
-              Seu envio fica pendente até ser aprovado.
-            </p>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2">
+      {activeView === "gallery" && (
+        <section className="space-y-5">
+          <div className="flex flex-col justify-between gap-3 rounded-3xl border border-white/10 bg-black/25 p-5 md:flex-row md:items-center">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white/85">
-                Nome do template
-              </label>
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                maxLength={80}
-                placeholder="Dark Angel"
-                className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-white/85">
-                Preview image URL
-              </label>
-              <input
-                value={previewImage}
-                onChange={(event) => setPreviewImage(event.target.value)}
-                maxLength={500}
-                placeholder="https://..."
-                className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white/85">
-              Descrição
-            </label>
-            <textarea
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              maxLength={500}
-              placeholder="Explique o estilo do template..."
-              rows={3}
-              className="w-full resize-none rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-white/85">
-              <FaCode className="text-white/45" />
-              HTML
-            </label>
-            <textarea
-              value={htmlCode}
-              onChange={(event) => setHtmlCode(event.target.value)}
-              rows={9}
-              spellCheck={false}
-              className="w-full resize-y rounded-2xl border border-white/10 bg-black/45 px-4 py-3 font-mono text-xs text-white outline-none transition focus:border-purple-400/60 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-white/85">
-              <FaImage className="text-white/45" />
-              CSS
-            </label>
-            <textarea
-              value={cssCode}
-              onChange={(event) => setCssCode(event.target.value)}
-              rows={10}
-              spellCheck={false}
-              className="w-full resize-y rounded-2xl border border-white/10 bg-black/45 px-4 py-3 font-mono text-xs text-white outline-none transition focus:border-purple-400/60 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white/85">
-              JavaScript opcional
-            </label>
-            <textarea
-              value={jsCode}
-              onChange={(event) => setJsCode(event.target.value)}
-              rows={6}
-              spellCheck={false}
-              placeholder="// Opcional. Vai rodar isolado dentro de iframe sandbox."
-              className="w-full resize-y rounded-2xl border border-white/10 bg-black/45 px-4 py-3 font-mono text-xs text-white placeholder-white/25 outline-none transition focus:border-purple-400/60 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]"
-            />
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-            <button
-              type="button"
-              onClick={() => setShowPreview((prev) => !prev)}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-3 text-sm font-bold text-white/60 transition hover:border-purple-400/25 hover:bg-purple-500/10 hover:text-white"
-            >
-              <FaEye />
-              {showPreview ? "Esconder preview" : "Mostrar preview"}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading || !canSubmit}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
-              Enviar para aprovação
-            </button>
-          </div>
-        </div>
-
-        <aside className="space-y-4">
-          {showPreview && (
-            <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
-              <p className="mb-3 text-sm font-black text-white">
-                Preview isolado
+              <h4 className="text-xl font-black text-white">
+                Galeria aprovada
+              </h4>
+              <p className="mt-1 text-sm text-white/40">
+                Aqui aparecem somente templates revisados e liberados.
               </p>
-              <CommunityTemplatePreview
-                htmlCode={htmlCode}
-                cssCode={cssCode}
-                jsCode={jsCode}
-                height="520px"
-              />
             </div>
-          )}
 
-          <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
-            <p className="mb-3 flex items-center gap-2 text-sm font-black text-white">
-              <FaPlus className="text-purple-300" />
-              Meus envios
-            </p>
+            <span className="w-fit rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-xs font-bold text-white/45">
+              {publicTemplates.length} aprovado(s)
+            </span>
+          </div>
 
-            {fetching ? (
-              <p className="text-sm text-white/45">Carregando...</p>
-            ) : myTemplates.length > 0 ? (
-              <div className="space-y-3">
-                {myTemplates.map((template) => (
-                  <div
+          {publicTemplates.length > 0 ? (
+            <div className="grid gap-5 xl:grid-cols-2">
+              {publicTemplates.map((template) => {
+                const isCurrent = currentCommunityTemplateId === template.id;
+                const isLoading = usingTemplateId === template.id;
+
+                return (
+                  <article
                     key={template.id}
-                    className="rounded-2xl border border-white/10 bg-black/30 p-3"
+                    className="group overflow-hidden rounded-3xl border border-white/10 bg-black/30 transition hover:border-purple-400/30 hover:bg-black/45"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-white">
-                          {template.name}
-                        </p>
-                        <p className="mt-1 text-xs text-white/35">
-                          {new Date(template.created_at).toLocaleString()}
-                        </p>
-                      </div>
+                    <div className="relative overflow-hidden bg-black/45">
+                      {template.preview_image ? (
+                        <img
+                          src={template.preview_image}
+                          alt={template.name}
+                          className="h-52 w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <CommunityTemplatePreview
+                          htmlCode={template.html_code}
+                          cssCode={template.css_code}
+                          jsCode={template.js_code}
+                          height="240px"
+                        />
+                      )}
 
-                      <span
-                        className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                          statusClass[template.status] || statusClass.pending
-                        }`}
-                      >
-                        {template.status}
-                      </span>
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/80 to-transparent" />
                     </div>
 
-                    {template.status === "rejected" &&
-                      template.rejection_reason && (
-                        <p className="mt-3 rounded-xl border border-red-400/20 bg-red-500/10 p-2 text-xs text-red-200">
-                          {template.rejection_reason}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h5 className="truncate text-lg font-black text-white">
+                            {template.name}
+                          </h5>
+                          <p className="mt-1 text-xs text-white/35">
+                            por @{template.creator_username || "unknown"}
+                          </p>
+                        </div>
+
+                        {isCurrent && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-green-400/20 bg-green-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-200">
+                            <FaCheck />
+                            usando
+                          </span>
+                        )}
+                      </div>
+
+                      {template.description && (
+                        <p className="mt-3 text-sm leading-relaxed text-white/55">
+                          {template.description}
                         </p>
                       )}
-                  </div>
-                ))}
+
+                      <button
+                        type="button"
+                        onClick={() => handleUseTemplate(template)}
+                        disabled={isLoading || isCurrent}
+                        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-purple-600 px-4 py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(147,51,234,0.2)] transition hover:-translate-y-0.5 hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isLoading ? (
+                          <FaSpinner className="animate-spin" />
+                        ) : isCurrent ? (
+                          <FaCheck />
+                        ) : (
+                          <FaEye />
+                        )}
+                        {isCurrent ? "Template em uso" : "Usar no meu perfil"}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] p-8 text-center text-sm text-white/35">
+              Ainda não tem template aprovado. Quando você aprovar um template,
+              ele aparece aqui para todo mundo usar.
+            </p>
+          )}
+        </section>
+      )}
+
+      {activeView === "submit" && (
+        <section className="space-y-5">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050505] p-5">
+            <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.4)_1px,transparent_1px)] [background-size:38px_38px]" />
+            <div className="relative flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-green-400/20 bg-green-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-green-200">
+                  <FaCode />
+                  coder mode
+                </div>
+
+                <h4 className="text-2xl font-black text-white">
+                  Enviar novo template
+                </h4>
+                <p className="mt-1 max-w-2xl text-sm text-white/45">
+                  Escreva HTML, CSS e JS opcional. O preview roda isolado dentro
+                  de iframe sandbox antes de ir para aprovação.
+                </p>
               </div>
-            ) : (
-              <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-white/35">
-                Nenhum template enviado ainda.
-              </p>
-            )}
+
+              <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
+                  <p className="text-lg font-black text-white">{codeStats.lines}</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+                    linhas
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
+                  <p className="text-lg font-black text-white">{codeStats.chars}</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+                    chars
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3 sm:block">
+                  <p className="text-lg font-black text-white">
+                    {myTemplates.length}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+                    envios
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        </aside>
-      </section>
+
+          <section className="grid gap-6 xl:grid-cols-[1fr_440px]">
+            <div className="space-y-5">
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-white/85">
+                      Nome do template
+                    </label>
+                    <input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      maxLength={80}
+                      placeholder="Dark Angel"
+                      className={fieldClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-white/85">
+                      Preview image URL
+                    </label>
+                    <input
+                      value={previewImage}
+                      onChange={(event) => setPreviewImage(event.target.value)}
+                      maxLength={500}
+                      placeholder="https://..."
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <label className="mb-2 block text-sm font-semibold text-white/85">
+                    Descrição
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    maxLength={500}
+                    placeholder="Explique o estilo do template..."
+                    rows={3}
+                    className={`${fieldClass} resize-none`}
+                  />
+                </div>
+              </div>
+
+              <CodeEditor
+                label="index.html"
+                icon={<FaCode className="text-orange-300" />}
+                value={htmlCode}
+                onChange={setHtmlCode}
+                rows={10}
+              />
+
+              <CodeEditor
+                label="style.css"
+                icon={<FaImage className="text-blue-300" />}
+                value={cssCode}
+                onChange={setCssCode}
+                rows={12}
+              />
+
+              <CodeEditor
+                label="script.js"
+                icon={<FaPlus className="text-yellow-300" />}
+                value={jsCode}
+                onChange={setJsCode}
+                rows={7}
+                placeholder="// Opcional. Vai rodar isolado dentro de iframe sandbox."
+              />
+
+              <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 sm:flex-row sm:justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowPreview((prev) => !prev)}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-3 text-sm font-bold text-white/60 transition hover:border-purple-400/25 hover:bg-purple-500/10 hover:text-white"
+                >
+                  <FaEye />
+                  {showPreview ? "Esconder preview" : "Mostrar preview"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={loading || !canSubmit}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {loading ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
+                  Enviar para aprovação
+                </button>
+              </div>
+            </div>
+
+            <aside className="space-y-4">
+              {showPreview && (
+                <div className="sticky top-24 rounded-3xl border border-white/10 bg-black/25 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-sm font-black text-white">
+                      Preview isolado
+                    </p>
+                    <span className="rounded-full border border-green-400/20 bg-green-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-200">
+                      sandbox
+                    </span>
+                  </div>
+
+                  <CommunityTemplatePreview
+                    htmlCode={htmlCode}
+                    cssCode={cssCode}
+                    jsCode={jsCode}
+                    height="520px"
+                  />
+                </div>
+              )}
+
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
+                <p className="mb-3 flex items-center gap-2 text-sm font-black text-white">
+                  <FaPlus className="text-purple-300" />
+                  Meus envios
+                </p>
+
+                {fetching ? (
+                  <p className="text-sm text-white/45">Carregando...</p>
+                ) : myTemplates.length > 0 ? (
+                  <div className="space-y-3">
+                    {myTemplates.map((template) => (
+                      <div
+                        key={template.id}
+                        className="rounded-2xl border border-white/10 bg-black/30 p-3"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-white">
+                              {template.name}
+                            </p>
+                            <p className="mt-1 text-xs text-white/35">
+                              {new Date(template.created_at).toLocaleString()}
+                            </p>
+                          </div>
+
+                          <span
+                            className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                              statusClass[template.status] || statusClass.pending
+                            }`}
+                          >
+                            {template.status}
+                          </span>
+                        </div>
+
+                        {template.status === "rejected" &&
+                          template.rejection_reason && (
+                            <p className="mt-3 rounded-xl border border-red-400/20 bg-red-500/10 p-2 text-xs text-red-200">
+                              {template.rejection_reason}
+                            </p>
+                          )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-white/35">
+                    Nenhum template enviado ainda.
+                  </p>
+                )}
+              </div>
+            </aside>
+          </section>
+        </section>
+      )}
     </div>
   );
 };
