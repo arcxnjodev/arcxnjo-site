@@ -282,53 +282,124 @@ export const AdminPanel = () => {
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white">
       <style>{`
-        @keyframes adminFloat {
-          0%, 100% { transform: translate3d(0,0,0) scale(1); opacity: 0.58; }
-          50% { transform: translate3d(24px,-18px,0) scale(1.08); opacity: 0.92; }
-        }
+  @keyframes adminFloat {
+    0%, 100% { transform: translate3d(0,0,0) rotate(var(--rotate, 0deg)); }
+    50% { transform: translate3d(0,-14px,0) rotate(var(--rotate, 0deg)); }
+  }
 
-        @keyframes adminPulse {
-          0%, 100% { opacity: 0.12; transform: scaleX(0.88); }
-          50% { opacity: 0.42; transform: scaleX(1); }
-        }
+  @keyframes adminPulse {
+    0%, 100% { opacity: 0.12; transform: scaleX(0.88); }
+    50% { opacity: 0.42; transform: scaleX(1); }
+  }
 
-        @keyframes adminGridMove {
-          from { background-position: 0 0; }
-          to { background-position: 80px 80px; }
-        }
+  @keyframes adminCodeGrid {
+    from { background-position: 0 0; }
+    to { background-position: 56px 56px; }
+  }
 
-        @keyframes adminGlowSweep {
-          0% { transform: translateX(-120%); opacity: 0; }
-          40% { opacity: 0.38; }
-          100% { transform: translateX(120%); opacity: 0; }
-        }
-      `}</style>
+  @keyframes adminGlowSweep {
+    0% { transform: translateX(-120%); opacity: 0; }
+    40% { opacity: 0.34; }
+    100% { transform: translateX(120%); opacity: 0; }
+  }
 
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(147,51,234,0.28),transparent_34%),radial-gradient(circle_at_85%_15%,rgba(236,72,153,0.16),transparent_32%),radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.12),transparent_35%)]" />
+  @keyframes adminScan {
+    0%, 100% { transform: translateY(-18%); opacity: 0.08; }
+    50% { transform: translateY(42%); opacity: 0.18; }
+  }
 
-        <div
-          className="absolute inset-0 opacity-[0.09]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-            animation: "adminGridMove 18s linear infinite",
-          }}
-        />
+  @keyframes adminTerminalBlink {
+    0%, 48% { opacity: 1; }
+    49%, 100% { opacity: 0; }
+  }
+`}</style>
 
-        <div
-          className="absolute left-[-120px] top-[120px] h-80 w-80 rounded-full bg-purple-700/25 blur-3xl"
-          style={{ animation: "adminFloat 8s ease-in-out infinite" }}
-        />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+  <div className="absolute inset-0 bg-[#050508]" />
 
-        <div
-          className="absolute bottom-[-140px] right-[-120px] h-96 w-96 rounded-full bg-fuchsia-600/18 blur-3xl"
-          style={{ animation: "adminFloat 10s ease-in-out infinite reverse" }}
-        />
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(168,85,247,0.14),transparent_30%),radial-gradient(circle_at_50%_110%,rgba(16,185,129,0.08),transparent_34%)]" />
 
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent" />
+  <div
+    className="absolute inset-0 opacity-[0.08]"
+    style={{
+      backgroundImage:
+        "linear-gradient(rgba(255,255,255,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px)",
+      backgroundSize: "56px 56px",
+      animation: "adminCodeGrid 26s linear infinite",
+    }}
+  />
+
+  <div
+    className="absolute inset-x-0 top-[-20%] h-1/2 bg-gradient-to-b from-cyan-300/[0.08] via-white/[0.025] to-transparent blur-sm"
+    style={{ animation: "adminScan 9s ease-in-out infinite" }}
+  />
+
+  <div className="absolute left-[-240px] top-[-180px] h-[520px] w-[520px] rounded-full border border-cyan-300/10 bg-cyan-300/[0.025] blur-3xl" />
+  <div className="absolute bottom-[-260px] right-[-220px] h-[620px] w-[620px] rounded-full border border-purple-400/10 bg-purple-500/[0.035] blur-3xl" />
+
+  <div
+    className="absolute right-[7%] top-[13%] hidden w-[360px] overflow-hidden rounded-3xl border border-white/10 bg-black/35 shadow-[0_24px_90px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:block"
+    style={{ "--rotate": "-2deg", animation: "adminFloat 9s ease-in-out infinite" } as React.CSSProperties}
+  >
+    <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div className="flex items-center gap-1.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
+        <span className="h-2.5 w-2.5 rounded-full bg-yellow-300/70" />
+        <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
       </div>
+
+      <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/25">
+        deploy.log
+      </span>
+    </div>
+
+    <div className="space-y-2 px-4 py-4 font-mono text-xs leading-relaxed text-white/45">
+      <p>
+        <span className="text-cyan-300/70">~/arcxnjo</span> git status
+      </p>
+      <p className="text-emerald-300/70">✓ working tree clean</p>
+      <p>
+        <span className="text-cyan-300/70">~/arcxnjo</span> npm run build
+      </p>
+      <p className="text-purple-300/70">compiled successfully</p>
+      <p>
+        <span className="text-cyan-300/70">~/arcxnjo</span>{" "}
+        <span className="text-white/70">deploy</span>
+        <span style={{ animation: "adminTerminalBlink 1s step-end infinite" }}>
+          _
+        </span>
+      </p>
+    </div>
+  </div>
+
+  <div
+    className="absolute bottom-[10%] left-[5%] hidden w-[320px] rounded-3xl border border-white/10 bg-black/25 p-5 font-mono text-xs leading-relaxed text-white/35 shadow-[0_24px_80px_rgba(0,0,0,0.38)] backdrop-blur-xl xl:block"
+    style={{ "--rotate": "2deg", animation: "adminFloat 11s ease-in-out infinite reverse" } as React.CSSProperties}
+  >
+    <p>
+      <span className="text-purple-300/70">const</span>{" "}
+      <span className="text-cyan-200/70">profile</span> = await arcxnjo.build();
+    </p>
+    <p>
+      <span className="text-purple-300/70">if</span> (profile.isPro) unlock();
+    </p>
+    <p className="text-emerald-300/65">return cleanExperience;</p>
+  </div>
+
+  <div className="absolute right-[28%] top-[32%] hidden font-mono text-7xl font-black text-white/[0.025] lg:block">
+    {"</>"}
+  </div>
+
+  <div className="absolute left-[18%] top-[20%] hidden font-mono text-sm text-cyan-200/[0.12] md:block">
+    api.arcxnjo.com.br/status · 200 OK
+  </div>
+
+  <div className="absolute bottom-[24%] right-[18%] hidden font-mono text-sm text-purple-200/[0.12] md:block">
+    profile.render(template) · ready
+  </div>
+
+  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent" />
+</div>
 
       <header className="sticky top-0 z-30 border-b border-white/10 bg-black/45 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
