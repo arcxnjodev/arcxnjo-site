@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import {
+  FaCheck,
   FaCode,
   FaEye,
   FaImage,
@@ -24,6 +25,7 @@ type CommunityTemplate = {
   is_public: boolean;
   created_at: string;
   approved_at?: string | null;
+  creator_username?: string;
 };
 
 const statusClass: Record<string, string> = {
@@ -77,8 +79,11 @@ p {
   );
   const [jsCode, setJsCode] = useState("");
   const [myTemplates, setMyTemplates] = useState<CommunityTemplate[]>([]);
+  const [publicTemplates, setPublicTemplates] = useState<CommunityTemplate[]>([]);
+  const [currentCommunityTemplateId, setCurrentCommunityTemplateId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [usingTemplateId, setUsingTemplateId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [showPreview, setShowPreview] = useState(true);
 
@@ -100,9 +105,36 @@ p {
     }
   };
 
+  const fetchPublicTemplates = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/community/templates/public`);
+      setPublicTemplates(response.data || []);
+    } catch (error) {
+      console.error("Public community templates fetch error:", error);
+    }
+  };
+
+  const fetchCurrentProfile = async () => {
+    try {
+      if (!token) return;
+
+      const response = await axios.get(`${API_URL}/api/profile/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const templateId = Number(response.data.community_template_id || 0);
+      setCurrentCommunityTemplateId(templateId > 0 ? templateId : null);
+    } catch (error) {
+      console.error("Current community template fetch error:", error);
+    }
+  };
+
   useEffect(() => {
+    fetchPublicTemplates();
+
     if (token) {
       fetchMyTemplates();
+      fetchCurrentProfile();
     }
   }, [API_URL]);
 
@@ -150,6 +182,31 @@ p {
     }
   };
 
+  const handleUseTemplate = async (template: CommunityTemplate) => {
+    try {
+      setUsingTemplateId(template.id);
+      setMessage("");
+
+      await axios.put(
+        `${API_URL}/api/profile/community-template`,
+        { templateId: template.id },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setCurrentCommunityTemplateId(template.id);
+      setMessage(`✅ Template "${template.name}" aplicado no seu perfil!`);
+    } catch (error: any) {
+      setMessage(
+        "❌ Erro ao usar template: " +
+          (error.response?.data?.error || error.message)
+      );
+    } finally {
+      setUsingTemplateId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-purple-600/20 via-black/30 to-pink-600/10 p-5 md:p-6">
@@ -162,12 +219,12 @@ p {
           </div>
 
           <h3 className="text-2xl font-black text-white">
-            Crie um template para a comunidade
+            Templates da comunidade
           </h3>
 
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
-            Envie HTML, CSS e JavaScript opcional. O template fica pendente até
-            ser aprovado pelo dono/admin.
+            Use templates aprovados no seu perfil ou envie seu próprio HTML, CSS
+            e JavaScript para aprovação.
           </p>
         </div>
       </section>
@@ -184,8 +241,112 @@ p {
         </div>
       )}
 
+      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+        <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-center">
+          <div>
+            <h4 className="text-xl font-black text-white">
+              Galeria aprovada
+            </h4>
+            <p className="mt-1 text-sm text-white/40">
+              Templates liberados aparecem aqui depois da aprovação.
+            </p>
+          </div>
+
+          <span className="w-fit rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-xs font-bold text-white/45">
+            {publicTemplates.length} público(s)
+          </span>
+        </div>
+
+        {publicTemplates.length > 0 ? (
+          <div className="grid gap-5 xl:grid-cols-2">
+            {publicTemplates.map((template) => {
+              const isCurrent = currentCommunityTemplateId === template.id;
+              const isLoading = usingTemplateId === template.id;
+
+              return (
+                <article
+                  key={template.id}
+                  className="overflow-hidden rounded-3xl border border-white/10 bg-black/30"
+                >
+                  {template.preview_image ? (
+                    <img
+                      src={template.preview_image}
+                      alt={template.name}
+                      className="h-48 w-full object-cover"
+                    />
+                  ) : (
+                    <CommunityTemplatePreview
+                      htmlCode={template.html_code}
+                      cssCode={template.css_code}
+                      jsCode={template.js_code}
+                      height="220px"
+                    />
+                  )}
+
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h5 className="truncate text-lg font-black text-white">
+                          {template.name}
+                        </h5>
+                        <p className="mt-1 text-xs text-white/35">
+                          por @{template.creator_username || "unknown"}
+                        </p>
+                      </div>
+
+                      {isCurrent && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-green-400/20 bg-green-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-200">
+                          <FaCheck />
+                          usando
+                        </span>
+                      )}
+                    </div>
+
+                    {template.description && (
+                      <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-white/55">
+                        {template.description}
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => handleUseTemplate(template)}
+                      disabled={isLoading || isCurrent}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-purple-600 px-4 py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(147,51,234,0.2)] transition hover:-translate-y-0.5 hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isLoading ? (
+                        <FaSpinner className="animate-spin" />
+                      ) : isCurrent ? (
+                        <FaCheck />
+                      ) : (
+                        <FaEye />
+                      )}
+                      {isCurrent ? "Template em uso" : "Usar no meu perfil"}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm text-white/35">
+            Ainda não tem template aprovado. Quando você aprovar um template, ele
+            aparece aqui para todo mundo usar.
+          </p>
+        )}
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-[1fr_420px]">
         <div className="space-y-5 rounded-3xl border border-white/10 bg-black/25 p-5">
+          <div>
+            <h4 className="text-xl font-black text-white">
+              Enviar novo template
+            </h4>
+            <p className="mt-1 text-sm text-white/40">
+              Seu envio fica pendente até ser aprovado.
+            </p>
+          </div>
+
           <div className="grid gap-5 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-semibold text-white/85">

@@ -1293,6 +1293,47 @@ app.get('/api/community/templates/public', async (req, res) => {
   }
 });
 
+
+app.put('/api/profile/community-template', authenticateToken, async (req, res) => {
+  const templateId = Number(req.body.templateId || req.body.template_id);
+
+  if (!Number.isInteger(templateId) || templateId <= 0) {
+    return res.status(400).json({ error: 'Invalid community template id.' });
+  }
+
+  try {
+    const templateResult = await pool.query(
+      `SELECT id, name
+       FROM community_templates
+       WHERE id = $1::integer
+       AND status = 'approved'
+       AND is_public = true
+       LIMIT 1`,
+      [templateId]
+    );
+
+    if (templateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Community template not found or not approved.' });
+    }
+
+    await pool.query(
+      `UPDATE user_profiles
+       SET profile_template = 'community',
+           community_template_id = $1::integer
+       WHERE user_id = $2::integer`,
+      [templateId, req.userId]
+    );
+
+    return res.json({
+      message: 'Community template applied successfully!',
+      template: templateResult.rows[0],
+    });
+  } catch (error) {
+    console.error('Community template apply error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/admin/community/templates', authenticateToken, requireAdmin, async (req, res) => {
   const status = String(req.query.status || 'pending').trim().toLowerCase();
 
@@ -1546,6 +1587,37 @@ app.get('/api/profile/:username', async (req, res) => {
       [user.id]
     );
 
+    const profile = profileResult.rows[0] || {};
+
+    let communityTemplate = null;
+
+    if (profile.profile_template === 'community' && profile.community_template_id) {
+      const communityTemplateResult = await pool.query(
+        `SELECT
+          ct.id,
+          ct.name,
+          ct.description,
+          ct.preview_image,
+          ct.html_code,
+          ct.css_code,
+          ct.js_code,
+          ct.status,
+          ct.is_public,
+          ct.created_at,
+          ct.approved_at,
+          u.username AS creator_username
+         FROM community_templates ct
+         LEFT JOIN users u ON u.id = ct.creator_user_id
+         WHERE ct.id = $1::integer
+         AND ct.status = 'approved'
+         AND ct.is_public = true
+         LIMIT 1`,
+        [profile.community_template_id]
+      );
+
+      communityTemplate = communityTemplateResult.rows[0] || null;
+    }
+
     const linksResult = await pool.query(
       'SELECT platform, url FROM user_links WHERE user_id = $1 AND url != $2 ORDER BY display_order',
       [user.id, '']
@@ -1569,7 +1641,8 @@ app.get('/api/profile/:username', async (req, res) => {
 
     return res.json({
       username: user.username,
-      profile: profileResult.rows[0],
+      profile,
+      communityTemplate,
       socialMedia,
       stats: statsResult.rows[0],
     });
@@ -1803,6 +1876,7 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
     'red-glow',
     'blue-ice',
     'pro-scroll',
+    'community',
   ];
 
   const allowedEffects = ['none', 'stars', 'snow', 'sparkles', 'hearts'];
@@ -1817,13 +1891,17 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
 
   try {
     await pool.query(
-  `UPDATE user_profiles
-   SET profile_template = $1,
-       profile_effect = $2,
-       custom_cursor_url = $3
-   WHERE user_id = $4`,
-  [profileTemplate, profileEffect, cleanCustomCursorUrl, req.userId]
-);
+      `UPDATE user_profiles
+       SET profile_template = $1,
+           profile_effect = $2,
+           custom_cursor_url = $3,
+           community_template_id = CASE
+             WHEN $1::varchar = 'community' THEN community_template_id
+             ELSE NULL
+           END
+       WHERE user_id = $4`,
+      [profileTemplate, profileEffect, cleanCustomCursorUrl, req.userId]
+    );
 
     return res.json({ message: 'Appearance updated successfully!' });
   } catch (error) {

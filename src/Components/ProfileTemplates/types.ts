@@ -7,6 +7,21 @@ export type GuestbookEntry = {
   created_at: string;
 };
 
+export type CommunityTemplate = {
+  id: number;
+  name: string;
+  description?: string;
+  preview_image?: string;
+  html_code: string;
+  css_code?: string;
+  js_code?: string;
+  status?: string;
+  is_public?: boolean;
+  created_at?: string;
+  approved_at?: string | null;
+  creator_username?: string;
+};
+
 export type ProfileData = {
   username: string;
   profile: {
@@ -18,6 +33,7 @@ export type ProfileData = {
     bio?: string;
     display_name?: string;
     profile_template?: string;
+    community_template_id?: number | null;
     profile_effect?: ProfileEffect;
     profile_badges?: string[];
     music_url?: string;
@@ -27,6 +43,7 @@ export type ProfileData = {
     discord_id?: string;
     custom_cursor_url?: string;
   };
+  communityTemplate?: CommunityTemplate | null;
   socialMedia: Record<string, string>;
   stats: {
     profile_views: number;

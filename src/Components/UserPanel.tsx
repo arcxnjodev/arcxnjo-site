@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useI18n } from "../i18n/i18nProvider";
+import { CommunityProfileTemplate } from "./ProfileTemplates/CommunityProfileTemplate";
 import { DefaultProfileTemplate } from "./ProfileTemplates/DefaultProfileTemplate";
 import { ProScrollTemplate } from "./ProfileTemplates/ProScrollTemplate";
 import type { ProfileData } from "./ProfileTemplates/types";
@@ -84,6 +85,17 @@ export const UserPanel = () => {
   }
 
   const templateId = data.profile.profile_template || "neon-purple";
+
+  if (templateId === "community" && data.communityTemplate) {
+    return (
+      <CommunityProfileTemplate
+        data={data}
+        username={username}
+        apiUrl={API_URL}
+        discordData={discordData}
+      />
+    );
+  }
 
   if (templateId === "pro-scroll") {
     return (
