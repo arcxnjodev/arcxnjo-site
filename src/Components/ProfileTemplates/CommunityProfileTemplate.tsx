@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FaHome } from "react-icons/fa";
 import type { ProfileTemplateProps } from "./types";
 import { ProfileCursor } from "./ProfileCursor";
+import { useI18n } from "../../i18n/i18nProvider";
 
 const escapeScriptClose = (value: string) => value.replace(/<\/script/gi, "<\\/script");
 const escapeJsonForHtml = (value: unknown) =>
@@ -14,6 +15,7 @@ export const CommunityProfileTemplate = ({
   discordData,
 }: ProfileTemplateProps) => {
   const template = data.communityTemplate;
+  const { t } = useI18n();
 
   const srcDoc = useMemo(() => {
     if (!template) return "";
@@ -87,9 +89,9 @@ export const CommunityProfileTemplate = ({
     return (
       <div className="flex min-h-screen items-center justify-center bg-black px-4 text-center text-white">
         <div>
-          <p className="text-2xl font-black">Community template unavailable</p>
+          <p className="text-2xl font-black">{t("profile.communityTemplateUnavailable")}</p>
           <p className="mt-2 text-sm text-white/45">
-            This template may have been removed or is no longer approved.
+            {t("profile.communityTemplateUnavailableDescription")}
           </p>
         </div>
       </div>
@@ -102,8 +104,8 @@ export const CommunityProfileTemplate = ({
 
       <Link
         to="/"
-        title="Home"
-        aria-label="Go to home"
+        title={t("nav.home")}
+        aria-label={t("profile.goHome")}
         className="fixed right-5 top-5 z-[60] flex h-11 w-11 items-center justify-center rounded-2xl bg-black/25 text-white/60 opacity-75 shadow-[0_8px_25px_rgba(0,0,0,0.22)] backdrop-blur-xl transition hover:bg-black/40 hover:text-white hover:opacity-100"
       >
         <FaHome className="text-base" />

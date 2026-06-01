@@ -232,8 +232,8 @@ export const AdminPanel = () => {
     },
     {
       id: "community",
-      label: "Comunidade",
-      description: "Crie templates e envie para aprovação",
+      label: t("admin.community"),
+      description: t("admin.communityDescription"),
       icon: <FaUsers />,
       component: <CommunityTemplatesSettings />,
     },
@@ -241,8 +241,8 @@ export const AdminPanel = () => {
       ? [
           {
             id: "community-admin",
-            label: "Aprovação",
-            description: "Revise templates enviados pela comunidade",
+            label: t("admin.communityApproval"),
+            description: t("admin.communityApprovalDescription"),
             icon: <FaShieldAlt />,
             component: <AdminCommunityTemplates />,
           },

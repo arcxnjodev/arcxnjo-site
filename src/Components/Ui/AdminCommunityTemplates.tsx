@@ -8,6 +8,7 @@ import {
   FaTrash,
   FaUsersCog,
 } from "react-icons/fa";
+import { useI18n } from "../../i18n/i18nProvider";
 import { CommunityTemplatePreview } from "./CommunityTemplatePreview";
 
 type AdminCommunityTemplate = {
@@ -39,6 +40,7 @@ const statusClass: Record<string, string> = {
 export const AdminCommunityTemplates = () => {
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
   const token = localStorage.getItem("token");
+  const { t } = useI18n();
 
   const [templates, setTemplates] = useState<AdminCommunityTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] =
@@ -49,6 +51,19 @@ export const AdminCommunityTemplates = () => {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [message, setMessage] = useState("");
+
+  const getFilterLabel = (filter: (typeof filterOptions)[number]) => {
+    if (filter === "approved") return t("settings.communityAdmin.filterApproved");
+    if (filter === "rejected") return t("settings.communityAdmin.filterRejected");
+    if (filter === "all") return t("settings.communityAdmin.filterAll");
+    return t("settings.communityAdmin.filterPending");
+  };
+
+  const getStatusLabel = (status: AdminCommunityTemplate["status"]) => {
+    if (status === "approved") return t("settings.communityAdmin.statusApproved");
+    if (status === "rejected") return t("settings.communityAdmin.statusRejected");
+    return t("settings.communityAdmin.statusPending");
+  };
 
   const fetchTemplates = async () => {
     try {
@@ -77,8 +92,9 @@ export const AdminCommunityTemplates = () => {
       }
     } catch (error: any) {
       setMessage(
-        "❌ Erro ao carregar templates: " +
-          (error.response?.data?.error || error.message)
+        `❌ ${t("settings.communityAdmin.loadError")}${
+          error.response?.data?.error || error.message
+        }`
       );
     } finally {
       setLoading(false);
@@ -94,7 +110,7 @@ export const AdminCommunityTemplates = () => {
     status: "pending" | "approved" | "rejected"
   ) => {
     if (status === "rejected" && !rejectionReason.trim()) {
-      setMessage("❌ Escreva o motivo da recusa.");
+      setMessage(`❌ ${t("settings.communityAdmin.rejectionRequired")}`);
       return;
     }
 
@@ -115,17 +131,18 @@ export const AdminCommunityTemplates = () => {
 
       setMessage(
         status === "approved"
-          ? "✅ Template aprovado!"
+          ? `✅ ${t("settings.communityAdmin.approvedMessage")}`
           : status === "rejected"
-          ? "✅ Template recusado."
-          : "✅ Template voltou para pendente."
+          ? `✅ ${t("settings.communityAdmin.rejectedMessage")}`
+          : `✅ ${t("settings.communityAdmin.pendingMessage")}`
       );
       setRejectionReason("");
       await fetchTemplates();
     } catch (error: any) {
       setMessage(
-        "❌ Erro ao atualizar: " +
-          (error.response?.data?.error || error.message)
+        `❌ ${t("settings.communityAdmin.updateError")}${
+          error.response?.data?.error || error.message
+        }`
       );
     } finally {
       setActionLoading(null);
@@ -134,7 +151,9 @@ export const AdminCommunityTemplates = () => {
 
   const deleteTemplate = async (template: AdminCommunityTemplate) => {
     const confirmed = window.confirm(
-      `Apagar o template "${template.name}"? Essa ação não pode ser desfeita.`
+      `${t("settings.communityAdmin.deleteConfirmBefore")}"${template.name}"${t(
+        "settings.communityAdmin.deleteConfirmAfter"
+      )}`
     );
 
     if (!confirmed) return;
@@ -150,11 +169,13 @@ export const AdminCommunityTemplates = () => {
         }
       );
 
-      setMessage("✅ Template apagado.");
+      setMessage(`✅ ${t("settings.communityAdmin.deletedMessage")}`);
       await fetchTemplates();
     } catch (error: any) {
       setMessage(
-        "❌ Erro ao apagar: " + (error.response?.data?.error || error.message)
+        `❌ ${t("settings.communityAdmin.deleteError")}${
+          error.response?.data?.error || error.message
+        }`
       );
     } finally {
       setActionLoading(null);
@@ -169,16 +190,15 @@ export const AdminCommunityTemplates = () => {
         <div className="relative">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-purple-200">
             <FaUsersCog />
-            Admin
+            {t("settings.communityAdmin.badge")}
           </div>
 
           <h3 className="text-2xl font-black text-white">
-            Aprovação de templates
+            {t("settings.communityAdmin.title")}
           </h3>
 
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
-            Revise os templates enviados pela comunidade. Eles só ficam públicos
-            depois da sua aprovação.
+            {t("settings.communityAdmin.description")}
           </p>
         </div>
       </section>
@@ -207,7 +227,7 @@ export const AdminCommunityTemplates = () => {
                 : "border-white/10 bg-white/[0.035] text-white/50 hover:border-purple-400/25 hover:text-white"
             }`}
           >
-            {option}
+            {getFilterLabel(option)}
           </button>
         ))}
       </div>
@@ -216,7 +236,7 @@ export const AdminCommunityTemplates = () => {
         <aside className="rounded-3xl border border-white/10 bg-black/25 p-4">
           <div className="mb-4 flex items-center justify-between gap-3">
             <p className="text-sm font-black text-white">
-              Templates
+              {t("settings.communityAdmin.templates")}
             </p>
 
             {loading && <FaSpinner className="animate-spin text-white/45" />}
@@ -247,7 +267,7 @@ export const AdminCommunityTemplates = () => {
                           {template.name}
                         </p>
                         <p className="mt-1 truncate text-xs text-white/35">
-                          @{template.creator_username || "unknown"}
+                          @{template.creator_username || t("settings.communityAdmin.unknown")}
                         </p>
                       </div>
 
@@ -256,7 +276,7 @@ export const AdminCommunityTemplates = () => {
                           statusClass[template.status] || statusClass.pending
                         }`}
                       >
-                        {template.status}
+                        {getStatusLabel(template.status)}
                       </span>
                     </div>
                   </button>
@@ -265,7 +285,7 @@ export const AdminCommunityTemplates = () => {
             </div>
           ) : (
             <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-white/35">
-              Nenhum template encontrado nesse filtro.
+              {t("settings.communityAdmin.noTemplates")}
             </p>
           )}
         </aside>
@@ -280,7 +300,8 @@ export const AdminCommunityTemplates = () => {
                   </h4>
 
                   <p className="mt-1 text-sm text-white/45">
-                    Enviado por @{selectedTemplate.creator_username || "unknown"}
+                    {t("settings.communityAdmin.sentBy")} @
+                    {selectedTemplate.creator_username || t("settings.communityAdmin.unknown")}
                     {selectedTemplate.creator_email
                       ? ` · ${selectedTemplate.creator_email}`
                       : ""}
@@ -298,7 +319,7 @@ export const AdminCommunityTemplates = () => {
                     statusClass[selectedTemplate.status] || statusClass.pending
                   }`}
                 >
-                  {selectedTemplate.status}
+                  {getStatusLabel(selectedTemplate.status)}
                 </span>
               </div>
 
@@ -313,7 +334,7 @@ export const AdminCommunityTemplates = () => {
               <div>
                 <div className="mb-3 flex items-center gap-2 text-sm font-black text-white">
                   <FaEye className="text-purple-300" />
-                  Preview isolado
+                  {t("settings.communityAdmin.isolatedPreview")}
                 </div>
 
                 <CommunityTemplatePreview
@@ -339,7 +360,7 @@ export const AdminCommunityTemplates = () => {
                     CSS
                   </p>
                   <pre className="max-h-56 overflow-auto rounded-2xl border border-white/10 bg-black/45 p-3 text-xs text-white/60">
-                    {selectedTemplate.css_code || "/* empty */"}
+                    {selectedTemplate.css_code || t("settings.communityAdmin.emptyCss")}
                   </pre>
                 </div>
 
@@ -348,21 +369,21 @@ export const AdminCommunityTemplates = () => {
                     JS
                   </p>
                   <pre className="max-h-56 overflow-auto rounded-2xl border border-white/10 bg-black/45 p-3 text-xs text-white/60">
-                    {selectedTemplate.js_code || "// empty"}
+                    {selectedTemplate.js_code || t("settings.communityAdmin.emptyJs")}
                   </pre>
                 </div>
               </div>
 
               <div className="rounded-3xl border border-white/10 bg-black/35 p-4">
                 <label className="mb-2 block text-sm font-bold text-white">
-                  Motivo da recusa
+                  {t("settings.communityAdmin.rejectionReason")}
                 </label>
 
                 <textarea
                   value={rejectionReason}
                   onChange={(event) => setRejectionReason(event.target.value)}
                   rows={3}
-                  placeholder="Explique o que precisa mudar..."
+                  placeholder={t("settings.communityAdmin.rejectionPlaceholder")}
                   className="w-full resize-none rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-purple-400/60 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]"
                 />
 
@@ -374,7 +395,7 @@ export const AdminCommunityTemplates = () => {
                     className="inline-flex items-center gap-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-200 transition hover:bg-red-500/20 disabled:opacity-50"
                   >
                     <FaTrash />
-                    Apagar
+                    {t("settings.communityAdmin.delete")}
                   </button>
 
                   <button
@@ -384,7 +405,7 @@ export const AdminCommunityTemplates = () => {
                     className="inline-flex items-center gap-2 rounded-2xl border border-yellow-400/20 bg-yellow-500/10 px-4 py-2.5 text-sm font-bold text-yellow-100 transition hover:bg-yellow-500/20 disabled:opacity-50"
                   >
                     <FaTimes />
-                    Recusar
+                    {t("settings.communityAdmin.reject")}
                   </button>
 
                   <button
@@ -394,14 +415,14 @@ export const AdminCommunityTemplates = () => {
                     className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_0_24px_rgba(34,197,94,0.2)] transition hover:bg-green-500 disabled:opacity-50"
                   >
                     <FaCheck />
-                    Aprovar
+                    {t("settings.communityAdmin.approve")}
                   </button>
                 </div>
               </div>
             </div>
           ) : (
             <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-6 text-center text-sm text-white/35">
-              Selecione um template para revisar.
+              {t("settings.communityAdmin.noTemplates")}
             </p>
           )}
         </main>

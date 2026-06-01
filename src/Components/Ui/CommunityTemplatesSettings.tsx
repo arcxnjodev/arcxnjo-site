@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   FaCheck,
   FaCode,
@@ -10,6 +10,7 @@ import {
   FaSpinner,
   FaUsers,
 } from "react-icons/fa";
+import { useI18n } from "../../i18n/i18nProvider";
 import { CommunityTemplatePreview } from "./CommunityTemplatePreview";
 
 type CommunityTemplate = {
@@ -32,7 +33,7 @@ type CommunityView = "gallery" | "submit";
 
 type CodeEditorProps = {
   label: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   value: string;
   onChange: (value: string) => void;
   rows: number;
@@ -88,6 +89,7 @@ const CodeEditor = ({
 
 export const CommunityTemplatesSettings = () => {
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
+  const { t } = useI18n();
 
   const [activeView, setActiveView] = useState<CommunityView>("gallery");
   const [name, setName] = useState("");
@@ -143,6 +145,12 @@ p {
   const [showPreview, setShowPreview] = useState(true);
 
   const token = localStorage.getItem("token");
+
+  const getStatusLabel = (status: CommunityTemplate["status"]) => {
+    if (status === "approved") return t("settings.community.statusApproved");
+    if (status === "rejected") return t("settings.community.statusRejected");
+    return t("settings.community.statusPending");
+  };
 
   const fetchMyTemplates = async () => {
     try {
@@ -210,7 +218,7 @@ p {
 
   const handleSubmit = async () => {
     if (!canSubmit) {
-      setMessage("❌ Dê um nome e coloque pelo menos o HTML do template.");
+      setMessage(`❌ ${t("settings.community.needNameAndHtml")}`);
       return;
     }
 
@@ -233,7 +241,7 @@ p {
         }
       );
 
-      setMessage("✅ Template enviado para aprovação!");
+      setMessage(`✅ ${t("settings.community.sentForApproval")}`);
       setName("");
       setDescription("");
       setPreviewImage("");
@@ -242,7 +250,9 @@ p {
       await fetchMyTemplates();
     } catch (error: any) {
       setMessage(
-        "❌ Erro ao enviar: " + (error.response?.data?.error || error.message)
+        `❌ ${t("settings.community.submitError")}${
+          error.response?.data?.error || error.message
+        }`
       );
     } finally {
       setLoading(false);
@@ -263,11 +273,16 @@ p {
       );
 
       setCurrentCommunityTemplateId(template.id);
-      setMessage(`✅ Template "${template.name}" aplicado no seu perfil!`);
+      setMessage(
+        `✅ ${t("settings.community.appliedBefore")}"${template.name}"${t(
+          "settings.community.appliedAfter"
+        )}`
+      );
     } catch (error: any) {
       setMessage(
-        "❌ Erro ao usar template: " +
-          (error.response?.data?.error || error.message)
+        `❌ ${t("settings.community.useError")}${
+          error.response?.data?.error || error.message
+        }`
       );
     } finally {
       setUsingTemplateId(null);
@@ -284,16 +299,15 @@ p {
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-purple-200">
               <FaUsers />
-              Comunidade
+              {t("admin.community")}
             </div>
 
             <h3 className="text-2xl font-black text-white md:text-3xl">
-              Templates da comunidade
+              {t("settings.community.title")}
             </h3>
 
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
-              Use templates aprovados ou envie seu próprio código em uma área
-              separada, com preview isolado e vibe de editor.
+              {t("settings.community.description")}
             </p>
           </div>
 
@@ -308,7 +322,7 @@ p {
               }`}
             >
               <FaEye />
-              Galeria aprovada
+              {t("settings.community.galleryTab")}
             </button>
 
             <button
@@ -321,7 +335,7 @@ p {
               }`}
             >
               <FaCode />
-              Enviar código
+              {t("settings.community.submitTab")}
             </button>
           </div>
         </div>
@@ -344,15 +358,15 @@ p {
           <div className="flex flex-col justify-between gap-3 rounded-3xl border border-white/10 bg-black/25 p-5 md:flex-row md:items-center">
             <div>
               <h4 className="text-xl font-black text-white">
-                Galeria aprovada
+                {t("settings.community.approvedGallery")}
               </h4>
               <p className="mt-1 text-sm text-white/40">
-                Aqui aparecem somente templates revisados e liberados.
+                {t("settings.community.approvedGalleryDescription")}
               </p>
             </div>
 
             <span className="w-fit rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-xs font-bold text-white/45">
-              {publicTemplates.length} aprovado(s)
+              {publicTemplates.length} {t("settings.community.approvedCount")}
             </span>
           </div>
 
@@ -393,14 +407,14 @@ p {
                             {template.name}
                           </h5>
                           <p className="mt-1 text-xs text-white/35">
-                            por @{template.creator_username || "unknown"}
+                            {t("settings.community.by")} @{template.creator_username || "unknown"}
                           </p>
                         </div>
 
                         {isCurrent && (
                           <span className="inline-flex items-center gap-1 rounded-full border border-green-400/20 bg-green-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-200">
                             <FaCheck />
-                            usando
+                            {t("settings.community.using")}
                           </span>
                         )}
                       </div>
@@ -424,7 +438,9 @@ p {
                         ) : (
                           <FaEye />
                         )}
-                        {isCurrent ? "Template em uso" : "Usar no meu perfil"}
+                        {isCurrent
+                          ? t("settings.community.templateInUse")
+                          : t("settings.community.useOnProfile")}
                       </button>
                     </div>
                   </article>
@@ -433,8 +449,7 @@ p {
             </div>
           ) : (
             <p className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] p-8 text-center text-sm text-white/35">
-              Ainda não tem template aprovado. Quando você aprovar um template,
-              ele aparece aqui para todo mundo usar.
+              {t("settings.community.emptyGallery")}
             </p>
           )}
         </section>
@@ -448,15 +463,14 @@ p {
               <div>
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-green-400/20 bg-green-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-green-200">
                   <FaCode />
-                  coder mode
+                  {t("settings.community.coderMode")}
                 </div>
 
                 <h4 className="text-2xl font-black text-white">
-                  Enviar novo template
+                  {t("settings.community.submitTitle")}
                 </h4>
                 <p className="mt-1 max-w-2xl text-sm text-white/45">
-                  Escreva HTML, CSS e JS opcional. O preview roda isolado dentro
-                  de iframe sandbox antes de ir para aprovação.
+                  {t("settings.community.submitDescription")}
                 </p>
               </div>
 
@@ -464,13 +478,13 @@ p {
                 <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
                   <p className="text-lg font-black text-white">{codeStats.lines}</p>
                   <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
-                    linhas
+                    {t("settings.community.lines")}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
                   <p className="text-lg font-black text-white">{codeStats.chars}</p>
                   <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
-                    chars
+                    {t("settings.community.chars")}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3 sm:block">
@@ -478,7 +492,7 @@ p {
                     {myTemplates.length}
                   </p>
                   <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
-                    envios
+                    {t("settings.community.submissions")}
                   </p>
                 </div>
               </div>
@@ -491,7 +505,7 @@ p {
                 <div className="grid gap-5 md:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-white/85">
-                      Nome do template
+                      {t("settings.community.templateName")}
                     </label>
                     <input
                       value={name}
@@ -504,7 +518,7 @@ p {
 
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-white/85">
-                      Preview image URL
+                      {t("settings.community.previewImageUrl")}
                     </label>
                     <input
                       value={previewImage}
@@ -518,13 +532,13 @@ p {
 
                 <div className="mt-5">
                   <label className="mb-2 block text-sm font-semibold text-white/85">
-                    Descrição
+                    {t("settings.community.descriptionLabel")}
                   </label>
                   <textarea
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                     maxLength={500}
-                    placeholder="Explique o estilo do template..."
+                    placeholder={t("settings.community.descriptionPlaceholder")}
                     rows={3}
                     className={`${fieldClass} resize-none`}
                   />
@@ -553,7 +567,7 @@ p {
                 value={jsCode}
                 onChange={setJsCode}
                 rows={7}
-                placeholder="// Opcional. Vai rodar isolado dentro de iframe sandbox."
+                placeholder={t("settings.community.optionalJsPlaceholder")}
               />
 
               <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 sm:flex-row sm:justify-between">
@@ -563,7 +577,9 @@ p {
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-3 text-sm font-bold text-white/60 transition hover:border-purple-400/25 hover:bg-purple-500/10 hover:text-white"
                 >
                   <FaEye />
-                  {showPreview ? "Esconder preview" : "Mostrar preview"}
+                  {showPreview
+                    ? t("settings.community.hidePreview")
+                    : t("settings.community.showPreview")}
                 </button>
 
                 <button
@@ -573,7 +589,7 @@ p {
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
-                  Enviar para aprovação
+                  {t("settings.community.submitForApproval")}
                 </button>
               </div>
             </div>
@@ -583,10 +599,10 @@ p {
                 <div className="sticky top-24 rounded-3xl border border-white/10 bg-black/25 p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <p className="text-sm font-black text-white">
-                      Preview isolado
+                      {t("settings.community.isolatedPreview")}
                     </p>
                     <span className="rounded-full border border-green-400/20 bg-green-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-200">
-                      sandbox
+                      {t("settings.community.sandbox")}
                     </span>
                   </div>
 
@@ -602,11 +618,11 @@ p {
               <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
                 <p className="mb-3 flex items-center gap-2 text-sm font-black text-white">
                   <FaPlus className="text-purple-300" />
-                  Meus envios
+                  {t("settings.community.mySubmissions")}
                 </p>
 
                 {fetching ? (
-                  <p className="text-sm text-white/45">Carregando...</p>
+                  <p className="text-sm text-white/45">{t("common.loading")}</p>
                 ) : myTemplates.length > 0 ? (
                   <div className="space-y-3">
                     {myTemplates.map((template) => (
@@ -629,7 +645,7 @@ p {
                               statusClass[template.status] || statusClass.pending
                             }`}
                           >
-                            {template.status}
+                            {getStatusLabel(template.status)}
                           </span>
                         </div>
 
@@ -644,7 +660,7 @@ p {
                   </div>
                 ) : (
                   <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-white/35">
-                    Nenhum template enviado ainda.
+                    {t("settings.community.noSubmissions")}
                   </p>
                 )}
               </div>
