@@ -152,6 +152,23 @@ function cleanCommunityTemplatePayload(body = {}) {
   };
 }
 
+
+function cleanCommunityTemplateOverridePayload(body = {}) {
+  const htmlCode = String(body.htmlCode ?? body.html_code ?? '').slice(0, 120000);
+  const cssCode = String(body.cssCode ?? body.css_code ?? '').slice(0, 120000);
+  const jsCode = String(body.jsCode ?? body.js_code ?? '').slice(0, 120000);
+  const rawSettings = body.settings && typeof body.settings === 'object'
+    ? body.settings
+    : {};
+
+  return {
+    htmlCode,
+    cssCode,
+    jsCode,
+    settings: JSON.stringify(rawSettings).slice(0, 20000),
+  };
+}
+
 function getProfileVisitorKey(req) {
   const forwardedFor = String(req.headers['x-forwarded-for'] || '')
     .split(',')[0]
@@ -1343,7 +1360,14 @@ app.put('/api/profile/community-template', authenticateToken, async (req, res) =
 
     await pool.query(
       `UPDATE user_profiles
-       SET profile_template = 'community',
+       SET previous_profile_template = CASE
+             WHEN profile_template IS NOT NULL
+              AND profile_template != ''
+              AND profile_template != 'community'
+             THEN profile_template
+             ELSE previous_profile_template
+           END,
+           profile_template = 'community',
            community_template_id = $1::integer
        WHERE user_id = $2::integer`,
       [templateId, req.userId]
@@ -1355,6 +1379,219 @@ app.put('/api/profile/community-template', authenticateToken, async (req, res) =
     });
   } catch (error) {
     console.error('Community template apply error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/profile/community-template', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `UPDATE user_profiles
+       SET profile_template = COALESCE(
+             NULLIF(previous_profile_template, ''),
+             'neon-purple'
+           ),
+           community_template_id = NULL,
+           previous_profile_template = NULL
+       WHERE user_id = $1::integer
+       RETURNING profile_template`,
+      [req.userId]
+    );
+
+    return res.json({
+      message: 'Community template removed successfully!',
+      profileTemplate: result.rows[0]?.profile_template || 'neon-purple',
+    });
+  } catch (error) {
+    console.error('Community template remove error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/profile/community-template/editor', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+        up.profile_template,
+        up.community_template_id,
+        ct.id AS template_id,
+        ct.name,
+        ct.description,
+        ct.preview_image,
+        ct.html_code AS original_html_code,
+        ct.css_code AS original_css_code,
+        ct.js_code AS original_js_code,
+        u.username AS creator_username,
+        ucto.html_code AS override_html_code,
+        ucto.css_code AS override_css_code,
+        ucto.js_code AS override_js_code,
+        ucto.settings AS override_settings,
+        ucto.updated_at AS override_updated_at
+       FROM user_profiles up
+       LEFT JOIN community_templates ct
+        ON ct.id = up.community_template_id
+        AND ct.status = 'approved'
+        AND ct.is_public = true
+       LEFT JOIN users u ON u.id = ct.creator_user_id
+       LEFT JOIN user_community_template_overrides ucto
+        ON ucto.user_id = up.user_id
+        AND ucto.community_template_id = ct.id
+       WHERE up.user_id = $1::integer
+       LIMIT 1`,
+      [req.userId]
+    );
+
+    const row = result.rows[0];
+
+    if (!row || row.profile_template !== 'community' || !row.template_id) {
+      return res.json({
+        hasActiveTemplate: false,
+        template: null,
+        override: null,
+      });
+    }
+
+    const hasOverride = Boolean(row.override_updated_at);
+
+    return res.json({
+      hasActiveTemplate: true,
+      template: {
+        id: row.template_id,
+        name: row.name,
+        description: row.description || '',
+        preview_image: row.preview_image || '',
+        creator_username: row.creator_username || null,
+        original_html_code: row.original_html_code || '',
+        original_css_code: row.original_css_code || '',
+        original_js_code: row.original_js_code || '',
+      },
+      override: {
+        exists: hasOverride,
+        html_code: hasOverride ? row.override_html_code || '' : row.original_html_code || '',
+        css_code: hasOverride ? row.override_css_code || '' : row.original_css_code || '',
+        js_code: hasOverride ? row.override_js_code || '' : row.original_js_code || '',
+        settings: row.override_settings || {},
+        updated_at: row.override_updated_at || null,
+      },
+    });
+  } catch (error) {
+    console.error('Community template editor fetch error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/profile/community-template/editor', authenticateToken, async (req, res) => {
+  const payload = cleanCommunityTemplateOverridePayload(req.body);
+
+  if (!payload.htmlCode.trim()) {
+    return res.status(400).json({ error: 'HTML code is required.' });
+  }
+
+  try {
+    const profileResult = await pool.query(
+      `SELECT community_template_id
+       FROM user_profiles
+       WHERE user_id = $1::integer
+       AND profile_template = 'community'
+       LIMIT 1`,
+      [req.userId]
+    );
+
+    const templateId = Number(profileResult.rows[0]?.community_template_id || 0);
+
+    if (!Number.isInteger(templateId) || templateId <= 0) {
+      return res.status(400).json({ error: 'No active community template.' });
+    }
+
+    const templateResult = await pool.query(
+      `SELECT id
+       FROM community_templates
+       WHERE id = $1::integer
+       AND status = 'approved'
+       AND is_public = true
+       LIMIT 1`,
+      [templateId]
+    );
+
+    if (templateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Community template not found or not approved.' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO user_community_template_overrides (
+        user_id,
+        community_template_id,
+        html_code,
+        css_code,
+        js_code,
+        settings,
+        updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6::jsonb, NOW())
+      ON CONFLICT (user_id, community_template_id)
+      DO UPDATE SET
+        html_code = EXCLUDED.html_code,
+        css_code = EXCLUDED.css_code,
+        js_code = EXCLUDED.js_code,
+        settings = EXCLUDED.settings,
+        updated_at = NOW()
+      RETURNING
+        id,
+        community_template_id,
+        html_code,
+        css_code,
+        js_code,
+        settings,
+        updated_at`,
+      [
+        req.userId,
+        templateId,
+        payload.htmlCode,
+        payload.cssCode,
+        payload.jsCode,
+        payload.settings,
+      ]
+    );
+
+    return res.json({
+      message: 'Community template edit saved successfully!',
+      override: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Community template editor save error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/profile/community-template/editor', authenticateToken, async (req, res) => {
+  try {
+    const profileResult = await pool.query(
+      `SELECT community_template_id
+       FROM user_profiles
+       WHERE user_id = $1::integer
+       AND profile_template = 'community'
+       LIMIT 1`,
+      [req.userId]
+    );
+
+    const templateId = Number(profileResult.rows[0]?.community_template_id || 0);
+
+    if (!Number.isInteger(templateId) || templateId <= 0) {
+      return res.status(400).json({ error: 'No active community template.' });
+    }
+
+    await pool.query(
+      `DELETE FROM user_community_template_overrides
+       WHERE user_id = $1::integer
+       AND community_template_id = $2::integer`,
+      [req.userId, templateId]
+    );
+
+    return res.json({
+      message: 'Community template edit reset successfully!',
+    });
+  } catch (error) {
+    console.error('Community template editor reset error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
@@ -1623,21 +1860,25 @@ app.get('/api/profile/:username', async (req, res) => {
           ct.name,
           ct.description,
           ct.preview_image,
-          ct.html_code,
-          ct.css_code,
-          ct.js_code,
+          COALESCE(NULLIF(ucto.html_code, ''), ct.html_code) AS html_code,
+          COALESCE(ucto.css_code, ct.css_code) AS css_code,
+          COALESCE(ucto.js_code, ct.js_code) AS js_code,
           ct.status,
           ct.is_public,
           ct.created_at,
           ct.approved_at,
-          u.username AS creator_username
+          u.username AS creator_username,
+          (ucto.id IS NOT NULL) AS has_personal_edit
          FROM community_templates ct
          LEFT JOIN users u ON u.id = ct.creator_user_id
+         LEFT JOIN user_community_template_overrides ucto
+          ON ucto.user_id = $2::integer
+          AND ucto.community_template_id = ct.id
          WHERE ct.id = $1::integer
          AND ct.status = 'approved'
          AND ct.is_public = true
          LIMIT 1`,
-        [profile.community_template_id]
+        [profile.community_template_id, user.id]
       );
 
       communityTemplate = communityTemplateResult.rows[0] || null;
@@ -1936,48 +2177,21 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
 
   try {
     await pool.query(
-  `UPDATE user_profiles
-   SET previous_profile_template = CASE
-         WHEN profile_template IS NOT NULL
-          AND profile_template != ''
-          AND profile_template != 'community'
-         THEN profile_template
-         ELSE previous_profile_template
-       END,
-       profile_template = 'community',
-       community_template_id = $1::integer
-   WHERE user_id = $2::integer`,
-  [templateId, req.userId]
-);
+      `UPDATE user_profiles
+       SET profile_template = $1,
+           profile_effect = $2,
+           custom_cursor_url = $3,
+           community_template_id = CASE
+             WHEN $1::varchar = 'community' THEN community_template_id
+             ELSE NULL
+           END
+       WHERE user_id = $4`,
+      [profileTemplate, profileEffect, cleanCustomCursorUrl, req.userId]
+    );
 
     return res.json({ message: 'Appearance updated successfully!' });
   } catch (error) {
     console.error('Appearance update error:', error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete('/api/profile/community-template', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(
-      `UPDATE user_profiles
-       SET profile_template = COALESCE(
-             NULLIF(previous_profile_template, ''),
-             'neon-purple'
-           ),
-           community_template_id = NULL,
-           previous_profile_template = NULL
-       WHERE user_id = $1::integer
-       RETURNING profile_template`,
-      [req.userId]
-    );
-
-    return res.json({
-      message: 'Community template removed successfully!',
-      profileTemplate: result.rows[0]?.profile_template || 'neon-purple',
-    });
-  } catch (error) {
-    console.error('Community template remove error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
