@@ -157,6 +157,9 @@ export const translations = {
     },
 
     settings: {
+      removeCommunityTemplate: "Remover template da comunidade",
+      removedTemplate: "Template da comunidade removido. Seu template anterior voltou.",
+      removeError: "Erro ao remover template: ",
       socialHub: "Social Hub",
       publicLinks: "Seus links públicos",
       publicLinksDescription: "Coloque seus perfis sociais aqui. Use só o username ou o link completo.",
@@ -410,6 +413,9 @@ export const translations = {
     },
 
     settings: {
+      removeCommunityTemplate: "Remove community template",
+      removedTemplate: "Community template removed. Your previous template is back.",
+      removeError: "Error removing template: ",
       socialHub: "Social Hub",
       publicLinks: "Your public links",
       publicLinksDescription: "Add your social profiles here. Use only the username or the full link.",
@@ -663,6 +669,9 @@ export const translations = {
     },
 
     settings: {
+      removeCommunityTemplate: "Quitar template de la comunidad",
+      removedTemplate: "Template de la comunidad quitado. Tu template anterior volvió.",
+      removeError: "Error al quitar template: ",
       socialHub: "Social Hub",
       publicLinks: "Tus enlaces públicos",
       publicLinksDescription: "Añade tus redes sociales aquí. Usa solo el username o el link completo.",

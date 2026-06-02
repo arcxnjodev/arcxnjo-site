@@ -1936,21 +1936,48 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
 
   try {
     await pool.query(
-      `UPDATE user_profiles
-       SET profile_template = $1,
-           profile_effect = $2,
-           custom_cursor_url = $3,
-           community_template_id = CASE
-             WHEN $1::varchar = 'community' THEN community_template_id
-             ELSE NULL
-           END
-       WHERE user_id = $4`,
-      [profileTemplate, profileEffect, cleanCustomCursorUrl, req.userId]
-    );
+  `UPDATE user_profiles
+   SET previous_profile_template = CASE
+         WHEN profile_template IS NOT NULL
+          AND profile_template != ''
+          AND profile_template != 'community'
+         THEN profile_template
+         ELSE previous_profile_template
+       END,
+       profile_template = 'community',
+       community_template_id = $1::integer
+   WHERE user_id = $2::integer`,
+  [templateId, req.userId]
+);
 
     return res.json({ message: 'Appearance updated successfully!' });
   } catch (error) {
     console.error('Appearance update error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/profile/community-template', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `UPDATE user_profiles
+       SET profile_template = COALESCE(
+             NULLIF(previous_profile_template, ''),
+             'neon-purple'
+           ),
+           community_template_id = NULL,
+           previous_profile_template = NULL
+       WHERE user_id = $1::integer
+       RETURNING profile_template`,
+      [req.userId]
+    );
+
+    return res.json({
+      message: 'Community template removed successfully!',
+      profileTemplate: result.rows[0]?.profile_template || 'neon-purple',
+    });
+  } catch (error) {
+    console.error('Community template remove error:', error);
     return res.status(500).json({ error: error.message });
   }
 });

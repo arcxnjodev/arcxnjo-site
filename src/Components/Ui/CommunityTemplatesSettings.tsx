@@ -259,6 +259,28 @@ p {
     }
   };
 
+  const handleRemoveCommunityTemplate = async () => {
+  try {
+    setUsingTemplateId(-1);
+    setMessage("");
+
+    await axios.delete(`${API_URL}/api/profile/community-template`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setCurrentCommunityTemplateId(null);
+    setMessage(`✅ ${t("settings.community.removedTemplate")}`);
+  } catch (error: any) {
+    setMessage(
+      `❌ ${t("settings.community.removeError")}${
+        error.response?.data?.error || error.message
+      }`
+    );
+  } finally {
+    setUsingTemplateId(null);
+  }
+};
+
   const handleUseTemplate = async (template: CommunityTemplate) => {
     try {
       setUsingTemplateId(template.id);
@@ -356,19 +378,37 @@ p {
       {activeView === "gallery" && (
         <section className="space-y-5">
           <div className="flex flex-col justify-between gap-3 rounded-3xl border border-white/10 bg-black/25 p-5 md:flex-row md:items-center">
-            <div>
-              <h4 className="text-xl font-black text-white">
-                {t("settings.community.approvedGallery")}
-              </h4>
-              <p className="mt-1 text-sm text-white/40">
-                {t("settings.community.approvedGalleryDescription")}
-              </p>
-            </div>
+  <div>
+    <h4 className="text-xl font-black text-white">
+      {t("settings.community.approvedGallery")}
+    </h4>
+    <p className="mt-1 text-sm text-white/40">
+      {t("settings.community.approvedGalleryDescription")}
+    </p>
+  </div>
 
-            <span className="w-fit rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-xs font-bold text-white/45">
-              {publicTemplates.length} {t("settings.community.approvedCount")}
-            </span>
-          </div>
+  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+    {currentCommunityTemplateId && (
+      <button
+        type="button"
+        onClick={handleRemoveCommunityTemplate}
+        disabled={usingTemplateId === -1}
+        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-200 transition hover:border-red-300/35 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {usingTemplateId === -1 ? (
+          <FaSpinner className="animate-spin" />
+        ) : (
+          <FaCheck />
+        )}
+        {t("settings.community.removeCommunityTemplate")}
+      </button>
+    )}
+
+    <span className="w-fit rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-xs font-bold text-white/45">
+      {publicTemplates.length} {t("settings.community.approvedCount")}
+    </span>
+  </div>
+</div>
 
           {publicTemplates.length > 0 ? (
             <div className="grid gap-5 xl:grid-cols-2">
