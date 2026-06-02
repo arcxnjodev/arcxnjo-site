@@ -4,16 +4,24 @@ import type { IconType } from "react-icons";
 import {
   FaBan,
   FaCheckCircle,
+  FaCode,
+  FaEye,
   FaHeart,
+  FaLayerGroup,
   FaLock,
   FaMagic,
+  FaMousePointer,
   FaPalette,
   FaSave,
   FaSnowflake,
+  FaSpinner,
   FaStar,
-  FaMousePointer,
+  FaTerminal,
+  FaTrash,
+  FaUndo,
 } from "react-icons/fa";
 import { useI18n } from "../../i18n/i18nProvider";
+import { CommunityTemplatePreview } from "./CommunityTemplatePreview";
 
 type TemplateDef = {
   id: string;
@@ -26,6 +34,29 @@ type TemplateDef = {
   preview: string;
   proOnly?: boolean;
 };
+
+type CommunityEditorData = {
+  hasActiveTemplate: boolean;
+  template: {
+    id: number;
+    name: string;
+    description: string;
+    preview_image: string;
+    creator_username?: string | null;
+    original_html_code: string;
+    original_css_code: string;
+    original_js_code: string;
+  } | null;
+  override: {
+    exists: boolean;
+    html_code: string;
+    css_code: string;
+    js_code: string;
+    updated_at?: string | null;
+  } | null;
+};
+
+type CommunityEditorTab = "html" | "css" | "js" | "preview";
 
 const templates: TemplateDef[] = [
   {
@@ -156,7 +187,7 @@ const effects: {
     icon: FaHeart,
   },
 ];
-  
+
 const copy = {
   pt: {
     badge: "Appearance Lab",
@@ -176,6 +207,41 @@ const copy = {
     saving: "Salvando...",
     success: "✅ Aparência atualizada com sucesso!",
     error: "❌ Erro ao salvar: ",
+    customCursor: "Cursor personalizado",
+    customCursorDesc:
+      "Coloque o link de uma imagem para usar como cursor personalizado no perfil.",
+    cursorImageUrl: "URL da imagem do cursor",
+    cursorHint: "Recomendado: PNG, WEBP, GIF ou CUR pequeno. Ideal: 32x32 ou 64x64.",
+    clearCursor: "Limpar cursor",
+    preview: "Preview",
+    communityTemplateName: "Template da comunidade",
+    communityStudioBadge: "Community Studio",
+    communityStudioTitle: "Editar template da comunidade",
+    communityStudioSubtitle:
+      "Edite uma cópia pessoal do template que você está usando. O template público aprovado continua intacto.",
+    loadingStudio: "Carregando editor do template...",
+    noCommunityTemplate:
+      "Você só consegue editar aqui quando estiver usando um template da comunidade.",
+    originalBy: "Original por",
+    personalEdit: "edição pessoal",
+    originalVersion: "versão original",
+    saveEdit: "Salvar edição",
+    savingEdit: "Salvando edição...",
+    resetEdit: "Resetar para original",
+    loadOriginal: "Carregar original",
+    savedEdit: "✅ Edição pessoal salva!",
+    resetEditSuccess: "✅ Edição resetada para o template original.",
+    loadEditorError: "❌ Erro ao carregar editor: ",
+    saveEditorError: "❌ Erro ao salvar edição: ",
+    resetEditorError: "❌ Erro ao resetar edição: ",
+    htmlTab: "HTML",
+    cssTab: "CSS",
+    jsTab: "JS",
+    previewTab: "Preview",
+    codeHint:
+      "Dica: use window.ARCXNJO_PROFILE para acessar avatar, nome, bio, links, Discord e stats.",
+    jsWarning:
+      "JS roda isolado no iframe sandbox. Use apenas para efeitos visuais do seu próprio perfil.",
   },
   en: {
     badge: "Appearance Lab",
@@ -195,6 +261,41 @@ const copy = {
     saving: "Saving...",
     success: "✅ Appearance updated successfully!",
     error: "❌ Error saving: ",
+    customCursor: "Custom cursor",
+    customCursorDesc:
+      "Add an image link to use as a custom cursor on your profile.",
+    cursorImageUrl: "Cursor image URL",
+    cursorHint: "Recommended: small PNG, WEBP, GIF, or CUR. Ideal: 32x32 or 64x64.",
+    clearCursor: "Clear cursor",
+    preview: "Preview",
+    communityTemplateName: "Community template",
+    communityStudioBadge: "Community Studio",
+    communityStudioTitle: "Edit community template",
+    communityStudioSubtitle:
+      "Edit your personal copy of the template you are using. The approved public template stays untouched.",
+    loadingStudio: "Loading template editor...",
+    noCommunityTemplate:
+      "You can edit here only when you are using a community template.",
+    originalBy: "Original by",
+    personalEdit: "personal edit",
+    originalVersion: "original version",
+    saveEdit: "Save edit",
+    savingEdit: "Saving edit...",
+    resetEdit: "Reset to original",
+    loadOriginal: "Load original",
+    savedEdit: "✅ Personal edit saved!",
+    resetEditSuccess: "✅ Edit reset to the original template.",
+    loadEditorError: "❌ Editor load error: ",
+    saveEditorError: "❌ Edit save error: ",
+    resetEditorError: "❌ Edit reset error: ",
+    htmlTab: "HTML",
+    cssTab: "CSS",
+    jsTab: "JS",
+    previewTab: "Preview",
+    codeHint:
+      "Tip: use window.ARCXNJO_PROFILE to access avatar, name, bio, links, Discord, and stats.",
+    jsWarning:
+      "JS runs isolated inside the sandboxed iframe. Use it only for visual effects on your own profile.",
   },
   es: {
     badge: "Appearance Lab",
@@ -214,8 +315,46 @@ const copy = {
     saving: "Guardando...",
     success: "✅ Apariencia actualizada con éxito!",
     error: "❌ Error al guardar: ",
+    customCursor: "Cursor personalizado",
+    customCursorDesc:
+      "Agrega el link de una imagen para usarla como cursor personalizado en tu perfil.",
+    cursorImageUrl: "URL de imagen del cursor",
+    cursorHint: "Recomendado: PNG, WEBP, GIF o CUR pequeño. Ideal: 32x32 o 64x64.",
+    clearCursor: "Limpiar cursor",
+    preview: "Preview",
+    communityTemplateName: "Template de la comunidad",
+    communityStudioBadge: "Community Studio",
+    communityStudioTitle: "Editar template de la comunidad",
+    communityStudioSubtitle:
+      "Edita tu copia personal del template que estás usando. El template público aprobado sigue intacto.",
+    loadingStudio: "Cargando editor del template...",
+    noCommunityTemplate:
+      "Solo puedes editar aquí cuando estés usando un template de la comunidad.",
+    originalBy: "Original por",
+    personalEdit: "edición personal",
+    originalVersion: "versión original",
+    saveEdit: "Guardar edición",
+    savingEdit: "Guardando edición...",
+    resetEdit: "Resetear al original",
+    loadOriginal: "Cargar original",
+    savedEdit: "✅ Edición personal guardada!",
+    resetEditSuccess: "✅ Edición reseteada al template original.",
+    loadEditorError: "❌ Error al cargar editor: ",
+    saveEditorError: "❌ Error al guardar edición: ",
+    resetEditorError: "❌ Error al resetear edición: ",
+    htmlTab: "HTML",
+    cssTab: "CSS",
+    jsTab: "JS",
+    previewTab: "Preview",
+    codeHint:
+      "Tip: usa window.ARCXNJO_PROFILE para acceder a avatar, nombre, bio, links, Discord y stats.",
+    jsWarning:
+      "JS se ejecuta aislado dentro del iframe sandbox. Úsalo solo para efectos visuales de tu propio perfil.",
   },
 };
+
+const codeTextareaClass =
+  "min-h-[360px] w-full resize-y rounded-b-3xl border-0 bg-[#050505] px-4 py-4 font-mono text-xs leading-relaxed text-white outline-none placeholder-white/20";
 
 export const AppearanceSettings = () => {
   const { language } = useI18n();
@@ -227,11 +366,44 @@ export const AppearanceSettings = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [customCursorUrl, setCustomCursorUrl] = useState("");
+  const [communityEditor, setCommunityEditor] = useState<CommunityEditorData | null>(null);
+  const [communityEditorLoading, setCommunityEditorLoading] = useState(false);
+  const [communitySaving, setCommunitySaving] = useState(false);
+  const [communityTab, setCommunityTab] = useState<CommunityEditorTab>("html");
+  const [communityHtml, setCommunityHtml] = useState("");
+  const [communityCss, setCommunityCss] = useState("");
+  const [communityJs, setCommunityJs] = useState("");
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
   const text = copy[language];
 
   const canUseProTemplates = plan === "pro" || ownerBypass;
+  const isCommunityTemplateSelected = selectedTemplate === "community";
+
+  const fetchCommunityEditor = async (authToken = localStorage.getItem("token")) => {
+    try {
+      if (!authToken) return;
+
+      setCommunityEditorLoading(true);
+
+      const response = await axios.get(`${API_URL}/api/profile/community-template/editor`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      const data: CommunityEditorData = response.data;
+      setCommunityEditor(data);
+
+      if (data?.hasActiveTemplate && data.override) {
+        setCommunityHtml(data.override.html_code || "");
+        setCommunityCss(data.override.css_code || "");
+        setCommunityJs(data.override.js_code || "");
+      }
+    } catch (error: any) {
+      setMessage(text.loadEditorError + (error.response?.data?.error || error.message));
+    } finally {
+      setCommunityEditorLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchAppearance = async () => {
@@ -243,12 +415,17 @@ export const AppearanceSettings = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setSelectedTemplate(response.data.profile_template || "neon-purple");
+        const profileTemplate = response.data.profile_template || "neon-purple";
+
+        setSelectedTemplate(profileTemplate);
         setSelectedEffect(response.data.profile_effect || "none");
         setPlan(response.data.plan === "pro" ? "pro" : "free");
         setOwnerBypass(Boolean(response.data.owner_bypass));
         setCustomCursorUrl(response.data.custom_cursor_url || "");
 
+        if (profileTemplate === "community") {
+          await fetchCommunityEditor(token);
+        }
       } catch (error) {
         console.error("Error fetching appearance:", error);
       }
@@ -285,12 +462,81 @@ export const AppearanceSettings = () => {
     }
   };
 
+  const handleSaveCommunityEdit = async () => {
+    setCommunitySaving(true);
+    setMessage("");
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        `${API_URL}/api/profile/community-template/editor`,
+        {
+          htmlCode: communityHtml,
+          cssCode: communityCss,
+          jsCode: communityJs,
+          settings: {},
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setMessage(text.savedEdit);
+      await fetchCommunityEditor(token);
+      setTimeout(() => setMessage(""), 3000);
+    } catch (error: any) {
+      setMessage(text.saveEditorError + (error.response?.data?.error || error.message));
+    } finally {
+      setCommunitySaving(false);
+    }
+  };
+
+  const handleResetCommunityEdit = async () => {
+    setCommunitySaving(true);
+    setMessage("");
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(`${API_URL}/api/profile/community-template/editor`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setMessage(text.resetEditSuccess);
+      await fetchCommunityEditor(token);
+      setTimeout(() => setMessage(""), 3000);
+    } catch (error: any) {
+      setMessage(text.resetEditorError + (error.response?.data?.error || error.message));
+    } finally {
+      setCommunitySaving(false);
+    }
+  };
+
+  const handleLoadOriginalCommunityCode = () => {
+    if (!communityEditor?.template) return;
+
+    setCommunityHtml(communityEditor.template.original_html_code || "");
+    setCommunityCss(communityEditor.template.original_css_code || "");
+    setCommunityJs(communityEditor.template.original_js_code || "");
+  };
+
   const selectedTemplateData =
     templates.find((template) => template.id === selectedTemplate) ||
     templates[0];
 
   const selectedEffectData =
     effects.find((effect) => effect.id === selectedEffect) || effects[0];
+
+  const selectedTemplateLabel = isCommunityTemplateSelected
+    ? communityEditor?.template?.name || text.communityTemplateName
+    : selectedTemplateData.name;
+
+  const communityCodeLength = communityHtml.length + communityCss.length + communityJs.length;
+  const communityLineCount = [communityHtml, communityCss, communityJs]
+    .join("\n")
+    .split("\n")
+    .filter(Boolean).length;
 
   return (
     <div className="space-y-6">
@@ -322,16 +568,231 @@ export const AppearanceSettings = () => {
           {message}
         </div>
       )}
-     <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
+
+      {isCommunityTemplateSelected && (
+        <section className="overflow-hidden rounded-3xl border border-white/10 bg-black/25">
+          <div className="relative overflow-hidden border-b border-white/10 bg-[#050505] p-5 md:p-6">
+            <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.45)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] [background-size:36px_36px]" />
+            <div className="absolute right-[-120px] top-[-120px] h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
+
+            <div className="relative flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-200">
+                  <FaTerminal />
+                  {text.communityStudioBadge}
+                </div>
+
+                <h4 className="text-2xl font-black text-white">
+                  {text.communityStudioTitle}
+                </h4>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/45">
+                  {text.communityStudioSubtitle}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
+                  <p className="text-lg font-black text-white">{communityLineCount}</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+                    lines
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
+                  <p className="text-lg font-black text-white">{communityCodeLength}</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+                    chars
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
+                  <p className="text-lg font-black text-white">
+                    {communityEditor?.override?.exists ? "custom" : "base"}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+                    mode
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {communityEditorLoading ? (
+            <div className="flex items-center gap-3 p-5 text-sm text-white/45">
+              <FaSpinner className="animate-spin" />
+              {text.loadingStudio}
+            </div>
+          ) : communityEditor?.hasActiveTemplate && communityEditor.template ? (
+            <div className="grid gap-5 p-5 xl:grid-cols-[1fr_440px]">
+              <div className="space-y-4">
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                    <div className="min-w-0">
+                      <p className="truncate text-lg font-black text-white">
+                        {communityEditor.template.name}
+                      </p>
+                      <p className="mt-1 text-xs text-white/40">
+                        {text.originalBy} @{communityEditor.template.creator_username || "unknown"} ·{" "}
+                        {communityEditor.override?.exists
+                          ? text.personalEdit
+                          : text.originalVersion}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={handleLoadOriginalCommunityCode}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-2.5 text-xs font-bold text-white/55 transition hover:border-cyan-400/25 hover:bg-cyan-500/10 hover:text-cyan-100"
+                      >
+                        <FaUndo />
+                        {text.loadOriginal}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleResetCommunityEdit}
+                        disabled={communitySaving}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-xs font-bold text-red-200 transition hover:border-red-300/35 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <FaTrash />
+                        {text.resetEdit}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSaveCommunityEdit}
+                        disabled={communitySaving}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-xs font-black text-black transition hover:-translate-y-0.5 hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {communitySaving ? <FaSpinner className="animate-spin" /> : <FaSave />}
+                        {communitySaving ? text.savingEdit : text.saveEdit}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#050505]">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-black/50 p-2">
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: "html" as const, label: text.htmlTab, icon: FaCode },
+                        { id: "css" as const, label: text.cssTab, icon: FaPalette },
+                        { id: "js" as const, label: text.jsTab, icon: FaTerminal },
+                        { id: "preview" as const, label: text.previewTab, icon: FaEye },
+                      ].map((tab) => {
+                        const Icon = tab.icon;
+                        const active = communityTab === tab.id;
+
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setCommunityTab(tab.id)}
+                            className={`inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-black transition ${
+                              active
+                                ? "bg-white text-black"
+                                : "text-white/45 hover:bg-white/5 hover:text-white"
+                            }`}
+                          >
+                            <Icon />
+                            {tab.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+                      sandbox editor
+                    </span>
+                  </div>
+
+                  {communityTab === "html" && (
+                    <textarea
+                      value={communityHtml}
+                      onChange={(event) => setCommunityHtml(event.target.value)}
+                      spellCheck={false}
+                      className={codeTextareaClass}
+                    />
+                  )}
+
+                  {communityTab === "css" && (
+                    <textarea
+                      value={communityCss}
+                      onChange={(event) => setCommunityCss(event.target.value)}
+                      spellCheck={false}
+                      className={codeTextareaClass}
+                    />
+                  )}
+
+                  {communityTab === "js" && (
+                    <textarea
+                      value={communityJs}
+                      onChange={(event) => setCommunityJs(event.target.value)}
+                      spellCheck={false}
+                      className={codeTextareaClass}
+                    />
+                  )}
+
+                  {communityTab === "preview" && (
+                    <div className="p-4">
+                      <CommunityTemplatePreview
+                        htmlCode={communityHtml}
+                        cssCode={communityCss}
+                        jsCode={communityJs}
+                        height="520px"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <p className="rounded-2xl border border-cyan-400/15 bg-cyan-500/10 p-3 text-xs leading-relaxed text-cyan-100/80">
+                    {text.codeHint}
+                  </p>
+
+                  <p className="rounded-2xl border border-yellow-400/15 bg-yellow-500/10 p-3 text-xs leading-relaxed text-yellow-100/80">
+                    {text.jsWarning}
+                  </p>
+                </div>
+              </div>
+
+              <aside className="space-y-4">
+                <div className="rounded-3xl border border-white/10 bg-black/35 p-4">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-black text-white">
+                    <FaEye className="text-cyan-300" />
+                    {text.preview}
+                  </div>
+
+                  <CommunityTemplatePreview
+                    htmlCode={communityHtml}
+                    cssCode={communityCss}
+                    jsCode={communityJs}
+                    height="620px"
+                  />
+                </div>
+              </aside>
+            </div>
+          ) : (
+            <div className="p-5">
+              <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-white/40">
+                {text.noCommunityTemplate}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
         <div className="mb-5 flex items-center gap-3">
           <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-white/70">
             <FaMousePointer />
           </div>
 
           <div>
-            <h4 className="text-lg font-black text-white">Custom Cursor</h4>
+            <h4 className="text-lg font-black text-white">{text.customCursor}</h4>
             <p className="mt-1 text-sm text-white/40">
-              Coloque o link de uma imagem para usar como cursor personalizado no perfil.
+              {text.customCursorDesc}
             </p>
           </div>
         </div>
@@ -339,7 +800,7 @@ export const AppearanceSettings = () => {
         <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <label className="mb-2 block text-sm font-semibold text-white/85">
-              Cursor image URL
+              {text.cursorImageUrl}
             </label>
 
             <input
@@ -351,7 +812,7 @@ export const AppearanceSettings = () => {
             />
 
             <p className="mt-2 text-xs text-white/35">
-              Recomendado: PNG, WEBP, GIF ou CUR pequeno. Ideal: 32x32 ou 64x64.
+              {text.cursorHint}
             </p>
           </div>
 
@@ -360,14 +821,14 @@ export const AppearanceSettings = () => {
             onClick={() => setCustomCursorUrl("")}
             className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-bold text-white/55 transition hover:border-red-400/25 hover:bg-red-500/10 hover:text-red-200"
           >
-            Clear Cursor
+            {text.clearCursor}
           </button>
         </div>
 
         {customCursorUrl.trim() && (
           <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-white/35">
-              Preview
+              {text.preview}
             </p>
 
             <div className="flex items-center gap-3">
@@ -393,6 +854,25 @@ export const AppearanceSettings = () => {
           <h4 className="text-lg font-black text-white">{text.templates}</h4>
           <p className="mt-1 text-sm text-white/40">{text.templatesDesc}</p>
         </div>
+
+        {isCommunityTemplateSelected && (
+          <div className="mb-4 rounded-3xl border border-cyan-400/20 bg-cyan-500/10 p-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-400/15 text-cyan-100">
+                <FaLayerGroup />
+              </div>
+
+              <div>
+                <p className="text-sm font-black text-white">
+                  {text.communityTemplateName}
+                </p>
+                <p className="mt-1 text-xs text-cyan-100/60">
+                  {communityEditor?.template?.name || selectedTemplateLabel}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {templates.map((template) => {
@@ -514,7 +994,7 @@ export const AppearanceSettings = () => {
             <p className="text-sm font-bold text-white">{text.currentStyle}</p>
 
             <p className="mt-1 text-xs text-white/40">
-              {text.template}: {selectedTemplateData.name} · {text.effect}:{" "}
+              {text.template}: {selectedTemplateLabel} · {text.effect}:{" "}
               {selectedEffectData.name[language]}
             </p>
           </div>
