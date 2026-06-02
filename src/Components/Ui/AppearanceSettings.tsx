@@ -5,19 +5,20 @@ import {
   FaBan,
   FaCheckCircle,
   FaCode,
-  FaEye,
   FaHeart,
-  FaLayerGroup,
+  FaImage,
   FaLock,
   FaMagic,
   FaMousePointer,
+  FaMusic,
   FaPalette,
+  FaPaintBrush,
   FaSave,
+  FaSlidersH,
   FaSnowflake,
   FaSpinner,
   FaStar,
-  FaTerminal,
-  FaTrash,
+  FaSyncAlt,
   FaUndo,
 } from "react-icons/fa";
 import { useI18n } from "../../i18n/i18nProvider";
@@ -35,14 +36,16 @@ type TemplateDef = {
   proOnly?: boolean;
 };
 
-type CommunityEditorData = {
+type StudioTab = "visual" | "media" | "buttons" | "music" | "advanced";
+
+type CommunityEditorResponse = {
   hasActiveTemplate: boolean;
   template: {
     id: number;
     name: string;
     description: string;
     preview_image: string;
-    creator_username?: string | null;
+    creator_username: string | null;
     original_html_code: string;
     original_css_code: string;
     original_js_code: string;
@@ -52,11 +55,62 @@ type CommunityEditorData = {
     html_code: string;
     css_code: string;
     js_code: string;
-    updated_at?: string | null;
+    settings: Partial<TemplateStudioSettings>;
+    updated_at: string | null;
   } | null;
 };
 
-type CommunityEditorTab = "html" | "css" | "js" | "preview";
+type TemplateStudioSettings = {
+  primaryColor: string;
+  secondaryColor: string;
+  textColor: string;
+  backgroundColor: string;
+  cardRadius: number;
+  cardBlur: number;
+  glowIntensity: number;
+  avatarSize: number;
+  backgroundImage: string;
+  backgroundVideo: string;
+  backgroundOpacity: number;
+  buttonStyle: "glass" | "solid" | "outline" | "minimal";
+  buttonRadius: number;
+  buttonGlow: boolean;
+  showIcons: boolean;
+  buttonSize: "sm" | "md" | "lg";
+  showMusic: boolean;
+  musicUrl: string;
+  musicTitle: string;
+  musicPosition: "top" | "bottom" | "left" | "right";
+  showCover: boolean;
+  coverImage: string;
+  showLyrics: boolean;
+};
+
+const defaultStudioSettings: TemplateStudioSettings = {
+  primaryColor: "#a855f7",
+  secondaryColor: "#22d3ee",
+  textColor: "#ffffff",
+  backgroundColor: "#050505",
+  cardRadius: 28,
+  cardBlur: 18,
+  glowIntensity: 38,
+  avatarSize: 128,
+  backgroundImage: "",
+  backgroundVideo: "",
+  backgroundOpacity: 42,
+  buttonStyle: "glass",
+  buttonRadius: 22,
+  buttonGlow: true,
+  showIcons: true,
+  buttonSize: "md",
+  showMusic: false,
+  musicUrl: "",
+  musicTitle: "",
+  musicPosition: "bottom",
+  showCover: true,
+  coverImage: "",
+  showLyrics: false,
+};
 
 const templates: TemplateDef[] = [
   {
@@ -193,7 +247,7 @@ const copy = {
     badge: "Appearance Lab",
     title: "Visual do perfil",
     subtitle:
-      "Escolha o template e o efeito animado do perfil público. Templates Pro aparecem bloqueados para usuários Free.",
+      "Escolha o template, efeito, cursor e personalize templates da comunidade por botões ou código avançado.",
     templates: "Templates",
     templatesDesc: "Escolha a estrutura visual do seu perfil.",
     effects: "Efeitos",
@@ -207,47 +261,89 @@ const copy = {
     saving: "Salvando...",
     success: "✅ Aparência atualizada com sucesso!",
     error: "❌ Erro ao salvar: ",
-    customCursor: "Cursor personalizado",
-    customCursorDesc:
+    cursorTitle: "Cursor personalizado",
+    cursorDescription:
       "Coloque o link de uma imagem para usar como cursor personalizado no perfil.",
-    cursorImageUrl: "URL da imagem do cursor",
-    cursorHint: "Recomendado: PNG, WEBP, GIF ou CUR pequeno. Ideal: 32x32 ou 64x64.",
+    cursorUrl: "URL da imagem do cursor",
+    cursorHelp:
+      "Recomendado: PNG, WEBP, GIF ou CUR pequeno. Ideal: 32x32 ou 64x64.",
     clearCursor: "Limpar cursor",
     preview: "Preview",
-    communityTemplateName: "Template da comunidade",
-    communityStudioBadge: "Community Studio",
-    communityStudioTitle: "Editar template da comunidade",
-    communityStudioSubtitle:
-      "Edite uma cópia pessoal do template que você está usando. O template público aprovado continua intacto.",
-    loadingStudio: "Carregando editor do template...",
+    studioBadge: "Community Studio",
+    studioTitle: "Editar template da comunidade",
+    studioDescription:
+      "Personalize o template que você está usando sem alterar o original aprovado pela comunidade.",
     noCommunityTemplate:
-      "Você só consegue editar aqui quando estiver usando um template da comunidade.",
-    originalBy: "Original por",
-    personalEdit: "edição pessoal",
-    originalVersion: "versão original",
-    saveEdit: "Salvar edição",
-    savingEdit: "Salvando edição...",
-    resetEdit: "Resetar para original",
-    loadOriginal: "Carregar original",
-    savedEdit: "✅ Edição pessoal salva!",
-    resetEditSuccess: "✅ Edição resetada para o template original.",
+      "Você ainda não está usando um template da comunidade.",
+    noCommunityTemplateDesc:
+      "Escolha um template aprovado na aba Comunidade para liberar esse editor.",
     loadEditorError: "❌ Erro ao carregar editor: ",
-    saveEditorError: "❌ Erro ao salvar edição: ",
-    resetEditorError: "❌ Erro ao resetar edição: ",
-    htmlTab: "HTML",
-    cssTab: "CSS",
-    jsTab: "JS",
-    previewTab: "Preview",
-    codeHint:
-      "Dica: use window.ARCXNJO_PROFILE para acessar avatar, nome, bio, links, Discord e stats.",
-    jsWarning:
-      "JS roda isolado no iframe sandbox. Use apenas para efeitos visuais do seu próprio perfil.",
+    saveStudio: "Salvar edição",
+    savingStudio: "Salvando edição...",
+    studioSaved: "✅ Edição pessoal salva no seu perfil!",
+    studioSaveError: "❌ Erro ao salvar edição: ",
+    resetStudio: "Resetar para original",
+    resetConfirm:
+      "Resetar sua edição pessoal e voltar para o template original?",
+    resetDone: "✅ Edição resetada para o original.",
+    resetError: "❌ Erro ao resetar edição: ",
+    loadOriginal: "Carregar original",
+    editedCopy: "cópia pessoal",
+    originalTemplate: "template original",
+    by: "por",
+    tabs: {
+      visual: "Visual",
+      media: "Mídia",
+      buttons: "Botões",
+      music: "Música",
+      advanced: "Código",
+    },
+    fields: {
+      primaryColor: "Cor principal",
+      secondaryColor: "Cor secundária",
+      textColor: "Cor do texto",
+      backgroundColor: "Cor do fundo",
+      cardRadius: "Arredondamento do card",
+      cardBlur: "Blur do card",
+      glowIntensity: "Intensidade do glow",
+      avatarSize: "Tamanho do avatar",
+      backgroundImage: "Imagem de fundo",
+      backgroundVideo: "Vídeo de fundo",
+      backgroundOpacity: "Opacidade do fundo",
+      buttonStyle: "Estilo dos botões",
+      buttonRadius: "Arredondamento dos botões",
+      buttonGlow: "Glow nos botões",
+      showIcons: "Mostrar ícones",
+      buttonSize: "Tamanho dos botões",
+      showMusic: "Mostrar player de música",
+      musicUrl: "Link da música",
+      musicTitle: "Nome da música",
+      musicPosition: "Posição do player",
+      showCover: "Mostrar capa",
+      coverImage: "Imagem da capa",
+      showLyrics: "Preparar área de letra",
+    },
+    options: {
+      glass: "Glass",
+      solid: "Sólido",
+      outline: "Contorno",
+      minimal: "Minimal",
+      sm: "Pequeno",
+      md: "Médio",
+      lg: "Grande",
+      top: "Topo",
+      bottom: "Embaixo",
+      left: "Esquerda",
+      right: "Direita",
+    },
+    advancedWarning:
+      "Modo avançado: HTML/CSS/JS mexem diretamente na sua cópia pessoal. Use com cuidado.",
   },
   en: {
     badge: "Appearance Lab",
     title: "Profile appearance",
     subtitle:
-      "Choose the template and animated effect for your public profile. Pro templates appear locked for Free users.",
+      "Choose your template, effect, cursor, and customize community templates with buttons or advanced code.",
     templates: "Templates",
     templatesDesc: "Choose your profile visual structure.",
     effects: "Effects",
@@ -261,47 +357,88 @@ const copy = {
     saving: "Saving...",
     success: "✅ Appearance updated successfully!",
     error: "❌ Error saving: ",
-    customCursor: "Custom cursor",
-    customCursorDesc:
+    cursorTitle: "Custom cursor",
+    cursorDescription:
       "Add an image link to use as a custom cursor on your profile.",
-    cursorImageUrl: "Cursor image URL",
-    cursorHint: "Recommended: small PNG, WEBP, GIF, or CUR. Ideal: 32x32 or 64x64.",
+    cursorUrl: "Cursor image URL",
+    cursorHelp:
+      "Recommended: small PNG, WEBP, GIF or CUR. Ideal: 32x32 or 64x64.",
     clearCursor: "Clear cursor",
     preview: "Preview",
-    communityTemplateName: "Community template",
-    communityStudioBadge: "Community Studio",
-    communityStudioTitle: "Edit community template",
-    communityStudioSubtitle:
-      "Edit your personal copy of the template you are using. The approved public template stays untouched.",
-    loadingStudio: "Loading template editor...",
-    noCommunityTemplate:
-      "You can edit here only when you are using a community template.",
-    originalBy: "Original by",
-    personalEdit: "personal edit",
-    originalVersion: "original version",
-    saveEdit: "Save edit",
-    savingEdit: "Saving edit...",
-    resetEdit: "Reset to original",
+    studioBadge: "Community Studio",
+    studioTitle: "Edit community template",
+    studioDescription:
+      "Customize the community template you are using without changing the approved original.",
+    noCommunityTemplate: "You are not using a community template yet.",
+    noCommunityTemplateDesc:
+      "Choose an approved template in the Community tab to unlock this editor.",
+    loadEditorError: "❌ Error loading editor: ",
+    saveStudio: "Save edit",
+    savingStudio: "Saving edit...",
+    studioSaved: "✅ Personal edit saved to your profile!",
+    studioSaveError: "❌ Error saving edit: ",
+    resetStudio: "Reset to original",
+    resetConfirm:
+      "Reset your personal edit and go back to the original template?",
+    resetDone: "✅ Edit reset to original.",
+    resetError: "❌ Error resetting edit: ",
     loadOriginal: "Load original",
-    savedEdit: "✅ Personal edit saved!",
-    resetEditSuccess: "✅ Edit reset to the original template.",
-    loadEditorError: "❌ Editor load error: ",
-    saveEditorError: "❌ Edit save error: ",
-    resetEditorError: "❌ Edit reset error: ",
-    htmlTab: "HTML",
-    cssTab: "CSS",
-    jsTab: "JS",
-    previewTab: "Preview",
-    codeHint:
-      "Tip: use window.ARCXNJO_PROFILE to access avatar, name, bio, links, Discord, and stats.",
-    jsWarning:
-      "JS runs isolated inside the sandboxed iframe. Use it only for visual effects on your own profile.",
+    editedCopy: "personal copy",
+    originalTemplate: "original template",
+    by: "by",
+    tabs: {
+      visual: "Visual",
+      media: "Media",
+      buttons: "Buttons",
+      music: "Music",
+      advanced: "Code",
+    },
+    fields: {
+      primaryColor: "Primary color",
+      secondaryColor: "Secondary color",
+      textColor: "Text color",
+      backgroundColor: "Background color",
+      cardRadius: "Card radius",
+      cardBlur: "Card blur",
+      glowIntensity: "Glow intensity",
+      avatarSize: "Avatar size",
+      backgroundImage: "Background image",
+      backgroundVideo: "Background video",
+      backgroundOpacity: "Background opacity",
+      buttonStyle: "Button style",
+      buttonRadius: "Button radius",
+      buttonGlow: "Button glow",
+      showIcons: "Show icons",
+      buttonSize: "Button size",
+      showMusic: "Show music player",
+      musicUrl: "Music link",
+      musicTitle: "Song title",
+      musicPosition: "Player position",
+      showCover: "Show cover",
+      coverImage: "Cover image",
+      showLyrics: "Prepare lyrics area",
+    },
+    options: {
+      glass: "Glass",
+      solid: "Solid",
+      outline: "Outline",
+      minimal: "Minimal",
+      sm: "Small",
+      md: "Medium",
+      lg: "Large",
+      top: "Top",
+      bottom: "Bottom",
+      left: "Left",
+      right: "Right",
+    },
+    advancedWarning:
+      "Advanced mode: HTML/CSS/JS directly change your personal copy. Use carefully.",
   },
   es: {
     badge: "Appearance Lab",
     title: "Apariencia del perfil",
     subtitle:
-      "Elige el template y el efecto animado del perfil público. Los templates Pro aparecen bloqueados para usuarios Free.",
+      "Elige el template, efecto, cursor y personaliza templates de la comunidad con botones o código avanzado.",
     templates: "Templates",
     templatesDesc: "Elige la estructura visual de tu perfil.",
     effects: "Efectos",
@@ -315,46 +452,97 @@ const copy = {
     saving: "Guardando...",
     success: "✅ Apariencia actualizada con éxito!",
     error: "❌ Error al guardar: ",
-    customCursor: "Cursor personalizado",
-    customCursorDesc:
-      "Agrega el link de una imagen para usarla como cursor personalizado en tu perfil.",
-    cursorImageUrl: "URL de imagen del cursor",
-    cursorHint: "Recomendado: PNG, WEBP, GIF o CUR pequeño. Ideal: 32x32 o 64x64.",
+    cursorTitle: "Cursor personalizado",
+    cursorDescription:
+      "Coloca el link de una imagen para usar como cursor personalizado en tu perfil.",
+    cursorUrl: "URL de imagen del cursor",
+    cursorHelp:
+      "Recomendado: PNG, WEBP, GIF o CUR pequeño. Ideal: 32x32 o 64x64.",
     clearCursor: "Limpiar cursor",
     preview: "Preview",
-    communityTemplateName: "Template de la comunidad",
-    communityStudioBadge: "Community Studio",
-    communityStudioTitle: "Editar template de la comunidad",
-    communityStudioSubtitle:
-      "Edita tu copia personal del template que estás usando. El template público aprobado sigue intacto.",
-    loadingStudio: "Cargando editor del template...",
-    noCommunityTemplate:
-      "Solo puedes editar aquí cuando estés usando un template de la comunidad.",
-    originalBy: "Original por",
-    personalEdit: "edición personal",
-    originalVersion: "versión original",
-    saveEdit: "Guardar edición",
-    savingEdit: "Guardando edición...",
-    resetEdit: "Resetear al original",
-    loadOriginal: "Cargar original",
-    savedEdit: "✅ Edición personal guardada!",
-    resetEditSuccess: "✅ Edición reseteada al template original.",
+    studioBadge: "Community Studio",
+    studioTitle: "Editar template de la comunidad",
+    studioDescription:
+      "Personaliza el template de la comunidad que estás usando sin cambiar el original aprobado.",
+    noCommunityTemplate: "Aún no estás usando un template de la comunidad.",
+    noCommunityTemplateDesc:
+      "Elige un template aprobado en la pestaña Comunidad para desbloquear este editor.",
     loadEditorError: "❌ Error al cargar editor: ",
-    saveEditorError: "❌ Error al guardar edición: ",
-    resetEditorError: "❌ Error al resetear edición: ",
-    htmlTab: "HTML",
-    cssTab: "CSS",
-    jsTab: "JS",
-    previewTab: "Preview",
-    codeHint:
-      "Tip: usa window.ARCXNJO_PROFILE para acceder a avatar, nombre, bio, links, Discord y stats.",
-    jsWarning:
-      "JS se ejecuta aislado dentro del iframe sandbox. Úsalo solo para efectos visuales de tu propio perfil.",
+    saveStudio: "Guardar edición",
+    savingStudio: "Guardando edición...",
+    studioSaved: "✅ Edición personal guardada en tu perfil!",
+    studioSaveError: "❌ Error al guardar edición: ",
+    resetStudio: "Resetear al original",
+    resetConfirm:
+      "¿Resetear tu edición personal y volver al template original?",
+    resetDone: "✅ Edición reseteada al original.",
+    resetError: "❌ Error al resetear edición: ",
+    loadOriginal: "Cargar original",
+    editedCopy: "copia personal",
+    originalTemplate: "template original",
+    by: "por",
+    tabs: {
+      visual: "Visual",
+      media: "Medios",
+      buttons: "Botones",
+      music: "Música",
+      advanced: "Código",
+    },
+    fields: {
+      primaryColor: "Color principal",
+      secondaryColor: "Color secundario",
+      textColor: "Color del texto",
+      backgroundColor: "Color del fondo",
+      cardRadius: "Borde del card",
+      cardBlur: "Blur del card",
+      glowIntensity: "Intensidad del glow",
+      avatarSize: "Tamaño del avatar",
+      backgroundImage: "Imagen de fondo",
+      backgroundVideo: "Video de fondo",
+      backgroundOpacity: "Opacidad del fondo",
+      buttonStyle: "Estilo de botones",
+      buttonRadius: "Borde de botones",
+      buttonGlow: "Glow en botones",
+      showIcons: "Mostrar íconos",
+      buttonSize: "Tamaño de botones",
+      showMusic: "Mostrar player de música",
+      musicUrl: "Link de música",
+      musicTitle: "Nombre de la canción",
+      musicPosition: "Posición del player",
+      showCover: "Mostrar portada",
+      coverImage: "Imagen de portada",
+      showLyrics: "Preparar área de letra",
+    },
+    options: {
+      glass: "Glass",
+      solid: "Sólido",
+      outline: "Contorno",
+      minimal: "Minimal",
+      sm: "Pequeño",
+      md: "Medio",
+      lg: "Grande",
+      top: "Arriba",
+      bottom: "Abajo",
+      left: "Izquierda",
+      right: "Derecha",
+    },
+    advancedWarning:
+      "Modo avanzado: HTML/CSS/JS cambian directamente tu copia personal. Úsalo con cuidado.",
   },
 };
 
-const codeTextareaClass =
-  "min-h-[360px] w-full resize-y rounded-b-3xl border-0 bg-[#050505] px-4 py-4 font-mono text-xs leading-relaxed text-white outline-none placeholder-white/20";
+const inputClass =
+  "w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]";
+
+const codeAreaClass =
+  "min-h-[320px] w-full resize-y rounded-b-3xl border-0 bg-[#050505] px-4 py-4 font-mono text-xs leading-relaxed text-white outline-none placeholder-white/20";
+
+const mergeStudioSettings = (
+  incoming?: Partial<TemplateStudioSettings> | null,
+): TemplateStudioSettings => ({
+  ...defaultStudioSettings,
+  ...(incoming || {}),
+});
 
 export const AppearanceSettings = () => {
   const { language } = useI18n();
@@ -366,42 +554,74 @@ export const AppearanceSettings = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [customCursorUrl, setCustomCursorUrl] = useState("");
-  const [communityEditor, setCommunityEditor] = useState<CommunityEditorData | null>(null);
-  const [communityEditorLoading, setCommunityEditorLoading] = useState(false);
-  const [communitySaving, setCommunitySaving] = useState(false);
-  const [communityTab, setCommunityTab] = useState<CommunityEditorTab>("html");
-  const [communityHtml, setCommunityHtml] = useState("");
-  const [communityCss, setCommunityCss] = useState("");
-  const [communityJs, setCommunityJs] = useState("");
+
+  const [studioLoading, setStudioLoading] = useState(false);
+  const [studioSaving, setStudioSaving] = useState(false);
+  const [studioMessage, setStudioMessage] = useState("");
+  const [studioTab, setStudioTab] = useState<StudioTab>("visual");
+  const [communityEditor, setCommunityEditor] =
+    useState<CommunityEditorResponse | null>(null);
+  const [studioSettings, setStudioSettings] = useState<TemplateStudioSettings>(
+    defaultStudioSettings,
+  );
+  const [htmlCode, setHtmlCode] = useState("");
+  const [cssCode, setCssCode] = useState("");
+  const [jsCode, setJsCode] = useState("");
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
   const text = copy[language];
 
   const canUseProTemplates = plan === "pro" || ownerBypass;
-  const isCommunityTemplateSelected = selectedTemplate === "community";
+  const hasActiveCommunityTemplate = Boolean(
+    communityEditor?.hasActiveTemplate && communityEditor.template,
+  );
 
-  const fetchCommunityEditor = async (authToken = localStorage.getItem("token")) => {
+  const updateStudioSetting = <K extends keyof TemplateStudioSettings>(
+    key: K,
+    value: TemplateStudioSettings[K],
+  ) => {
+    setStudioSettings((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const fetchCommunityEditor = async () => {
     try {
-      if (!authToken) return;
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-      setCommunityEditorLoading(true);
+      setStudioLoading(true);
+      setStudioMessage("");
 
-      const response = await axios.get(`${API_URL}/api/profile/community-template/editor`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+      const response = await axios.get<CommunityEditorResponse>(
+        `${API_URL}/api/profile/community-template/editor`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
-      const data: CommunityEditorData = response.data;
-      setCommunityEditor(data);
+      const editor = response.data;
+      setCommunityEditor(editor);
 
-      if (data?.hasActiveTemplate && data.override) {
-        setCommunityHtml(data.override.html_code || "");
-        setCommunityCss(data.override.css_code || "");
-        setCommunityJs(data.override.js_code || "");
+      if (editor.hasActiveTemplate && editor.template && editor.override) {
+        setHtmlCode(
+          editor.override.html_code || editor.template.original_html_code || "",
+        );
+        setCssCode(
+          editor.override.css_code || editor.template.original_css_code || "",
+        );
+        setJsCode(
+          editor.override.js_code || editor.template.original_js_code || "",
+        );
+        setStudioSettings(mergeStudioSettings(editor.override.settings));
+      } else {
+        setHtmlCode("");
+        setCssCode("");
+        setJsCode("");
+        setStudioSettings(defaultStudioSettings);
       }
     } catch (error: any) {
-      setMessage(text.loadEditorError + (error.response?.data?.error || error.message));
+      setStudioMessage(
+        text.loadEditorError + (error.response?.data?.error || error.message),
+      );
     } finally {
-      setCommunityEditorLoading(false);
+      setStudioLoading(false);
     }
   };
 
@@ -415,16 +635,15 @@ export const AppearanceSettings = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const profileTemplate = response.data.profile_template || "neon-purple";
-
-        setSelectedTemplate(profileTemplate);
+        const template = response.data.profile_template || "neon-purple";
+        setSelectedTemplate(template);
         setSelectedEffect(response.data.profile_effect || "none");
         setPlan(response.data.plan === "pro" ? "pro" : "free");
         setOwnerBypass(Boolean(response.data.owner_bypass));
         setCustomCursorUrl(response.data.custom_cursor_url || "");
 
-        if (profileTemplate === "community") {
-          await fetchCommunityEditor(token);
+        if (template === "community") {
+          await fetchCommunityEditor();
         }
       } catch (error) {
         console.error("Error fetching appearance:", error);
@@ -433,6 +652,12 @@ export const AppearanceSettings = () => {
 
     fetchAppearance();
   }, [API_URL]);
+
+  useEffect(() => {
+    if (selectedTemplate === "community") {
+      fetchCommunityEditor();
+    }
+  }, [selectedTemplate]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -450,11 +675,15 @@ export const AppearanceSettings = () => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       setMessage(text.success);
       setTimeout(() => setMessage(""), 3000);
+
+      if (selectedTemplate === "community") {
+        await fetchCommunityEditor();
+      }
     } catch (error: any) {
       setMessage(text.error + (error.response?.data?.error || error.message));
     } finally {
@@ -462,63 +691,67 @@ export const AppearanceSettings = () => {
     }
   };
 
-  const handleSaveCommunityEdit = async () => {
-    setCommunitySaving(true);
-    setMessage("");
+  const handleSaveStudio = async () => {
+    if (!hasActiveCommunityTemplate) return;
 
     try {
       const token = localStorage.getItem("token");
+      setStudioSaving(true);
+      setStudioMessage("");
 
       await axios.put(
         `${API_URL}/api/profile/community-template/editor`,
         {
-          htmlCode: communityHtml,
-          cssCode: communityCss,
-          jsCode: communityJs,
-          settings: {},
+          htmlCode,
+          cssCode,
+          jsCode,
+          settings: studioSettings,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      setMessage(text.savedEdit);
-      await fetchCommunityEditor(token);
-      setTimeout(() => setMessage(""), 3000);
+      setStudioMessage(text.studioSaved);
+      await fetchCommunityEditor();
     } catch (error: any) {
-      setMessage(text.saveEditorError + (error.response?.data?.error || error.message));
+      setStudioMessage(
+        text.studioSaveError + (error.response?.data?.error || error.message),
+      );
     } finally {
-      setCommunitySaving(false);
+      setStudioSaving(false);
     }
   };
 
-  const handleResetCommunityEdit = async () => {
-    setCommunitySaving(true);
-    setMessage("");
+  const handleResetStudio = async () => {
+    if (!hasActiveCommunityTemplate) return;
+    if (!window.confirm(text.resetConfirm)) return;
 
     try {
       const token = localStorage.getItem("token");
+      setStudioSaving(true);
+      setStudioMessage("");
 
       await axios.delete(`${API_URL}/api/profile/community-template/editor`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setMessage(text.resetEditSuccess);
-      await fetchCommunityEditor(token);
-      setTimeout(() => setMessage(""), 3000);
+      setStudioMessage(text.resetDone);
+      await fetchCommunityEditor();
     } catch (error: any) {
-      setMessage(text.resetEditorError + (error.response?.data?.error || error.message));
+      setStudioMessage(
+        text.resetError + (error.response?.data?.error || error.message),
+      );
     } finally {
-      setCommunitySaving(false);
+      setStudioSaving(false);
     }
   };
 
-  const handleLoadOriginalCommunityCode = () => {
+  const handleLoadOriginal = () => {
     if (!communityEditor?.template) return;
 
-    setCommunityHtml(communityEditor.template.original_html_code || "");
-    setCommunityCss(communityEditor.template.original_css_code || "");
-    setCommunityJs(communityEditor.template.original_js_code || "");
+    setHtmlCode(communityEditor.template.original_html_code || "");
+    setCssCode(communityEditor.template.original_css_code || "");
+    setJsCode(communityEditor.template.original_js_code || "");
+    setStudioSettings(defaultStudioSettings);
   };
 
   const selectedTemplateData =
@@ -528,15 +761,13 @@ export const AppearanceSettings = () => {
   const selectedEffectData =
     effects.find((effect) => effect.id === selectedEffect) || effects[0];
 
-  const selectedTemplateLabel = isCommunityTemplateSelected
-    ? communityEditor?.template?.name || text.communityTemplateName
-    : selectedTemplateData.name;
-
-  const communityCodeLength = communityHtml.length + communityCss.length + communityJs.length;
-  const communityLineCount = [communityHtml, communityCss, communityJs]
-    .join("\n")
-    .split("\n")
-    .filter(Boolean).length;
+  const studioTabs: { id: StudioTab; label: string; icon: IconType }[] = [
+    { id: "visual", label: text.tabs.visual, icon: FaPaintBrush },
+    { id: "media", label: text.tabs.media, icon: FaImage },
+    { id: "buttons", label: text.tabs.buttons, icon: FaSlidersH },
+    { id: "music", label: text.tabs.music, icon: FaMusic },
+    { id: "advanced", label: text.tabs.advanced, icon: FaCode },
+  ];
 
   return (
     <div className="space-y-6">
@@ -569,220 +800,6 @@ export const AppearanceSettings = () => {
         </div>
       )}
 
-      {isCommunityTemplateSelected && (
-        <section className="overflow-hidden rounded-3xl border border-white/10 bg-black/25">
-          <div className="relative overflow-hidden border-b border-white/10 bg-[#050505] p-5 md:p-6">
-            <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.45)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] [background-size:36px_36px]" />
-            <div className="absolute right-[-120px] top-[-120px] h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
-
-            <div className="relative flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-              <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-200">
-                  <FaTerminal />
-                  {text.communityStudioBadge}
-                </div>
-
-                <h4 className="text-2xl font-black text-white">
-                  {text.communityStudioTitle}
-                </h4>
-                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/45">
-                  {text.communityStudioSubtitle}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
-                  <p className="text-lg font-black text-white">{communityLineCount}</p>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
-                    lines
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
-                  <p className="text-lg font-black text-white">{communityCodeLength}</p>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
-                    chars
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/55 px-4 py-3">
-                  <p className="text-lg font-black text-white">
-                    {communityEditor?.override?.exists ? "custom" : "base"}
-                  </p>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
-                    mode
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {communityEditorLoading ? (
-            <div className="flex items-center gap-3 p-5 text-sm text-white/45">
-              <FaSpinner className="animate-spin" />
-              {text.loadingStudio}
-            </div>
-          ) : communityEditor?.hasActiveTemplate && communityEditor.template ? (
-            <div className="grid gap-5 p-5 xl:grid-cols-[1fr_440px]">
-              <div className="space-y-4">
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-                  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                    <div className="min-w-0">
-                      <p className="truncate text-lg font-black text-white">
-                        {communityEditor.template.name}
-                      </p>
-                      <p className="mt-1 text-xs text-white/40">
-                        {text.originalBy} @{communityEditor.template.creator_username || "unknown"} ·{" "}
-                        {communityEditor.override?.exists
-                          ? text.personalEdit
-                          : text.originalVersion}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={handleLoadOriginalCommunityCode}
-                        className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-2.5 text-xs font-bold text-white/55 transition hover:border-cyan-400/25 hover:bg-cyan-500/10 hover:text-cyan-100"
-                      >
-                        <FaUndo />
-                        {text.loadOriginal}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleResetCommunityEdit}
-                        disabled={communitySaving}
-                        className="inline-flex items-center gap-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-xs font-bold text-red-200 transition hover:border-red-300/35 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <FaTrash />
-                        {text.resetEdit}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleSaveCommunityEdit}
-                        disabled={communitySaving}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-xs font-black text-black transition hover:-translate-y-0.5 hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {communitySaving ? <FaSpinner className="animate-spin" /> : <FaSave />}
-                        {communitySaving ? text.savingEdit : text.saveEdit}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#050505]">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-black/50 p-2">
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: "html" as const, label: text.htmlTab, icon: FaCode },
-                        { id: "css" as const, label: text.cssTab, icon: FaPalette },
-                        { id: "js" as const, label: text.jsTab, icon: FaTerminal },
-                        { id: "preview" as const, label: text.previewTab, icon: FaEye },
-                      ].map((tab) => {
-                        const Icon = tab.icon;
-                        const active = communityTab === tab.id;
-
-                        return (
-                          <button
-                            key={tab.id}
-                            type="button"
-                            onClick={() => setCommunityTab(tab.id)}
-                            className={`inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-black transition ${
-                              active
-                                ? "bg-white text-black"
-                                : "text-white/45 hover:bg-white/5 hover:text-white"
-                            }`}
-                          >
-                            <Icon />
-                            {tab.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
-                      sandbox editor
-                    </span>
-                  </div>
-
-                  {communityTab === "html" && (
-                    <textarea
-                      value={communityHtml}
-                      onChange={(event) => setCommunityHtml(event.target.value)}
-                      spellCheck={false}
-                      className={codeTextareaClass}
-                    />
-                  )}
-
-                  {communityTab === "css" && (
-                    <textarea
-                      value={communityCss}
-                      onChange={(event) => setCommunityCss(event.target.value)}
-                      spellCheck={false}
-                      className={codeTextareaClass}
-                    />
-                  )}
-
-                  {communityTab === "js" && (
-                    <textarea
-                      value={communityJs}
-                      onChange={(event) => setCommunityJs(event.target.value)}
-                      spellCheck={false}
-                      className={codeTextareaClass}
-                    />
-                  )}
-
-                  {communityTab === "preview" && (
-                    <div className="p-4">
-                      <CommunityTemplatePreview
-                        htmlCode={communityHtml}
-                        cssCode={communityCss}
-                        jsCode={communityJs}
-                        height="520px"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <p className="rounded-2xl border border-cyan-400/15 bg-cyan-500/10 p-3 text-xs leading-relaxed text-cyan-100/80">
-                    {text.codeHint}
-                  </p>
-
-                  <p className="rounded-2xl border border-yellow-400/15 bg-yellow-500/10 p-3 text-xs leading-relaxed text-yellow-100/80">
-                    {text.jsWarning}
-                  </p>
-                </div>
-              </div>
-
-              <aside className="space-y-4">
-                <div className="rounded-3xl border border-white/10 bg-black/35 p-4">
-                  <div className="mb-3 flex items-center gap-2 text-sm font-black text-white">
-                    <FaEye className="text-cyan-300" />
-                    {text.preview}
-                  </div>
-
-                  <CommunityTemplatePreview
-                    htmlCode={communityHtml}
-                    cssCode={communityCss}
-                    jsCode={communityJs}
-                    height="620px"
-                  />
-                </div>
-              </aside>
-            </div>
-          ) : (
-            <div className="p-5">
-              <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-white/40">
-                {text.noCommunityTemplate}
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
       <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
         <div className="mb-5 flex items-center gap-3">
           <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-white/70">
@@ -790,9 +807,11 @@ export const AppearanceSettings = () => {
           </div>
 
           <div>
-            <h4 className="text-lg font-black text-white">{text.customCursor}</h4>
+            <h4 className="text-lg font-black text-white">
+              {text.cursorTitle}
+            </h4>
             <p className="mt-1 text-sm text-white/40">
-              {text.customCursorDesc}
+              {text.cursorDescription}
             </p>
           </div>
         </div>
@@ -800,7 +819,7 @@ export const AppearanceSettings = () => {
         <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <label className="mb-2 block text-sm font-semibold text-white/85">
-              {text.cursorImageUrl}
+              {text.cursorUrl}
             </label>
 
             <input
@@ -808,12 +827,10 @@ export const AppearanceSettings = () => {
               value={customCursorUrl}
               onChange={(e) => setCustomCursorUrl(e.target.value)}
               placeholder="https://site.com/cursor.png"
-              className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]"
+              className={inputClass}
             />
 
-            <p className="mt-2 text-xs text-white/35">
-              {text.cursorHint}
-            </p>
+            <p className="mt-2 text-xs text-white/35">{text.cursorHelp}</p>
           </div>
 
           <button
@@ -855,25 +872,6 @@ export const AppearanceSettings = () => {
           <p className="mt-1 text-sm text-white/40">{text.templatesDesc}</p>
         </div>
 
-        {isCommunityTemplateSelected && (
-          <div className="mb-4 rounded-3xl border border-cyan-400/20 bg-cyan-500/10 p-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-400/15 text-cyan-100">
-                <FaLayerGroup />
-              </div>
-
-              <div>
-                <p className="text-sm font-black text-white">
-                  {text.communityTemplateName}
-                </p>
-                <p className="mt-1 text-xs text-cyan-100/60">
-                  {communityEditor?.template?.name || selectedTemplateLabel}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {templates.map((template) => {
             const isSelected = selectedTemplate === template.id;
@@ -892,8 +890,8 @@ export const AppearanceSettings = () => {
                   isSelected
                     ? "border-purple-400/50 bg-purple-500/15 shadow-[0_0_28px_rgba(168,85,247,0.18)]"
                     : isLocked
-                    ? "cursor-not-allowed border-white/5 bg-white/[0.025] opacity-55"
-                    : "border-white/10 bg-white/[0.035] hover:border-purple-400/25 hover:bg-white/[0.06]"
+                      ? "cursor-not-allowed border-white/5 bg-white/[0.025] opacity-55"
+                      : "border-white/10 bg-white/[0.035] hover:border-purple-400/25 hover:bg-white/[0.06]"
                 }`}
               >
                 <div
@@ -927,7 +925,9 @@ export const AppearanceSettings = () => {
                 </div>
 
                 <div className="p-4">
-                  <p className="text-sm font-black text-white">{template.name}</p>
+                  <p className="text-sm font-black text-white">
+                    {template.name}
+                  </p>
 
                   <p className="mt-1 text-xs leading-relaxed text-white/45">
                     {isLocked ? text.locked : template.description[language]}
@@ -936,6 +936,411 @@ export const AppearanceSettings = () => {
               </button>
             );
           })}
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-3xl border border-white/10 bg-black/25">
+        <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-br from-cyan-500/10 via-black/30 to-purple-500/10 p-5">
+          <div className="absolute right-[-90px] top-[-90px] h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl" />
+
+          <div className="relative flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-200">
+                <FaCode />
+                {text.studioBadge}
+              </div>
+
+              <h4 className="text-2xl font-black text-white">
+                {text.studioTitle}
+              </h4>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/45">
+                {text.studioDescription}
+              </p>
+            </div>
+
+            {hasActiveCommunityTemplate && communityEditor?.template && (
+              <div className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white/55">
+                <span className="font-bold text-white">
+                  {communityEditor.template.name}
+                </span>{" "}
+                <span className="text-white/30">·</span> {text.by} @
+                {communityEditor.template.creator_username || "unknown"}
+                <div className="mt-1 text-xs text-cyan-200/70">
+                  {communityEditor.override?.exists
+                    ? text.editedCopy
+                    : text.originalTemplate}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-5">
+          {studioMessage && (
+            <div
+              className={`mb-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+                studioMessage.includes("✅")
+                  ? "border-green-400/20 bg-green-500/10 text-green-200"
+                  : "border-red-400/20 bg-red-500/10 text-red-200"
+              }`}
+            >
+              {studioMessage}
+            </div>
+          )}
+
+          {studioLoading ? (
+            <div className="grid min-h-[280px] place-items-center rounded-3xl border border-white/10 bg-black/30 text-white/45">
+              <FaSpinner className="mb-3 animate-spin text-2xl" />
+              {text.saving}
+            </div>
+          ) : !hasActiveCommunityTemplate ? (
+            <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] p-8 text-center">
+              <p className="text-lg font-black text-white">
+                {text.noCommunityTemplate}
+              </p>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-white/45">
+                {text.noCommunityTemplateDesc}
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-6 2xl:grid-cols-[1fr_520px]">
+              <div className="space-y-5">
+                <div className="grid gap-2 rounded-3xl border border-white/10 bg-black/30 p-2 sm:grid-cols-5">
+                  {studioTabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = studioTab === tab.id;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setStudioTab(tab.id)}
+                        className={`inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-black transition ${
+                          isActive
+                            ? "bg-white text-black shadow-[0_0_24px_rgba(255,255,255,0.16)]"
+                            : "text-white/45 hover:bg-white/5 hover:text-white"
+                        }`}
+                      >
+                        <Icon />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {studioTab === "visual" && (
+                  <div className="grid gap-5 rounded-3xl border border-white/10 bg-black/25 p-5 md:grid-cols-2">
+                    <ColorField
+                      label={text.fields.primaryColor}
+                      value={studioSettings.primaryColor}
+                      onChange={(value) =>
+                        updateStudioSetting("primaryColor", value)
+                      }
+                    />
+                    <ColorField
+                      label={text.fields.secondaryColor}
+                      value={studioSettings.secondaryColor}
+                      onChange={(value) =>
+                        updateStudioSetting("secondaryColor", value)
+                      }
+                    />
+                    <ColorField
+                      label={text.fields.textColor}
+                      value={studioSettings.textColor}
+                      onChange={(value) =>
+                        updateStudioSetting("textColor", value)
+                      }
+                    />
+                    <ColorField
+                      label={text.fields.backgroundColor}
+                      value={studioSettings.backgroundColor}
+                      onChange={(value) =>
+                        updateStudioSetting("backgroundColor", value)
+                      }
+                    />
+                    <RangeField
+                      label={text.fields.cardRadius}
+                      value={studioSettings.cardRadius}
+                      min={0}
+                      max={56}
+                      suffix="px"
+                      onChange={(value) =>
+                        updateStudioSetting("cardRadius", value)
+                      }
+                    />
+                    <RangeField
+                      label={text.fields.cardBlur}
+                      value={studioSettings.cardBlur}
+                      min={0}
+                      max={40}
+                      suffix="px"
+                      onChange={(value) =>
+                        updateStudioSetting("cardBlur", value)
+                      }
+                    />
+                    <RangeField
+                      label={text.fields.glowIntensity}
+                      value={studioSettings.glowIntensity}
+                      min={0}
+                      max={80}
+                      suffix="%"
+                      onChange={(value) =>
+                        updateStudioSetting("glowIntensity", value)
+                      }
+                    />
+                    <RangeField
+                      label={text.fields.avatarSize}
+                      value={studioSettings.avatarSize}
+                      min={72}
+                      max={220}
+                      suffix="px"
+                      onChange={(value) =>
+                        updateStudioSetting("avatarSize", value)
+                      }
+                    />
+                  </div>
+                )}
+
+                {studioTab === "media" && (
+                  <div className="grid gap-5 rounded-3xl border border-white/10 bg-black/25 p-5">
+                    <TextField
+                      label={text.fields.backgroundImage}
+                      value={studioSettings.backgroundImage}
+                      placeholder="https://..."
+                      onChange={(value) =>
+                        updateStudioSetting("backgroundImage", value)
+                      }
+                    />
+                    <TextField
+                      label={text.fields.backgroundVideo}
+                      value={studioSettings.backgroundVideo}
+                      placeholder="https://...mp4"
+                      onChange={(value) =>
+                        updateStudioSetting("backgroundVideo", value)
+                      }
+                    />
+                    <RangeField
+                      label={text.fields.backgroundOpacity}
+                      value={studioSettings.backgroundOpacity}
+                      min={0}
+                      max={100}
+                      suffix="%"
+                      onChange={(value) =>
+                        updateStudioSetting("backgroundOpacity", value)
+                      }
+                    />
+                  </div>
+                )}
+
+                {studioTab === "buttons" && (
+                  <div className="grid gap-5 rounded-3xl border border-white/10 bg-black/25 p-5 md:grid-cols-2">
+                    <SelectField
+                      label={text.fields.buttonStyle}
+                      value={studioSettings.buttonStyle}
+                      options={[
+                        ["glass", text.options.glass],
+                        ["solid", text.options.solid],
+                        ["outline", text.options.outline],
+                        ["minimal", text.options.minimal],
+                      ]}
+                      onChange={(value) =>
+                        updateStudioSetting(
+                          "buttonStyle",
+                          value as TemplateStudioSettings["buttonStyle"],
+                        )
+                      }
+                    />
+                    <SelectField
+                      label={text.fields.buttonSize}
+                      value={studioSettings.buttonSize}
+                      options={[
+                        ["sm", text.options.sm],
+                        ["md", text.options.md],
+                        ["lg", text.options.lg],
+                      ]}
+                      onChange={(value) =>
+                        updateStudioSetting(
+                          "buttonSize",
+                          value as TemplateStudioSettings["buttonSize"],
+                        )
+                      }
+                    />
+                    <RangeField
+                      label={text.fields.buttonRadius}
+                      value={studioSettings.buttonRadius}
+                      min={0}
+                      max={42}
+                      suffix="px"
+                      onChange={(value) =>
+                        updateStudioSetting("buttonRadius", value)
+                      }
+                    />
+                    <ToggleField
+                      label={text.fields.buttonGlow}
+                      checked={studioSettings.buttonGlow}
+                      onChange={(value) =>
+                        updateStudioSetting("buttonGlow", value)
+                      }
+                    />
+                    <ToggleField
+                      label={text.fields.showIcons}
+                      checked={studioSettings.showIcons}
+                      onChange={(value) =>
+                        updateStudioSetting("showIcons", value)
+                      }
+                    />
+                  </div>
+                )}
+
+                {studioTab === "music" && (
+                  <div className="grid gap-5 rounded-3xl border border-white/10 bg-black/25 p-5 md:grid-cols-2">
+                    <ToggleField
+                      label={text.fields.showMusic}
+                      checked={studioSettings.showMusic}
+                      onChange={(value) =>
+                        updateStudioSetting("showMusic", value)
+                      }
+                    />
+                    <SelectField
+                      label={text.fields.musicPosition}
+                      value={studioSettings.musicPosition}
+                      options={[
+                        ["top", text.options.top],
+                        ["bottom", text.options.bottom],
+                        ["left", text.options.left],
+                        ["right", text.options.right],
+                      ]}
+                      onChange={(value) =>
+                        updateStudioSetting(
+                          "musicPosition",
+                          value as TemplateStudioSettings["musicPosition"],
+                        )
+                      }
+                    />
+                    <TextField
+                      label={text.fields.musicTitle}
+                      value={studioSettings.musicTitle}
+                      placeholder="staying alive"
+                      onChange={(value) =>
+                        updateStudioSetting("musicTitle", value)
+                      }
+                    />
+                    <TextField
+                      label={text.fields.musicUrl}
+                      value={studioSettings.musicUrl}
+                      placeholder="https://...mp3"
+                      onChange={(value) =>
+                        updateStudioSetting("musicUrl", value)
+                      }
+                    />
+                    <ToggleField
+                      label={text.fields.showCover}
+                      checked={studioSettings.showCover}
+                      onChange={(value) =>
+                        updateStudioSetting("showCover", value)
+                      }
+                    />
+                    <TextField
+                      label={text.fields.coverImage}
+                      value={studioSettings.coverImage}
+                      placeholder="https://...jpg"
+                      onChange={(value) =>
+                        updateStudioSetting("coverImage", value)
+                      }
+                    />
+                    <ToggleField
+                      label={text.fields.showLyrics}
+                      checked={studioSettings.showLyrics}
+                      onChange={(value) =>
+                        updateStudioSetting("showLyrics", value)
+                      }
+                    />
+                  </div>
+                )}
+
+                {studioTab === "advanced" && (
+                  <div className="space-y-5">
+                    <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/10 px-4 py-3 text-sm font-semibold text-yellow-100">
+                      {text.advancedWarning}
+                    </div>
+                    <CodeEditor
+                      label="index.html"
+                      value={htmlCode}
+                      onChange={setHtmlCode}
+                    />
+                    <CodeEditor
+                      label="style.css"
+                      value={cssCode}
+                      onChange={setCssCode}
+                    />
+                    <CodeEditor
+                      label="script.js"
+                      value={jsCode}
+                      onChange={setJsCode}
+                    />
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 sm:flex-row sm:justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={handleLoadOriginal}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-bold text-white/60 transition hover:border-cyan-400/25 hover:bg-cyan-500/10 hover:text-cyan-100"
+                    >
+                      <FaSyncAlt />
+                      {text.loadOriginal}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleResetStudio}
+                      disabled={studioSaving}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200 transition hover:border-red-300/35 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <FaUndo />
+                      {text.resetStudio}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveStudio}
+                    disabled={studioSaving}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {studioSaving ? (
+                      <FaSpinner className="animate-spin" />
+                    ) : (
+                      <FaSave />
+                    )}
+                    {studioSaving ? text.savingStudio : text.saveStudio}
+                  </button>
+                </div>
+              </div>
+
+              <aside className="space-y-4">
+                <div className="sticky top-24 rounded-3xl border border-white/10 bg-black/25 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-sm font-black text-white">
+                      {text.preview}
+                    </p>
+                    <span className="rounded-full border border-green-400/20 bg-green-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-200">
+                      sandbox
+                    </span>
+                  </div>
+
+                  <CommunityTemplatePreview
+                    htmlCode={htmlCode}
+                    cssCode={cssCode}
+                    jsCode={jsCode}
+                    height="560px"
+                    templateSettings={studioSettings}
+                  />
+                </div>
+              </aside>
+            </div>
+          )}
         </div>
       </section>
 
@@ -994,7 +1399,7 @@ export const AppearanceSettings = () => {
             <p className="text-sm font-bold text-white">{text.currentStyle}</p>
 
             <p className="mt-1 text-xs text-white/40">
-              {text.template}: {selectedTemplateLabel} · {text.effect}:{" "}
+              {text.template}: {selectedTemplateData.name} · {text.effect}:{" "}
               {selectedEffectData.name[language]}
             </p>
           </div>
@@ -1013,3 +1418,177 @@ export const AppearanceSettings = () => {
     </div>
   );
 };
+
+type FieldProps = {
+  label: string;
+};
+
+const ColorField = ({
+  label,
+  value,
+  onChange,
+}: FieldProps & { value: string; onChange: (value: string) => void }) => (
+  <label className="block">
+    <span className="mb-2 block text-sm font-semibold text-white/85">
+      {label}
+    </span>
+    <div className="flex gap-3">
+      <input
+        type="color"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-12 w-14 shrink-0 cursor-pointer rounded-2xl border border-white/10 bg-black/35 p-1"
+      />
+      <input
+        type="text"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={inputClass}
+      />
+    </div>
+  </label>
+);
+
+const RangeField = ({
+  label,
+  value,
+  min,
+  max,
+  suffix,
+  onChange,
+}: FieldProps & {
+  value: number;
+  min: number;
+  max: number;
+  suffix: string;
+  onChange: (value: number) => void;
+}) => (
+  <label className="block">
+    <span className="mb-2 flex items-center justify-between gap-3 text-sm font-semibold text-white/85">
+      {label}
+      <span className="text-xs text-white/35">
+        {value}
+        {suffix}
+      </span>
+    </span>
+    <input
+      type="range"
+      min={min}
+      max={max}
+      value={value}
+      onChange={(event) => onChange(Number(event.target.value))}
+      className="w-full accent-purple-500"
+    />
+  </label>
+);
+
+const TextField = ({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: FieldProps & {
+  value: string;
+  placeholder?: string;
+  onChange: (value: string) => void;
+}) => (
+  <label className="block">
+    <span className="mb-2 block text-sm font-semibold text-white/85">
+      {label}
+    </span>
+    <input
+      type="text"
+      value={value}
+      placeholder={placeholder}
+      onChange={(event) => onChange(event.target.value)}
+      className={inputClass}
+    />
+  </label>
+);
+
+const SelectField = ({
+  label,
+  value,
+  options,
+  onChange,
+}: FieldProps & {
+  value: string;
+  options: [string, string][];
+  onChange: (value: string) => void;
+}) => (
+  <label className="block">
+    <span className="mb-2 block text-sm font-semibold text-white/85">
+      {label}
+    </span>
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className={inputClass}
+    >
+      {options.map(([optionValue, optionLabel]) => (
+        <option key={optionValue} value={optionValue}>
+          {optionLabel}
+        </option>
+      ))}
+    </select>
+  </label>
+);
+
+const ToggleField = ({
+  label,
+  checked,
+  onChange,
+}: FieldProps & { checked: boolean; onChange: (value: boolean) => void }) => (
+  <button
+    type="button"
+    onClick={() => onChange(!checked)}
+    className={`flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-left transition ${
+      checked
+        ? "border-purple-400/40 bg-purple-500/15 text-white"
+        : "border-white/10 bg-black/30 text-white/55 hover:border-white/20"
+    }`}
+  >
+    <span className="text-sm font-semibold">{label}</span>
+    <span
+      className={`relative h-6 w-11 rounded-full transition ${
+        checked ? "bg-purple-500" : "bg-white/15"
+      }`}
+    >
+      <span
+        className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
+          checked ? "left-6" : "left-1"
+        }`}
+      />
+    </span>
+  </button>
+);
+
+const CodeEditor = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) => (
+  <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#050505]">
+    <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-white/50">
+        <FaCode />
+        {label}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />
+        <span className="h-2.5 w-2.5 rounded-full bg-yellow-300/80" />
+        <span className="h-2.5 w-2.5 rounded-full bg-green-400/80" />
+      </div>
+    </div>
+    <textarea
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      spellCheck={false}
+      className={codeAreaClass}
+    />
+  </div>
+);

@@ -1863,6 +1863,7 @@ app.get('/api/profile/:username', async (req, res) => {
           COALESCE(NULLIF(ucto.html_code, ''), ct.html_code) AS html_code,
           COALESCE(ucto.css_code, ct.css_code) AS css_code,
           COALESCE(ucto.js_code, ct.js_code) AS js_code,
+          COALESCE(ucto.settings, '{}'::jsonb) AS template_settings,
           ct.status,
           ct.is_public,
           ct.created_at,
