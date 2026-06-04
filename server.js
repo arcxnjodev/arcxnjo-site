@@ -2177,18 +2177,26 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
   }
 
   try {
-    await pool.query(
-      `UPDATE user_profiles
-       SET profile_template = $1,
-           profile_effect = $2,
-           custom_cursor_url = $3,
-           community_template_id = CASE
-             WHEN $1::varchar = 'community' THEN community_template_id
-             ELSE NULL
-           END
-       WHERE user_id = $4`,
-      [profileTemplate, profileEffect, cleanCustomCursorUrl, req.userId]
-    );
+   const keepCommunityTemplate = profileTemplate === 'community';
+
+await pool.query(
+  `UPDATE user_profiles
+   SET profile_template = $1::varchar,
+       profile_effect = $2::varchar,
+       custom_cursor_url = $3::text,
+       community_template_id = CASE
+         WHEN $5 THEN community_template_id
+         ELSE NULL
+       END
+   WHERE user_id = $4::integer`,
+  [
+    profileTemplate,
+    profileEffect,
+    cleanCustomCursorUrl,
+    req.userId,
+    keepCommunityTemplate,
+  ]
+);
 
     return res.json({ message: 'Appearance updated successfully!' });
   } catch (error) {
