@@ -305,25 +305,6 @@ export const MusicSettings = () => {
             </div>
 
             <button
-              onClick={async () => {
-                const token = localStorage.getItem("token");
-
-                const response = await axios.get(
-                  `${API_URL}/api/spotify/auth`,
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                    },
-                  }
-                );
-
-                window.location.href = response.data.url;
-              }}
-            >
-              Connect Spotify
-            </button>
-
-            <button
               type="submit"
               disabled={loading || uploadingMusic}
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"

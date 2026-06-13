@@ -42,9 +42,6 @@ const pool = new Pool({
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu_secret_jwt_2024';
-const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-const SPOTIFY_REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI;
 
 const allowedFileTypes = [
   'image/jpeg',
@@ -641,128 +638,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-/* =========================================================
-   login spotify
-========================================================= */
-
-app.get('/api/spotify/auth', authenticateToken, async (req, res) => {
-  const scope =
-    'user-read-currently-playing user-read-playback-state';
-
-  const state = jwt.sign(
-    { userId: req.userId },
-    JWT_SECRET,
-    { expiresIn: '10m' }
-  );
-
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: SPOTIFY_CLIENT_ID,
-    scope,
-    redirect_uri: SPOTIFY_REDIRECT_URI,
-    state,
-  });
-
-  res.json({
-    url: `https://accounts.spotify.com/authorize?${params}`,
-  });
-});
-
-/* =========================================================
-   callback spotify
-========================================================= */
-
-app.get('/api/spotify/callback', async (req, res) => {
-  const { code, state } = req.query;
-
-  try {
-    const decoded = jwt.verify(state, JWT_SECRET);
-
-    const tokenResponse = await axios.post(
-      'https://accounts.spotify.com/api/token',
-      new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: SPOTIFY_REDIRECT_URI,
-      }),
-      {
-        headers: {
-          Authorization:
-            'Basic ' +
-            Buffer.from(
-              `${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`
-            ).toString('base64'),
-          'Content-Type':
-            'application/x-www-form-urlencoded',
-        },
-      }
-    );
-
-    const {
-      access_token,
-      refresh_token,
-    } = tokenResponse.data;
-
-    await pool.query(
-      `
-      UPDATE users
-      SET spotify_connected = true,
-          spotify_access_token = $1,
-          spotify_refresh_token = $2
-      WHERE id = $3
-      `,
-      [
-        access_token,
-        refresh_token,
-        decoded.userId,
-      ]
-    );
-
-    return res.redirect(
-      'https://arcxnjo.com.br/admin?spotify=connected'
-    );
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send('Spotify connection failed');
-  }
-});
-
-app.get(
-  '/api/spotify/current',
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const result = await pool.query(
-        `
-        SELECT spotify_access_token
-        FROM users
-        WHERE id = $1
-        `,
-        [req.userId]
-      );
-
-      const token =
-        result.rows[0]?.spotify_access_token;
-
-      if (!token) {
-        return res.json(null);
-      }
-
-      const spotify = await axios.get(
-        'https://api.spotify.com/v1/me/player/currently-playing',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      return res.json(spotify.data);
-    } catch (error) {
-      return res.json(null);
-    }
-  }
-);
 
 /* =========================================================
    STRIPE CHECKOUT
@@ -1168,15 +1043,6 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     const userId = decodedState.userId;
 
     await saveDiscordProfileMetadata(userId, discordUser);
-
-    if (discordClient?.isReady()) {
-      try {
-        const fetchedUser = await discordClient.users.fetch(discordUser.id);
-        discordUserCache.set(discordUser.id, normalizeDiscordUser(fetchedUser));
-      } catch (error) {
-        console.error('Discord user cache after OAuth error:', error.message);
-      }
-    }
 
     const frontendUrl = process.env.FRONTEND_URL || 'https://arcxnjo.com.br';
 
