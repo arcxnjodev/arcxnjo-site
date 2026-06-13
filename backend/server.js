@@ -132,13 +132,136 @@ function normalizeSpotify(activity) {
     albumArtUrl = null;
   }
 
+  const start = activity.timestamps?.start
+    ? new Date(activity.timestamps.start).getTime()
+    : null;
+
+  const end = activity.timestamps?.end
+    ? new Date(activity.timestamps.end).getTime()
+    : null;
+
   return {
     song: activity.details || '',
     artist: activity.state || '',
     album: activity.assets?.largeText || '',
     album_art_url: albumArtUrl,
+    timestamps: { start, end },
   };
 }
+
+/* =========================================================
+   LYRICS (lrclib.net)
+========================================================= */
+
+const lyricsCache = new Map();
+const LYRICS_CACHE_TTL = 1000 * 60 * 60; // 1 hora
+const LYRICS_CACHE_MAX = 200;
+
+function getLyricsCache(key) {
+  const entry = lyricsCache.get(key);
+  if (!entry) return undefined;
+
+  if (Date.now() - entry.cachedAt > LYRICS_CACHE_TTL) {
+    lyricsCache.delete(key);
+    return undefined;
+  }
+
+  return entry.value;
+}
+
+function setLyricsCache(key, value) {
+  if (lyricsCache.size >= LYRICS_CACHE_MAX) {
+    const oldestKey = lyricsCache.keys().next().value;
+    lyricsCache.delete(oldestKey);
+  }
+
+  lyricsCache.set(key, { value, cachedAt: Date.now() });
+}
+
+app.get('/api/lyrics', async (req, res) => {
+  const track = String(req.query.track || '').trim();
+  const artist = String(req.query.artist || '').trim();
+  const album = String(req.query.album || '').trim();
+  const duration = req.query.duration ? Number(req.query.duration) : null;
+
+  if (!track || !artist) {
+    return res.status(400).json({ error: 'track e artist são obrigatórios' });
+  }
+
+  const cacheKey = `${track.toLowerCase()}::${artist.toLowerCase()}::${album.toLowerCase()}::${duration || ''}`;
+
+  const cached = getLyricsCache(cacheKey);
+  if (cached !== undefined) {
+    return res.json(cached);
+  }
+
+  const lrclibHeaders = {
+    'User-Agent': 'arcxnjo.com.br (https://arcxnjo.com.br)',
+  };
+
+  try {
+    const params = {
+      track_name: track,
+      artist_name: artist,
+    };
+
+    if (album) params.album_name = album;
+    if (duration && Number.isFinite(duration)) {
+      params.duration = Math.round(duration);
+    }
+
+    let lyricsData = null;
+
+    try {
+      const getResponse = await axios.get('https://lrclib.net/api/get', {
+        params,
+        headers: lrclibHeaders,
+      });
+
+      lyricsData = getResponse.data;
+    } catch (getError) {
+      if (getError.response?.status !== 404) {
+        throw getError;
+      }
+    }
+
+    if (!lyricsData) {
+      const searchResponse = await axios.get('https://lrclib.net/api/search', {
+        params: {
+          track_name: track,
+          artist_name: artist,
+        },
+        headers: lrclibHeaders,
+      });
+
+      const results = Array.isArray(searchResponse.data) ? searchResponse.data : [];
+
+      lyricsData =
+        results.find(
+          (item) =>
+            !duration || Math.abs((item.duration || 0) - duration) <= 2
+        ) || results[0] || null;
+    }
+
+    const payload = lyricsData
+      ? {
+          found: true,
+          instrumental: Boolean(lyricsData.instrumental),
+          syncedLyrics: lyricsData.syncedLyrics || null,
+          plainLyrics: lyricsData.plainLyrics || null,
+          trackName: lyricsData.trackName || track,
+          artistName: lyricsData.artistName || artist,
+        }
+      : { found: false };
+
+    setLyricsCache(cacheKey, payload);
+
+    return res.json(payload);
+  } catch (error) {
+    console.error('Lyrics fetch error:', error.response?.data || error.message);
+    return res.status(500).json({ error: 'Falha ao buscar letra da música' });
+  }
+});
 
 function savePresence(presence) {
   if (!presence?.userId) return;

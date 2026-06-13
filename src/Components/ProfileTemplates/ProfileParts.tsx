@@ -17,6 +17,7 @@ import {
   socialIcons,
 } from "./profileUtils";
 import type { GuestbookEntry, ProfileData, TemplateStyle } from "./types";
+import { LyricsDisplay } from "./LyricsDisplay";
 
 export const BackgroundLayer = ({
   data,
@@ -610,27 +611,31 @@ export const DiscordProfileCard = ({
       </div>
 
       {discordData.spotify ? (
-        <div className="mt-4 flex items-center gap-3 rounded-xl bg-black/20 p-3">
-          {discordData.spotify.album_art_url && (
-            <img
-              src={discordData.spotify.album_art_url}
-              alt={discordData.spotify.song}
-              className="h-11 w-11 rounded-lg object-cover"
-            />
-          )}
+  <>
+    <div className="mt-4 flex items-center gap-3 rounded-xl bg-black/20 p-3">
+      {discordData.spotify.album_art_url && (
+        <img
+          src={discordData.spotify.album_art_url}
+          alt={discordData.spotify.song}
+          className="h-11 w-11 rounded-lg object-cover"
+        />
+      )}
 
-          <div className="min-w-0">
-            <p className="text-xs text-white/50">{t("profile.listeningSpotify")}</p>
+      <div className="min-w-0">
+        <p className="text-xs text-white/50">{t("profile.listeningSpotify")}</p>
 
-            <p className="mt-1 truncate text-sm font-semibold text-white">
-              {discordData.spotify.song}
-            </p>
+        <p className="mt-1 truncate text-sm font-semibold text-white">
+          {discordData.spotify.song}
+        </p>
 
-            <p className="truncate text-xs text-white/60">
-              {discordData.spotify.artist}
-            </p>
-          </div>
-        </div>
+        <p className="truncate text-xs text-white/60">
+          {discordData.spotify.artist}
+        </p>
+      </div>
+    </div>
+
+      <LyricsDisplay spotify={discordData.spotify} />
+  </>
       ) : activeDiscordActivity ? (
         <div className="mt-4 rounded-xl bg-black/20 p-3">
           <p className="text-xs text-white/50">{t("profile.activity")}</p>
