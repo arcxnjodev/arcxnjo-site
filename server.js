@@ -2164,6 +2164,8 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
     'red-glow',
     'blue-ice',
     'pro-scroll',
+    'sleek',
+    'grid',
     'community',
   ];
 
