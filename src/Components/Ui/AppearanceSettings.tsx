@@ -174,6 +174,26 @@ const templates: TemplateDef[] = [
     preview: "from-black via-zinc-950 to-white/20",
     proOnly: true,
   },
+  {
+    id: "sleek",
+    name: "Sleek",
+    description: {
+      pt: "Layout horizontal com foto grande e info ao lado.",
+      en: "Horizontal layout with large photo and info beside it.",
+      es: "Layout horizontal con foto grande e info al lado.",
+    },
+    preview: "from-zinc-900 to-black",
+  },
+  {
+    id: "grid",
+    name: "Grid",
+    description: {
+      pt: "Cards em grade com banner interno e seções separadas.",
+      en: "Grid cards with inner banner and separated sections.",
+      es: "Cards en grilla con banner interno y secciones separadas.",
+    },
+    preview: "from-neutral-900 to-zinc-950",
+  },
 ];
 
 const effects: {

@@ -4,6 +4,8 @@ import { useI18n } from "../i18n/i18nProvider";
 import { CommunityProfileTemplate } from "./ProfileTemplates/CommunityProfileTemplate";
 import { DefaultProfileTemplate } from "./ProfileTemplates/DefaultProfileTemplate";
 import { ProScrollTemplate } from "./ProfileTemplates/ProScrollTemplate";
+import { SleekTemplate } from "./ProfileTemplates/SleekTemplate";
+import { GridTemplate } from "./ProfileTemplates/GridTemplate";
 import type { ProfileData } from "./ProfileTemplates/types";
 
 export const UserPanel = () => {
@@ -100,6 +102,28 @@ export const UserPanel = () => {
   if (templateId === "pro-scroll") {
     return (
       <ProScrollTemplate
+        data={data}
+        username={username}
+        apiUrl={API_URL}
+        discordData={discordData}
+      />
+    );
+  }
+
+  if (templateId === "sleek") {
+    return (
+      <SleekTemplate
+        data={data}
+        username={username}
+        apiUrl={API_URL}
+        discordData={discordData}
+      />
+    );
+  }
+
+  if (templateId === "grid") {
+    return (
+      <GridTemplate
         data={data}
         username={username}
         apiUrl={API_URL}

@@ -225,6 +225,44 @@ export const profileTemplates: Record<string, TemplateStyle> = {
     guestbookForm:
       "bg-black/55 backdrop-blur-2xl shadow-[0_12px_48px_rgba(0,0,0,0.55)]",
   },
+  "sleek": {
+    overlay: "bg-black/25",
+    card: "bg-white/5 shadow-xl backdrop-blur-xl border border-white/10",
+    avatar: "border-white/10 shadow-lg",
+    username: "text-white",
+    handle: "text-white/40",
+    bio: "text-white/70",
+    views: "text-white/30",
+    icon: "hover:text-white hover:bg-white/10",
+    audioButton:
+      "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
+    audioPanel:
+      "bg-black/25 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+    sliderAccent: "accent-white",
+    infoCard: "bg-white/8",
+    infoIcon: "text-white",
+    guestbookForm:
+      "bg-black/30 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+  },
+  "grid": {
+    overlay: "bg-black/30",
+    card: "bg-white/5 shadow-xl backdrop-blur-xl border border-white/10",
+    avatar: "border-white/10 shadow-lg",
+    username: "text-white",
+    handle: "text-white/35",
+    bio: "text-white/65",
+    views: "text-white/25",
+    icon: "hover:text-white hover:bg-white/10",
+    audioButton:
+      "bg-black/15 hover:bg-black/20 text-white backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.28)]",
+    audioPanel:
+      "bg-black/25 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+    sliderAccent: "accent-white",
+    infoCard: "bg-white/8",
+    infoIcon: "text-white",
+    guestbookForm:
+      "bg-black/30 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+  },
 };
 
 export const getTemplateStyle = (templateId?: string) => {
