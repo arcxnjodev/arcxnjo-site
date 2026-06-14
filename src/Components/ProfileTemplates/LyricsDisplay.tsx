@@ -5,6 +5,7 @@ type SpotifyInfo = {
   song?: string;
   artist?: string;
   album?: string;
+  album_art_url?: string | null;
   timestamps?: {
     start?: number | null;
     end?: number | null;
@@ -12,7 +13,7 @@ type SpotifyInfo = {
 };
 
 type LyricLine = {
-  time: number; // segundos
+  time: number;
   text: string;
 };
 
@@ -25,13 +26,11 @@ type LyricsResponse = {
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
-// Parseia o formato LRC: [mm:ss.xx]texto da linha
 function parseSyncedLyrics(synced: string): LyricLine[] {
   const lines: LyricLine[] = [];
 
   for (const rawLine of synced.split("\n")) {
     const match = rawLine.match(/\[(\d{2}):(\d{2})(?:[.:](\d{1,3}))?\](.*)/);
-
     if (!match) continue;
 
     const minutes = Number(match[1]);
@@ -41,10 +40,7 @@ function parseSyncedLyrics(synced: string): LyricLine[] {
 
     if (!text) continue;
 
-    lines.push({
-      time: minutes * 60 + seconds + fraction,
-      text,
-    });
+    lines.push({ time: minutes * 60 + seconds + fraction, text });
   }
 
   return lines.sort((a, b) => a.time - b.time);
@@ -70,10 +66,10 @@ export const LyricsDisplay = ({
   const song = spotify?.song || "";
   const artist = spotify?.artist || "";
   const album = spotify?.album || "";
+  const albumArt = spotify?.album_art_url || null;
   const start = spotify?.timestamps?.start || null;
   const end = spotify?.timestamps?.end || null;
 
-  // Busca a letra quando a música muda
   useEffect(() => {
     setLines(null);
     setPlainLyrics(null);
@@ -87,13 +83,8 @@ export const LyricsDisplay = ({
       setLoading(true);
 
       try {
-        const params = new URLSearchParams({
-          track: song,
-          artist,
-        });
-
+        const params = new URLSearchParams({ track: song, artist });
         if (album) params.set("album", album);
-
         if (start && end && end > start) {
           params.set("duration", String(Math.round((end - start) / 1000)));
         }
@@ -103,10 +94,7 @@ export const LyricsDisplay = ({
         });
 
         const data: LyricsResponse = await response.json();
-
-        if (!data.found || data.instrumental) {
-          return;
-        }
+        if (!data.found || data.instrumental) return;
 
         if (data.syncedLyrics) {
           setLines(parseSyncedLyrics(data.syncedLyrics));
@@ -123,43 +111,41 @@ export const LyricsDisplay = ({
     };
 
     fetchLyrics();
-
     return () => controller.abort();
   }, [song, artist, album, start, end]);
 
-  // Atualiza a linha ativa com base no progresso da música
   useEffect(() => {
     if (!lines || !start) return;
 
     const updateActiveLine = () => {
       const elapsed = (Date.now() - start) / 1000;
-
       let index = -1;
       for (let i = 0; i < lines.length; i++) {
-        if (lines[i].time <= elapsed) {
-          index = i;
-        } else {
-          break;
-        }
+        if (lines[i].time <= elapsed) index = i;
+        else break;
       }
-
       setActiveIndex(index);
     };
 
     updateActiveLine();
-
     const interval = window.setInterval(updateActiveLine, 500);
-
     return () => window.clearInterval(interval);
   }, [lines, start]);
 
-  // Auto-scroll para manter a linha ativa visível
+  // Auto-scroll só dentro do container
   useEffect(() => {
     if (activeLineRef.current && containerRef.current) {
-      activeLineRef.current.scrollIntoView({
-        block: "center",
-        behavior: "smooth",
-      });
+      const container = containerRef.current;
+      const line = activeLineRef.current;
+      const containerTop = container.scrollTop;
+      const containerBottom = containerTop + container.clientHeight;
+      const lineTop = line.offsetTop;
+      const lineBottom = lineTop + line.clientHeight;
+
+      if (lineTop < containerTop || lineBottom > containerBottom) {
+        container.scrollTop =
+          lineTop - container.clientHeight / 2 + line.clientHeight / 2;
+      }
     }
   }, [activeIndex]);
 
@@ -168,32 +154,81 @@ export const LyricsDisplay = ({
   if (!lines && !plainLyrics) return null;
 
   return (
-    <div className={`mt-3 rounded-xl bg-black/20 p-3 ${className}`}>
-      <p className="mb-2 text-xs text-white/50">{t("profile.lyrics")}</p>
+    <div className={`overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md ${className}`}>
 
+      {/* Header com capa e info */}
+      <div className="flex items-center gap-3 border-b border-white/10 p-4">
+        {albumArt ? (
+          <img
+            src={albumArt}
+            alt={album || song}
+            className="h-12 w-12 rounded-xl object-cover shadow-lg"
+          />
+        ) : (
+          <div className="grid h-12 w-12 place-items-center rounded-xl bg-white/10">
+            <svg className="h-5 w-5 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+            </svg>
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold text-white">{song}</p>
+          <p className="truncate text-xs text-white/50">{artist}</p>
+        </div>
+
+        <span className="shrink-0 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/40">
+          {t("profile.lyrics")}
+        </span>
+      </div>
+
+      {/* Letras */}
       {lines ? (
         <div
           ref={containerRef}
-          
+          className="max-h-64 overflow-y-auto px-4 py-4 text-center"
+          style={{ scrollbarWidth: "none" }}
         >
-          {lines.map((line, index) => (
-            <p
-              key={index}
-              ref={index === activeIndex ? activeLineRef : null}
-              className={`truncate text-[15px] transition-all duration-300 ${
-                index === activeIndex
-                  ? "font-semibold text-white"
-                  : "text-white/35"
-              }`}
-            >
-              {line.text}
-            </p>
-          ))}
+          <style>{`div::-webkit-scrollbar { display: none; }`}</style>
+          {lines.map((line, index) => {
+            const isActive = index === activeIndex;
+            const isPast = index < activeIndex;
+
+            return (
+              <p
+                key={index}
+                ref={isActive ? activeLineRef : null}
+                className="mb-3 leading-snug transition-all duration-500"
+                style={{
+                  fontSize: isActive ? "1.15rem" : "0.95rem",
+                  fontWeight: isActive ? 800 : 500,
+                  color: isActive
+                    ? "rgba(255,255,255,1)"
+                    : isPast
+                    ? "rgba(255,255,255,0.25)"
+                    : "rgba(255,255,255,0.18)",
+                  textShadow: isActive
+                    ? "0 0 24px rgba(255,255,255,0.5), 0 0 48px rgba(255,255,255,0.2)"
+                    : "none",
+                  transform: isActive ? "scale(1.04)" : "scale(1)",
+                  letterSpacing: isActive ? "0.01em" : "normal",
+                }}
+              >
+                {line.text}
+              </p>
+            );
+          })}
         </div>
       ) : (
-        <div className="text-[15px] text-white/60">
+        <div
+          className="max-h-64 overflow-y-auto px-4 py-4 text-center"
+          style={{ scrollbarWidth: "none" }}
+        >
           {plainLyrics?.split("\n").map((line, index) => (
-            <p key={index} className="leading-relaxed">
+            <p
+              key={index}
+              className="mb-2 text-[15px] leading-relaxed text-white/55"
+            >
               {line || "\u00A0"}
             </p>
           ))}
