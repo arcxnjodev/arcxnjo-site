@@ -504,69 +504,17 @@ return (
             id="pro-music"
             className="mx-auto flex min-h-screen max-w-4xl items-center px-4 py-16"
           >
-            <div className="w-full rounded-[2rem] border border-white/10 bg-black/45 p-5 shadow-[0_25px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:p-8">
-              <div className="mb-6 flex items-center gap-4">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-white">
-                  <FaMusic className="text-xl" />
-                </div>
-
-                <div className="min-w-0">
-                  <p className="truncate text-2xl font-black text-white">
-                    {playingTitle}
-                  </p>
-
-                  <p className="truncate text-sm text-white/55">{playingArtist}</p>
-                </div>
-              </div>
-
-              {hasMusic ? (
-                <div className="mb-6 rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-center text-sm font-semibold text-white/65">
-                  Music starts after CLICK TO ENTER
-                </div>
+            <div className="w-full">
+              {discordData?.spotify ? (
+                <LyricsDisplay spotify={discordData.spotify} />
               ) : (
-                <div className="mb-6 rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-center text-sm font-semibold text-white/35">
-                  No profile music
+                <div className="rounded-[2rem] border border-white/10 bg-black/45 p-8 text-center backdrop-blur-2xl">
+                  <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-white">
+                    <FaMusic className="text-xl" />
+                  </div>
+                  <p className="text-sm font-semibold text-white/35">No profile music</p>
                 </div>
               )}
-
-              <div className="rounded-3xl border border-white/10 bg-black/35 p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/40">
-                      now playing
-                    </p>
-
-                    <p className="mt-2 max-w-[260px] truncate text-sm font-semibold text-white/70">
-                      {playingTitle}
-                    </p>
-                  </div>
-
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
-                    live
-                  </span>
-                </div>
-
-                <div className="mt-6 flex h-24 items-end justify-center gap-1.5 overflow-hidden rounded-2xl bg-black/25 px-4 py-4">
-                  {Array.from({ length: 28 }).map((_, index) => (
-                    <span
-                      key={index}
-                      className="w-1.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.55)]"
-                      style={{
-                        height: `${18 + ((index * 13) % 72)}%`,
-                        opacity: 0.35 + ((index % 5) * 0.12),
-                        animation: `arcxnjoEqualizer ${
-                          0.7 + (index % 6) * 0.12
-                        }s ease-in-out infinite`,
-                        animationDelay: `${index * 0.045}s`,
-                      }}
-                    />
-                  ))}
-                </div>
-
-                {discordData?.spotify && (
-                  <LyricsDisplay spotify={discordData.spotify} className="mt-4" />
-                )}
-              </div>
             </div>
           </section>
         </main>
