@@ -2307,11 +2307,27 @@ app.post(
 
       const uploadToCloudinary = () => {
         return new Promise((resolve, reject) => {
+          const options = {
+            folder: 'arcxnjo/profile-media',
+            resource_type: 'auto',
+          };
+
+          if (isVideo) {
+            Object.assign(options, {
+              video_codec: 'auto',
+              bit_rate: '2500k',
+              quality: 'auto:best',
+            });
+          } else {
+            Object.assign(options, {
+              quality: 95,
+              fetch_format: 'auto',
+              flags: 'preserve_transparency',
+            });
+          }
+
           const stream = cloudinary.uploader.upload_stream(
-            {
-              folder: 'arcxnjo/profile-media',
-              resource_type: 'auto',
-            },
+            options,
             (error, result) => {
               if (error) return reject(error);
               resolve(result);

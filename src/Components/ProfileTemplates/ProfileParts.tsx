@@ -18,6 +18,7 @@ import {
 } from "./profileUtils";
 import type { GuestbookEntry, ProfileData, TemplateStyle } from "./types";
 import { LyricsDisplay } from "./LyricsDisplay";
+import { optimizeImageUrl, optimizeVideoUrl } from "../../utils/cloudinary";
 
 export const BackgroundLayer = ({
   data,
@@ -39,7 +40,7 @@ export const BackgroundLayer = ({
       {isVideoBackground ? (
         <video
           ref={backgroundVideoRef as React.LegacyRef<HTMLVideoElement>}
-          src={data.profile.banner_video || ""}
+          src={optimizeVideoUrl(data.profile.banner_video)}
           className="absolute inset-0 h-full w-full object-cover"
           muted={controlsTarget !== "video" ? true : muted}
           loop
@@ -50,7 +51,7 @@ export const BackgroundLayer = ({
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url(${data.profile.banner_image})`,
+            backgroundImage: `url(${optimizeImageUrl(data.profile.banner_image)})`,
           }}
         />
       ) : (
