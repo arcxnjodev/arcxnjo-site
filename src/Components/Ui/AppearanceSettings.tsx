@@ -194,6 +194,36 @@ const templates: TemplateDef[] = [
     },
     preview: "from-neutral-900 to-zinc-950",
   },
+  {
+    id: "modern",
+    name: "Modern",
+    description: {
+      pt: "Duas colunas com stats, bio e socials separados.",
+      en: "Two columns with stats, bio and separated socials.",
+      es: "Dos columnas con stats, bio y sociales separados.",
+    },
+    preview: "from-zinc-800 to-black",
+  },
+  {
+    id: "simplistic",
+    name: "Simplistic",
+    description: {
+      pt: "Botões grandes de link com foto e bio no topo.",
+      en: "Big link buttons with photo and bio on top.",
+      es: "Botones grandes de enlace con foto y bio arriba.",
+    },
+    preview: "from-stone-900 to-black",
+  },
+  {
+    id: "minimal",
+    name: "Minimal",
+    description: {
+      pt: "Sem card. Tudo flutua diretamente sobre o fundo.",
+      en: "No card. Everything floats directly over the background.",
+      es: "Sin tarjeta. Todo flota directamente sobre el fondo.",
+    },
+    preview: "from-black to-zinc-900",
+  },
 ];
 
 const effects: {
