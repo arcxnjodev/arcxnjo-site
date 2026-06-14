@@ -228,7 +228,7 @@ export const GridTemplate = ({
                 <DiscordProfileCard
                   discordData={discordData}
                   template={template}
-                  showLyrics={false}
+                  showLyrics={true}
                 />
               </div>
             )}

@@ -200,7 +200,7 @@ export const ModernTemplate = ({
                 <DiscordProfileCard
                   discordData={discordData}
                   template={template}
-                  showLyrics={false}
+                  showLyrics={true}
                 />
               )}
 

@@ -178,7 +178,7 @@ export const MinimalTemplate = ({
               discordData={discordData}
               template={template}
               className="mt-5 text-left"
-              showLyrics={false}
+              showLyrics={true}
             />
           )}
         </div>

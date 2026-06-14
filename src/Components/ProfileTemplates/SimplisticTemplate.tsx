@@ -196,7 +196,7 @@ export const SimplisticTemplate = ({
               discordData={discordData}
               template={template}
               className="mt-4"
-              showLyrics={false}
+              showLyrics={true}
             />
           )}
         </div>
