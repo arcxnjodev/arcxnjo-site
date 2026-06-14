@@ -180,7 +180,7 @@ export const LyricsDisplay = ({
             <p
               key={index}
               ref={index === activeIndex ? activeLineRef : null}
-             className={`truncate text-base transition-all duration-300 ${
+              className={`truncate text-[15px] transition-all duration-300 ${
                 index === activeIndex
                   ? "font-semibold text-white"
                   : "text-white/35"
@@ -191,7 +191,7 @@ export const LyricsDisplay = ({
           ))}
         </div>
       ) : (
-        <div className="text-base text-white/60">
+        <div className="text-[15px] text-white/60">
           {plainLyrics?.split("\n").map((line, index) => (
             <p key={index} className="leading-relaxed">
               {line || "\u00A0"}
