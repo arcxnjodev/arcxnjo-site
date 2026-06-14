@@ -174,13 +174,13 @@ export const LyricsDisplay = ({
       {lines ? (
         <div
           ref={containerRef}
-          className="max-h-32 space-y-1.5 overflow-y-auto pr-1 text-center"
+          
         >
           {lines.map((line, index) => (
             <p
               key={index}
               ref={index === activeIndex ? activeLineRef : null}
-              className={`truncate text-sm transition-all duration-300 ${
+             className={`truncate text-base transition-all duration-300 ${
                 index === activeIndex
                   ? "font-semibold text-white"
                   : "text-white/35"
@@ -191,7 +191,7 @@ export const LyricsDisplay = ({
           ))}
         </div>
       ) : (
-        <div className="max-h-32 overflow-y-auto pr-1 text-sm text-white/60">
+        <div className="text-base text-white/60">
           {plainLyrics?.split("\n").map((line, index) => (
             <p key={index} className="leading-relaxed">
               {line || "\u00A0"}
