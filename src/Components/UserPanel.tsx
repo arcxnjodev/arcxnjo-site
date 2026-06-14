@@ -6,6 +6,9 @@ import { DefaultProfileTemplate } from "./ProfileTemplates/DefaultProfileTemplat
 import { ProScrollTemplate } from "./ProfileTemplates/ProScrollTemplate";
 import { SleekTemplate } from "./ProfileTemplates/SleekTemplate";
 import { GridTemplate } from "./ProfileTemplates/GridTemplate";
+import { ModernTemplate } from "./ProfileTemplates/ModernTemplate";
+import { SimplisticTemplate } from "./ProfileTemplates/SimplisticTemplate";
+import { MinimalTemplate } from "./ProfileTemplates/MinimalTemplate";
 import type { ProfileData } from "./ProfileTemplates/types";
 
 export const UserPanel = () => {
@@ -123,12 +126,25 @@ export const UserPanel = () => {
 
   if (templateId === "grid") {
     return (
-      <GridTemplate
-        data={data}
-        username={username}
-        apiUrl={API_URL}
-        discordData={discordData}
-      />
+      <GridTemplate data={data} username={username} apiUrl={API_URL} discordData={discordData} />
+    );
+  }
+
+  if (templateId === "modern") {
+    return (
+      <ModernTemplate data={data} username={username} apiUrl={API_URL} discordData={discordData} />
+    );
+  }
+
+  if (templateId === "simplistic") {
+    return (
+      <SimplisticTemplate data={data} username={username} apiUrl={API_URL} discordData={discordData} />
+    );
+  }
+
+  if (templateId === "minimal") {
+    return (
+      <MinimalTemplate data={data} username={username} apiUrl={API_URL} discordData={discordData} />
     );
   }
 

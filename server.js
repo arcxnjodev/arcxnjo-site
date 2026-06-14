@@ -2166,6 +2166,9 @@ app.put('/api/profile/appearance', authenticateToken, async (req, res) => {
     'pro-scroll',
     'sleek',
     'grid',
+    'modern',
+    'simplistic',
+    'minimal',
     'community',
   ];
 
