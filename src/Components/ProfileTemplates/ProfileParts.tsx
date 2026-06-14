@@ -72,8 +72,6 @@ export const EnterOverlay = ({ onEnter }: { onEnter: () => void }) => {
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.10),transparent_32%,rgba(0,0,0,0.62)_100%)]" />
 
-      <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:44px_44px]" />
-
       <span className="relative select-none text-3xl font-black uppercase tracking-[0.34em] text-white drop-shadow-[0_0_24px_rgba(255,255,255,0.55)] transition duration-300 hover:scale-105 md:text-5xl">
         Click
       </span>
