@@ -320,15 +320,6 @@ export const ProScrollTemplate = ({
       .replace(/[^a-z0-9]+/g, "-");
   }, [data?.profile.music_title]);
 
-  const playingTitle =
-    discordData?.spotify?.song ||
-    data.profile.music_title ||
-    t("profile.profileMusic") ||
-    "Profile music";
-
-  const playingArtist =
-    discordData?.spotify?.artist ||
-    (hasMusic ? "ARCXNJO profile audio" : t("profile.onlineOnDiscord"));
   const customCursorUrl = data.profile.custom_cursor_url?.trim();
   const hasCustomCursor = Boolean(customCursorUrl);
 
