@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaClock, FaHome, FaMapMarkerAlt, FaMusic } from "react-icons/fa";
-import { useI18n } from "../../i18n/i18nProvider";
 import { ParticleLayer } from "./ParticleLayer";
 import {
   BackgroundLayer,
@@ -81,8 +80,6 @@ export const ProScrollTemplate = ({
   apiUrl,
   discordData,
 }: ProfileTemplateProps) => {
-  const { t } = useI18n();
-
   const [entered, setEntered] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.6);
