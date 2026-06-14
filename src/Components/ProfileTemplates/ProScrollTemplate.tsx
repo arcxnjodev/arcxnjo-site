@@ -12,6 +12,7 @@ import {
   MediaControls,
   SocialLinks,
 } from "./ProfileParts";
+import { LyricsDisplay } from "./LyricsDisplay";
 import { getTemplateStyle } from "./profileUtils";
 import { ProfileCursor } from "./ProfileCursor";
 import type { ProfileEffect, ProfileTemplateProps } from "./types";
@@ -560,6 +561,10 @@ return (
                     />
                   ))}
                 </div>
+
+                {discordData?.spotify && (
+                  <LyricsDisplay spotify={discordData.spotify} className="mt-4" />
+                )}
               </div>
             </div>
           </section>
