@@ -467,10 +467,12 @@ export const DiscordProfileCard = ({
   discordData,
   template,
   className = "",
+  showLyrics = true,
 }: {
   discordData: any;
   template: TemplateStyle;
   className?: string;
+  showLyrics?: boolean;
 }) => {
   const { t } = useI18n();
 
@@ -634,7 +636,7 @@ export const DiscordProfileCard = ({
       </div>
     </div>
 
-      <LyricsDisplay spotify={discordData.spotify} />
+      {showLyrics && <LyricsDisplay spotify={discordData.spotify} />}
   </>
       ) : activeDiscordActivity ? (
         <div className="mt-4 rounded-xl bg-black/20 p-3">

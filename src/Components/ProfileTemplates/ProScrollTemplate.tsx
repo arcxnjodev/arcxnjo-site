@@ -493,6 +493,7 @@ return (
               <DiscordProfileCard
                 discordData={discordData}
                 template={template}
+                showLyrics={false}
                 className="shadow-[0_20px_70px_rgba(0,0,0,0.35)]"
               />
             </div>
