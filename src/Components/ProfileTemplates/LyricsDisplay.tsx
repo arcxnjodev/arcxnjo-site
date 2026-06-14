@@ -66,7 +66,6 @@ export const LyricsDisplay = ({
   const song = spotify?.song || "";
   const artist = spotify?.artist || "";
   const album = spotify?.album || "";
-  const albumArt = spotify?.album_art_url || null;
   const start = spotify?.timestamps?.start || null;
   const end = spotify?.timestamps?.end || null;
 
@@ -156,28 +155,9 @@ export const LyricsDisplay = ({
   return (
     <div className={`overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md ${className}`}>
 
-      {/* Header com capa e info */}
-      <div className="flex items-center gap-3 border-b border-white/10 p-4">
-        {albumArt ? (
-          <img
-            src={albumArt}
-            alt={album || song}
-            className="h-12 w-12 rounded-xl object-cover shadow-lg"
-          />
-        ) : (
-          <div className="grid h-12 w-12 place-items-center rounded-xl bg-white/10">
-            <svg className="h-5 w-5 text-white/40" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-            </svg>
-          </div>
-        )}
-
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-white">{song}</p>
-          <p className="truncate text-xs text-white/50">{artist}</p>
-        </div>
-
-        <span className="shrink-0 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/40">
+      {/* Badge Lyrics */}
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-white/35">
           {t("profile.lyrics")}
         </span>
       </div>
