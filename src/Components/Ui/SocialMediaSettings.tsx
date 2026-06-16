@@ -2,35 +2,45 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import type { IconType } from "react-icons";
 import {
-  FaAt,
   FaBitcoin,
-  FaCheckCircle,
   FaDiscord,
-  FaDollarSign,
   FaEnvelope,
-  FaExternalLinkAlt,
-  FaFacebookF,
+  FaEthereum,
+  FaFacebook,
   FaGamepad,
   FaGithub,
+  FaGitlab,
   FaGlobe,
   FaInstagram,
-  FaLink,
+  FaKickstarter,
+  FaLinkedin,
   FaMusic,
+  FaPatreon,
   FaPaypal,
-  FaPinterestP,
-  FaRedditAlien,
-  FaSave,
-  FaSnapchatGhost,
+  FaPinterest,
+  FaPlaystation,
+  FaReddit,
+  FaSignalMessenger,
+  FaSnapchat,
   FaSoundcloud,
   FaSpotify,
   FaSteam,
-  FaTelegramPlane,
+  FaTelegram,
+  FaThreads,
   FaTiktok,
-  FaTrash,
   FaTwitch,
-  FaTwitter,
+  FaVk,
+  FaWhatsapp,
+  FaXbox,
+  FaXTwitter,
   FaYoutube,
-} from "react-icons/fa";
+  FaDollarSign,
+  FaCircleCheck,
+  FaTrash,
+  FaFloppyDisk,
+  FaArrowUpRightFromSquare,
+  FaLink,
+} from "react-icons/fa6";
 
 type LinkValues = Record<string, string>;
 
@@ -48,7 +58,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "snapchat",
     label: "Snapchat",
     placeholder: "seuusuario",
-    icon: FaSnapchatGhost,
+    icon: FaSnapchat,
     color: "text-yellow-300",
     hint: "Usuário do Snapchat.",
   },
@@ -88,8 +98,8 @@ const linkPlatforms: LinkPlatform[] = [
     id: "x",
     label: "X",
     placeholder: "seuusuario",
-    icon: FaTwitter,
-    color: "text-zinc-500",
+    icon: FaXTwitter,
+    color: "text-zinc-300",
     hint: "Seu @ do X/Twitter.",
   },
   {
@@ -104,7 +114,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "telegram",
     label: "Telegram",
     placeholder: "seuusuario",
-    icon: FaTelegramPlane,
+    icon: FaTelegram,
     color: "text-sky-400",
     hint: "Usuário, canal ou grupo.",
   },
@@ -160,7 +170,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "playstation",
     label: "PlayStation",
     placeholder: "seuusuario",
-    icon: FaGamepad,
+    icon: FaPlaystation,
     color: "text-sky-500",
     hint: "PSN ID ou link completo.",
   },
@@ -168,7 +178,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "xbox",
     label: "Xbox",
     placeholder: "seugamertag",
-    icon: FaGamepad,
+    icon: FaXbox,
     color: "text-green-600",
     hint: "Gamertag ou link completo.",
   },
@@ -184,7 +194,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "gitlab",
     label: "GitLab",
     placeholder: "seuusuario",
-    icon: FaGithub,
+    icon: FaGitlab,
     color: "text-orange-500",
     hint: "Usuário ou link completo.",
   },
@@ -200,7 +210,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "reddit",
     label: "Reddit",
     placeholder: "u/seuusuario",
-    icon: FaRedditAlien,
+    icon: FaReddit,
     color: "text-orange-600",
     hint: "Usuário, subreddit ou link.",
   },
@@ -208,7 +218,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "vk",
     label: "VK",
     placeholder: "seuusuario",
-    icon: FaAt,
+    icon: FaVk,
     color: "text-blue-500",
     hint: "Usuário ou link completo.",
   },
@@ -224,7 +234,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "kick",
     label: "Kick",
     placeholder: "seuusuario",
-    icon: FaAt,
+    icon: FaKickstarter,
     color: "text-lime-400",
     hint: "Seu usuário da Kick.",
   },
@@ -232,7 +242,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "pinterest",
     label: "Pinterest",
     placeholder: "seuusuario",
-    icon: FaPinterestP,
+    icon: FaPinterest,
     color: "text-red-600",
     hint: "Usuário ou link completo.",
   },
@@ -240,7 +250,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "facebook",
     label: "Facebook",
     placeholder: "seuusuario",
-    icon: FaFacebookF,
+    icon: FaFacebook,
     color: "text-blue-600",
     hint: "Perfil, página ou link completo.",
   },
@@ -248,7 +258,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "threads",
     label: "Threads",
     placeholder: "seuusuario",
-    icon: FaAt,
+    icon: FaThreads,
     color: "text-white",
     hint: "Usuário ou link completo.",
   },
@@ -256,7 +266,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "patreon",
     label: "Patreon",
     placeholder: "seuusuario",
-    icon: FaDollarSign,
+    icon: FaPatreon,
     color: "text-rose-500",
     hint: "Usuário ou link completo.",
   },
@@ -264,8 +274,24 @@ const linkPlatforms: LinkPlatform[] = [
     id: "signal",
     label: "Signal",
     placeholder: "seuusuario",
-    icon: FaAt,
+    icon: FaSignalMessenger,
     color: "text-blue-500",
+    hint: "Usuário ou link completo.",
+  },
+  {
+    id: "whatsapp",
+    label: "WhatsApp",
+    placeholder: "+5511999999999",
+    icon: FaWhatsapp,
+    color: "text-green-500",
+    hint: "Número com DDD ou link completo.",
+  },
+  {
+    id: "linkedin",
+    label: "LinkedIn",
+    placeholder: "seuusuario",
+    icon: FaLinkedin,
+    color: "text-blue-400",
     hint: "Usuário ou link completo.",
   },
   {
@@ -280,7 +306,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "ethereum",
     label: "Ethereum",
     placeholder: "endereço ou link",
-    icon: FaBitcoin,
+    icon: FaEthereum,
     color: "text-zinc-400",
     hint: "Carteira, endereço ou link.",
   },
@@ -564,7 +590,7 @@ export const SocialMediaSettings = () => {
 
                   {hasValue && (
                     <span className="absolute right-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-green-400 text-[8px] text-black">
-                      <FaCheckCircle />
+                      <FaCircleCheck />
                     </span>
                   )}
                 </button>
@@ -641,7 +667,7 @@ export const SocialMediaSettings = () => {
                 className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/10 text-white/60 transition hover:bg-white/15 hover:text-white"
                 title="Open preview"
               >
-                <FaExternalLinkAlt className="text-xs" />
+                <FaArrowUpRightFromSquare className="text-xs" />
               </a>
             ) : null}
           </div>
@@ -663,7 +689,7 @@ export const SocialMediaSettings = () => {
             disabled={loading}
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <FaSave className="text-xs" />
+            <FaFloppyDisk className="text-xs" />
             {loading ? "Saving..." : "Save Links"}
           </button>
         </div>
