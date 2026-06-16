@@ -39,6 +39,7 @@ app.use(express.json({ limit: '1mb' }));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu_secret_jwt_2024';
