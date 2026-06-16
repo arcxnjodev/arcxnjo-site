@@ -1,29 +1,47 @@
 import type { IconType } from "react-icons";
 import {
   FaDiscord,
-  FaGlobe,
+  FaGithub,
   FaInstagram,
   FaLinkedin,
-  FaTwitch,
-  FaTwitter,
-  FaYoutube,
-  FaGithub,
   FaTiktok,
-  FaKickstarterK,
-} from "react-icons/fa";
+  FaTwitch,
+  FaXTwitter,
+  FaYoutube,
+  FaSpotify,
+  FaSoundcloud,
+  FaSnapchat,
+  FaTelegram,
+  FaReddit,
+  FaFacebook,
+  FaWhatsapp,
+  FaSteam,
+  FaPatreon,
+  FaKickstarter,
+  FaGlobe,
+} from "react-icons/fa6";
 import type { TemplateStyle } from "./types";
 
 export const socialIcons: Record<string, IconType> = {
   instagram: FaInstagram,
-  x: FaTwitter,
-  twitter: FaTwitter,
+  x: FaXTwitter,
+  twitter: FaXTwitter,
   youtube: FaYoutube,
   twitch: FaTwitch,
-  kick: FaKickstarterK,
+  kick: FaKickstarter,
   discord: FaDiscord,
   linkedin: FaLinkedin,
   github: FaGithub,
   tiktok: FaTiktok,
+  spotify: FaSpotify,
+  soundcloud: FaSoundcloud,
+  snapchat: FaSnapchat,
+  telegram: FaTelegram,
+  reddit: FaReddit,
+  facebook: FaFacebook,
+  whatsapp: FaWhatsapp,
+  steam: FaSteam,
+  patreon: FaPatreon,
   website: FaGlobe,
 };
 
@@ -38,6 +56,15 @@ export const socialColors: Record<string, string> = {
   linkedin: "#0A66C2",
   github: "#ffffff",
   tiktok: "#ffffff",
+  spotify: "#1DB954",
+  soundcloud: "#FF5500",
+  snapchat: "#FFFC00",
+  telegram: "#26A5E4",
+  reddit: "#FF4500",
+  facebook: "#1877F2",
+  whatsapp: "#25D366",
+  steam: "#ffffff",
+  patreon: "#FF424D",
   website: "#ffffff",
 };
 
@@ -68,6 +95,24 @@ export const getSocialUrl = (platform: string, url: string) => {
       return `https://linkedin.com/in/${cleanUsername}`;
     case "github":
       return `https://github.com/${cleanUsername}`;
+    case "spotify":
+      return `https://open.spotify.com/user/${cleanUsername}`;
+    case "soundcloud":
+      return `https://soundcloud.com/${cleanUsername}`;
+    case "snapchat":
+      return `https://snapchat.com/add/${cleanUsername}`;
+    case "telegram":
+      return `https://t.me/${cleanUsername}`;
+    case "reddit":
+      return `https://reddit.com/u/${cleanUsername}`;
+    case "facebook":
+      return `https://facebook.com/${cleanUsername}`;
+    case "whatsapp":
+      return `https://wa.me/${cleanUsername}`;
+    case "steam":
+      return `https://steamcommunity.com/id/${cleanUsername}`;
+    case "patreon":
+      return `https://patreon.com/${cleanUsername}`;
     case "discord":
       return cleanUrl;
     default:
