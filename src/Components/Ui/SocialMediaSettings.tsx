@@ -7,7 +7,6 @@ import {
   FaEnvelope,
   FaEthereum,
   FaFacebook,
-  FaGamepad,
   FaGithub,
   FaGitlab,
   FaGlobe,
