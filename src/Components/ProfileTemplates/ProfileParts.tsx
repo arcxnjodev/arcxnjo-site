@@ -157,9 +157,9 @@ export const SocialLinks = ({
             rel="noreferrer"
             title={platform}
             aria-label={platform}
-            className="grid h-[54px] w-[54px] place-items-center rounded-full bg-black text-[26px] ring-1 ring-white/20 shadow-[0_0_18px_rgba(0,0,0,0.4)] transition duration-200 hover:scale-110"
+            className="grid h-[54px] w-[54px] place-items-center rounded-full bg-black text-[26px] ring-1 ring-white/20 transition duration-200 hover:scale-110"
             style={{
-              color,
+              color: `${color} !important` as React.CSSProperties["color"],
               boxShadow: `0 0 18px ${color}33`,
             }}
             onMouseEnter={e => {
@@ -169,7 +169,7 @@ export const SocialLinks = ({
               (e.currentTarget as HTMLElement).style.boxShadow = `0 0 18px ${color}33`;
             }}
           >
-            <Icon />
+            <Icon style={{ color, fill: color }} />
           </a>
         );
       })}
