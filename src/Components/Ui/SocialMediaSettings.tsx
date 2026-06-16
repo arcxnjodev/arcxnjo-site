@@ -40,7 +40,9 @@ import {
   FaFloppyDisk,
   FaArrowUpRightFromSquare,
   FaLink,
+  
 } from "react-icons/fa6";
+import { SiRoblox } from "react-icons/si";
 
 type LinkValues = Record<string, string>;
 
@@ -146,7 +148,7 @@ const linkPlatforms: LinkPlatform[] = [
     id: "roblox",
     label: "Roblox",
     placeholder: "seuusuario",
-    icon: FaGamepad,
+    icon: SiRoblox,
     color: "text-slate-300",
     hint: "Usuário ou link completo.",
   },

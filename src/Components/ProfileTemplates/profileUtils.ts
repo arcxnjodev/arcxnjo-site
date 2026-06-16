@@ -20,6 +20,9 @@ import {
   FaKickstarter,
   FaGlobe,
 } from "react-icons/fa6";
+
+import { SiRoblox } from "react-icons/si";
+
 import type { TemplateStyle } from "./types";
 
 export const socialIcons: Record<string, IconType> = {
@@ -43,6 +46,7 @@ export const socialIcons: Record<string, IconType> = {
   steam: FaSteam,
   patreon: FaPatreon,
   website: FaGlobe,
+  roblox: SiRoblox,
 };
 
 export const socialColors: Record<string, string> = {
@@ -66,6 +70,7 @@ export const socialColors: Record<string, string> = {
   steam: "#ffffff",
   patreon: "#FF424D",
   website: "#ffffff",
+  roblox: "#ffffff",
 };
 
 export const getSocialUrl = (platform: string, url: string) => {
