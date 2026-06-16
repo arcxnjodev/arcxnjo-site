@@ -14,6 +14,7 @@ import {
   badgeMap,
   discordProfileIcons,
   getSocialUrl,
+  socialColors,
   socialIcons,
 } from "./profileUtils";
 import type { GuestbookEntry, ProfileData, TemplateStyle } from "./types";
@@ -146,6 +147,7 @@ export const SocialLinks = ({
     <div className={`flex flex-wrap justify-center gap-4 ${className}`}>
       {socialEntries.map(([platform, url]) => {
         const Icon = socialIcons[platform.toLowerCase()] || FaGlobe;
+        const color = socialColors[platform.toLowerCase()] || "#ffffff";
 
         return (
           <a
@@ -155,7 +157,17 @@ export const SocialLinks = ({
             rel="noreferrer"
             title={platform}
             aria-label={platform}
-            className="grid h-[54px] w-[54px] place-items-center rounded-full bg-black text-[26px] text-white ring-1 ring-white/30 shadow-[0_0_18px_rgba(255,255,255,0.42)] transition duration-200 hover:scale-110 hover:ring-white/60 hover:shadow-[0_0_28px_rgba(255,255,255,0.75)]"
+            className="grid h-[54px] w-[54px] place-items-center rounded-full bg-black text-[26px] ring-1 ring-white/20 shadow-[0_0_18px_rgba(0,0,0,0.4)] transition duration-200 hover:scale-110"
+            style={{
+              color,
+              boxShadow: `0 0 18px ${color}33`,
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.boxShadow = `0 0 28px ${color}88`;
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.boxShadow = `0 0 18px ${color}33`;
+            }}
           >
             <Icon />
           </a>

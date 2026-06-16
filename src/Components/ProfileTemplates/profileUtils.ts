@@ -27,6 +27,20 @@ export const socialIcons: Record<string, IconType> = {
   website: FaGlobe,
 };
 
+export const socialColors: Record<string, string> = {
+  instagram: "#E1306C",
+  x: "#ffffff",
+  twitter: "#1DA1F2",
+  youtube: "#FF0000",
+  twitch: "#9146FF",
+  kick: "#53FC18",
+  discord: "#5865F2",
+  linkedin: "#0A66C2",
+  github: "#ffffff",
+  tiktok: "#ffffff",
+  website: "#ffffff",
+};
+
 export const getSocialUrl = (platform: string, url: string) => {
   const cleanUrl = url.trim();
 
