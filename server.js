@@ -838,9 +838,9 @@ app.put('/api/profile/badges', authenticateToken, async (req, res) => {
       finalBadges = [...new Set([...existingManualBadges, ...requestedBadges])];
     }
 
-    if (finalBadges.length > 3) {
+    if (!isOwnerBypass && plan !== 'pro' && finalBadges.length > 3) {
       return res.status(400).json({
-        error: 'You can have a maximum of 3 badges total.',
+        error: 'Free users can have a maximum of 3 badges. Upgrade to Pro for unlimited badges.',
       });
     }
 
