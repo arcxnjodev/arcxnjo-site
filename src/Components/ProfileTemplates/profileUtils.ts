@@ -132,16 +132,15 @@ export const badgeMap: Record<string, { label: string; image: string }> = {
   },
   music: {
     label: "Music",
-    image: "https://cdn.discordapp.com/emojis/847487695227584562.webp",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1478659125482225673/7CE6BDAA-CBAE-48F9-8438-8153B75BFB26.gif?ex=6a32f8df&is=6a31a75f&hm=fb882fafbcf0462caa82f0b37d72b2568e68f5b0bf19c75c606ae6c44283263a&",
   },
   anime: {
     label: "Anime",
-    image: "https://cdn.discordapp.com/emojis/705315110004195430.webp",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1480655304508047623/8297995ca09f89a263cc05bd3d78b620.gif?ex=6a32fbb5&is=6a31aa35&hm=01876dc05d7f0a9960d13c34a103ac1fe87119028eb73370a9f8f420b2a58d57&",
   },
   verified: {
     label: "Verified",
-    image:
-      "https://cdn.discordapp.com/emojis/894156569858703380.webp?size=32&animated=true",
+    image: "https://cdn.discordapp.com/emojis/894156569858703380.webp?size=32&animated=true",
   },
   premium: {
     label: "Premium",
@@ -149,15 +148,15 @@ export const badgeMap: Record<string, { label: string; image: string }> = {
   },
   vip: {
     label: "VIP",
-    image: "https://cdn.discordapp.com/emojis/1041872676710514748.webp",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1514587049791852604/9C8E2C74-BEE8-4517-B7BD-C94B6DB15A15.gif?ex=6a3328dc&is=6a31d75c&hm=91c35ca08acebb128ee7c72399265a293c7cb550c26ded9e7382590cc99121f5&",
   },
   og: {
     label: "OG",
-    image: "https://cdn.discordapp.com/emojis/972692703072649336.webp",
+    image: "https://media.discordapp.net/attachments/1255692212717752513/1452546315434332241/ogu.png?ex=6a32e56c&is=6a3193ec&hm=a56b67350041db028d27871d0b4ba2a207bfb405edeb9244e1e5ca043bdf6cf6&=&format=webp&quality=lossless",
   },
   developer: {
     label: "Developer",
-    image: "https://emoji.gg/emoji/95693-developer.png",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1398993841415262219/black-butterfly-ezgif.com-effects.gif?ex=6a3330cb&is=6a31df4b&hm=7ed11996a125b2117c0aecfe83dddb4e9716943d47249213630b751c2e72abfd&",
   },
   staff: {
     label: "Staff",
@@ -165,7 +164,7 @@ export const badgeMap: Record<string, { label: string; image: string }> = {
   },
   founder: {
     label: "Founder",
-    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1478659124555415664/AE0C26BE-01FB-4BB6-988A-29B4D10D91CA.gif?ex=6a32f8df&is=6a31a75f&hm=0e150b1eead93bde8392ab84bcddcad8fc0052dd1f128665c95198c77d04130b&",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1461132709295427667/6636d37ba22a391c6353b1436a81f656.gif?ex=6a3326e0&is=6a31d560&hm=4089b5929cd674bd36b63648930c46b786f0ab873b3e7164d0c4d41d528b9bfc&",
   },
 };
 
