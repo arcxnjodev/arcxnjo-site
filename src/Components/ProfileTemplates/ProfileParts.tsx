@@ -157,7 +157,7 @@ export const SocialLinks = ({
             rel="noreferrer"
             title={platform}
             aria-label={platform}
-            className="grid h-[54px] w-[54px] place-items-center rounded-full bg-white/5 text-[26px] transition duration-200 hover:scale-110"
+            className="grid h-[54px] w-[54px] place-items-center rounded-full bg-transparent text-[26px] transition duration-200 hover:scale-110"
             style={{
               color: `${color} !important` as React.CSSProperties["color"],
               boxShadow: `0 0 18px ${color}33`,
