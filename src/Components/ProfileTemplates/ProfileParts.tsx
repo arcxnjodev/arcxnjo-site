@@ -106,7 +106,7 @@ export const BadgesInline = ({ badges }: { badges: string[] }) => {
                 setOpenBadgeId((prev) => (prev === badgeId ? null : prev));
               }, 120);
             }}
-            className="group relative grid h-7 w-7 place-items-center transition hover:scale-110 appearance-none border-0 bg-transparent p-0 outline-none"
+            className="group relative grid h-9 w-9 place-items-center rounded-full bg-transparent appearance-none border-0 p-0 outline-none transition hover:scale-110"
             title={badge.label}
           >
             <span className="absolute inset-0 rounded-full bg-white/5 opacity-0 blur-md transition group-hover:opacity-100" />
