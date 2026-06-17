@@ -87,7 +87,7 @@ export const BadgesInline = ({ badges }: { badges: string[] }) => {
   if (badges.length === 0) return null;
 
   return (
-    <div className="inline-flex items-center gap-1.5 align-middle">
+    <div className="inline-flex items-center gap-2 align-middle">
       {badges.map((badgeId) => {
         const badge = badgeMap[badgeId];
         if (!badge) return null;
@@ -95,9 +95,10 @@ export const BadgesInline = ({ badges }: { badges: string[] }) => {
         const isOpen = openBadgeId === badgeId;
 
         return (
-          <button
+          <div
             key={badgeId}
-            type="button"
+            role="button"
+            tabIndex={0}
             onClick={() =>
               setOpenBadgeId((prev) => (prev === badgeId ? null : badgeId))
             }
@@ -106,15 +107,13 @@ export const BadgesInline = ({ badges }: { badges: string[] }) => {
                 setOpenBadgeId((prev) => (prev === badgeId ? null : prev));
               }, 120);
             }}
-            className="group relative grid h-9 w-9 place-items-center rounded-full bg-transparent appearance-none border-0 p-0 outline-none transition hover:scale-110"
+            className="group relative cursor-pointer transition hover:scale-110"
             title={badge.label}
           >
-            <span className="absolute inset-0 rounded-full bg-white/5 opacity-0 blur-md transition group-hover:opacity-100" />
-
             <img
               src={badge.image}
               alt={badge.label}
-              className="relative h-6 w-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]"
+              className="h-6 w-6 object-contain"
               draggable={false}
             />
 
@@ -127,7 +126,7 @@ export const BadgesInline = ({ badges }: { badges: string[] }) => {
             >
               {badge.label}
             </span>
-          </button>
+          </div>
         );
       })}
     </div>
