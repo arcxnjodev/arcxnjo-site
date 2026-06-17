@@ -80,7 +80,7 @@ const allBadges: BadgeDef[] = [
     id: "founder",
     label: "Founder",
     group: "manual",
-    image: "https://cdn.discordapp.com/emojis/1257354981384650873.webp",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1461132709295427667/6636d37ba22a391c6353b1436a81f656.gif?ex=6a3326e0&is=6a31d560&hm=4089b5929cd674bd36b63648930c46b786f0ab873b3e7164d0c4d41d528b9bfc&",
   },
 ];
 
