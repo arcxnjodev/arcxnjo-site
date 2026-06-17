@@ -87,7 +87,7 @@ export const BadgesInline = ({ badges }: { badges: string[] }) => {
   if (badges.length === 0) return null;
 
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/30 px-2.5 py-1.5 align-middle backdrop-blur-2xl shadow-[0_0_24px_rgba(255,255,255,0.12)]">
+    <div className="inline-flex items-center gap-1.5 align-middle">
       {badges.map((badgeId) => {
         const badge = badgeMap[badgeId];
         if (!badge) return null;
@@ -106,7 +106,7 @@ export const BadgesInline = ({ badges }: { badges: string[] }) => {
                 setOpenBadgeId((prev) => (prev === badgeId ? null : prev));
               }, 120);
             }}
-            className="group relative grid h-9 w-9 place-items-center rounded-full transition hover:scale-110"
+            className="group relative grid h-7 w-7 place-items-center transition hover:scale-110"
             title={badge.label}
           >
             <span className="absolute inset-0 rounded-full bg-white/5 opacity-0 blur-md transition group-hover:opacity-100" />
