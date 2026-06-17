@@ -165,7 +165,7 @@ export const badgeMap: Record<string, { label: string; image: string }> = {
   },
   founder: {
     label: "Founder",
-    image: "https://cdn.discordapp.com/emojis/1257354981384650873.webp",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1478659124555415664/AE0C26BE-01FB-4BB6-988A-29B4D10D91CA.gif?ex=6a32f8df&is=6a31a75f&hm=0e150b1eead93bde8392ab84bcddcad8fc0052dd1f128665c95198c77d04130b&",
   },
 };
 
