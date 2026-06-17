@@ -25,19 +25,19 @@ const allBadges: BadgeDef[] = [
     id: "open-dm",
     label: "Open DM",
     group: "free",
-    image: "https://cdn.discordapp.com/emojis/827964533792440421.webp",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1512912971662102732/DCE8D196-1743-4CAA-9D72-0D638D7C0E15.gif?ex=6a330081&is=6a31af01&hm=c25763e7cb496b940dee1b5d318711d83a9f2de008ccce8f3d644bdb4343295e&p",
   },
   {
     id: "music",
     label: "Music",
     group: "free",
-    image: "https://cdn.discordapp.com/emojis/847487695227584562.webp",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1478659125482225673/7CE6BDAA-CBAE-48F9-8438-8153B75BFB26.gif?ex=6a32f8df&is=6a31a75f&hm=fb882fafbcf0462caa82f0b37d72b2568e68f5b0bf19c75c606ae6c44283263a&",
   },
   {
     id: "anime",
     label: "Anime",
     group: "free",
-    image: "https://cdn.discordapp.com/emojis/705315110004195430.webp",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1480655304508047623/8297995ca09f89a263cc05bd3d78b620.gif?ex=6a32fbb5&is=6a31aa35&hm=01876dc05d7f0a9960d13c34a103ac1fe87119028eb73370a9f8f420b2a58d57&",
   },
   {
     id: "verified",
@@ -56,19 +56,19 @@ const allBadges: BadgeDef[] = [
     id: "vip",
     label: "VIP",
     group: "pro",
-    image: "https://cdn.discordapp.com/emojis/1041872676710514748.webp",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1514587049791852604/9C8E2C74-BEE8-4517-B7BD-C94B6DB15A15.gif?ex=6a3328dc&is=6a31d75c&hm=91c35ca08acebb128ee7c72399265a293c7cb550c26ded9e7382590cc99121f5&",
   },
   {
     id: "og",
     label: "OG",
     group: "pro",
-    image: "https://cdn.discordapp.com/emojis/972692703072649336.webp",
+    image: "https://media.discordapp.net/attachments/1255692212717752513/1452546315434332241/ogu.png?ex=6a32e56c&is=6a3193ec&hm=a56b67350041db028d27871d0b4ba2a207bfb405edeb9244e1e5ca043bdf6cf6&=&format=webp&quality=lossless",
   },
   {
     id: "developer",
     label: "Developer",
     group: "manual",
-    image: "https://emoji.gg/emoji/95693-developer.png",
+    image: "https://cdn.discordapp.com/attachments/1255692212717752513/1398993841415262219/black-butterfly-ezgif.com-effects.gif?ex=6a3330cb&is=6a31df4b&hm=7ed11996a125b2117c0aecfe83dddb4e9716943d47249213630b751c2e72abfd&",
   },
   {
     id: "staff",
@@ -173,9 +173,9 @@ export const BadgeSettings = () => {
         return prev.filter((badge) => badge !== badgeId);
       }
 
-      if (prev.length + lockedBadges.length >= 3) {
-        setMessage("❌ You can select a maximum of 3 badges.");
-        setTimeout(() => setMessage(""), 2500);
+      if (prev.length + lockedBadges.length >= 3 && plan !== "pro") {
+        setMessage("❌ Free users can select a maximum of 3 badges. Upgrade to Pro for unlimited badges.");
+        setTimeout(() => setMessage(""), 3000);
         return prev;
       }
 
@@ -360,9 +360,9 @@ export const BadgeSettings = () => {
           <h3 className="text-2xl font-black text-white">Badges do perfil</h3>
 
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
-            Escolha até 3 badges para aparecerem no seu perfil público. Badges
-            manuais ficam bloqueadas para usuários comuns e só podem ser dadas
-            pelo owner.
+            {plan === "pro"
+              ? "Badges ilimitadas no Pro. Badges manuais só podem ser dadas pelo owner."
+              : "Escolha até 3 badges para aparecerem no seu perfil público. Faça upgrade para Pro e use badges ilimitadas."}
           </p>
         </div>
       </div>
