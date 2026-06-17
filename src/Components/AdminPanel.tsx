@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { userSliceType } from "../Store/userSlice";
 import { SocialMediaSettings } from "./Ui/SocialMediaSettings";
 import { ProfileImagesSettings } from "./Ui/ProfileImagesSettings";
-import { AppearanceSettings } from "./Ui/AppearanceSettings";
+import { AppearanceSettings } from "./ProfileTemplates/AppearanceSettings";
 import { BadgeSettings } from "./Ui/BadgeSettings";
 import { MusicSettings } from "./Ui/MusicSettings";
 import { CommunityTemplatesSettings } from "./Ui/CommunityTemplatesSettings";
