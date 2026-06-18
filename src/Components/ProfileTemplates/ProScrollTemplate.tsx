@@ -405,7 +405,7 @@ return (
               <img
                 src={data.profile.profile_image || "/favicon.png"}
                 alt={data.username}
-                className={`mx-auto h-32 w-32 rounded-full border-4 bg-black object-cover ${template.avatar}`}
+                className={`mx-auto h-32 w-32 rounded-full bg-black object-cover ${template.avatar}`}
               />
 
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3">

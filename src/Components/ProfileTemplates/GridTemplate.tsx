@@ -172,7 +172,7 @@ export const GridTemplate = ({
                 <img
                   src={data.profile.profile_image || "/favicon.png"}
                   alt={data.username}
-                  className="h-20 w-20 rounded-2xl border-2 border-white/15 bg-black object-cover shadow-xl"
+                  className="h-20 w-20 rounded-2xl bg-black object-cover"
                 />
               </div>
             </div>
