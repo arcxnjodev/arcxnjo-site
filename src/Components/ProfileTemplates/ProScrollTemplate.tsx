@@ -352,7 +352,7 @@ return (
         to="/"
         title="Home"
         aria-label="Go to home"
-        className="fixed right-5 top-5 z-[60] flex h-11 w-11 items-center justify-center rounded-2xl bg-black/25 text-white/60 opacity-75 shadow-[0_8px_25px_rgba(0,0,0,0.22)] backdrop-blur-xl transition hover:bg-black/40 hover:text-white hover:opacity-100"
+        className="fixed right-5 top-5 z-[60] flex h-11 w-11 items-center justify-center rounded-2xl bg-black/25 text-white/60 opacity-75 shadow-[0_8px_25px_rgba(0,0,0,0.22)] backdrop-blur-sm transition hover:bg-black/40 hover:text-white hover:opacity-100"
       >
         <FaHome className="text-base" />
       </Link>
@@ -435,7 +435,7 @@ return (
             id="pro-activity"
             className="mx-auto grid min-h-screen max-w-5xl content-center gap-5 px-4 py-16 md:grid-cols-2"
           >
-            <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+            <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-md [will-change:transform]">
               <div className="mb-4 flex items-center gap-3">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-white">
                   <FaClock />
@@ -454,7 +454,7 @@ return (
               <p className="mt-2 text-sm text-white/50">{dateLabel}</p>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+            <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-md [will-change:transform]">
               <div className="mb-4 flex items-center gap-3">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-white">
                   <FaMapMarkerAlt />
@@ -496,7 +496,7 @@ return (
               {discordData?.spotify ? (
                 <LyricsDisplay spotify={discordData.spotify} />
               ) : (
-                <div className="rounded-[2rem] border border-white/10 bg-black/45 p-8 text-center backdrop-blur-2xl">
+                <div className="rounded-[2rem] border border-white/10 bg-black/45 p-8 text-center backdrop-blur-md">
                   <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-white">
                     <FaMusic className="text-xl" />
                   </div>

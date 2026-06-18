@@ -178,7 +178,7 @@ export const LyricsDisplay = ({
               <p
                 key={index}
                 ref={isActive ? activeLineRef : null}
-                className="mb-3 leading-snug transition-all duration-500"
+                className="mb-3 leading-snug transition-[font-size,font-weight,color,text-shadow,transform] duration-300 will-change-[transform,opacity]"
                 style={{
                   fontSize: isActive ? "1.15rem" : "0.95rem",
                   fontWeight: isActive ? 800 : 500,
