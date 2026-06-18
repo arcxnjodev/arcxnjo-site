@@ -15,6 +15,7 @@ import { LyricsDisplay } from "./LyricsDisplay";
 import { getTemplateStyle } from "./profileUtils";
 import { ProfileCursor } from "./ProfileCursor";
 import type { ProfileEffect, ProfileTemplateProps } from "./types";
+import { TypewriterBio } from "./TypewriterBio";
 
 
 const scrollSections = [
@@ -418,9 +419,11 @@ return (
               <p className="mt-2 text-sm text-white/65">@{data.username}</p>
 
               {data.profile.bio && (
-                <p className="mx-auto mt-4 max-w-md whitespace-pre-line text-sm leading-relaxed text-white/85">
-                  {data.profile.bio}
-                </p>
+                <TypewriterBio
+                  text={data.profile.bio}
+                  className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/85"
+                  delay={600}
+                />
               )}
 
               <SocialLinks socialEntries={socialEntries} className="mt-7" />

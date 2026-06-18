@@ -15,6 +15,7 @@ import {
 import { getTemplateStyle } from "./profileUtils";
 import { ProfileCursor } from "./ProfileCursor";
 import type { ProfileEffect, ProfileTemplateProps } from "./types";
+import { TypewriterBio } from "./TypewriterBio";
 
 export const DefaultProfileTemplate = ({
   data,
@@ -185,9 +186,10 @@ export const DefaultProfileTemplate = ({
             )}
 
             {data.profile.bio && (
-              <p className={`mt-3 whitespace-pre-line text-sm ${template.bio}`}>
-                {data.profile.bio}
-              </p>
+              <TypewriterBio
+                text={data.profile.bio}
+                className={`mt-3 text-sm ${template.bio}`}
+              />
             )}
 
             <DiscordProfileCard
