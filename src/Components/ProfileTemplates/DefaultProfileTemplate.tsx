@@ -170,7 +170,7 @@ export const DefaultProfileTemplate = ({
             <img
               src={data.profile.profile_image || "/favicon.png"}
               alt={data.username}
-              className={`mx-auto h-28 w-28 rounded-full border-4 bg-black object-cover ${template.avatar}`}
+              className={`mx-auto h-28 w-28 rounded-full bg-black object-cover ${template.avatar}`}
             />
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
