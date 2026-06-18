@@ -331,15 +331,15 @@ return (
       <ProfileCursor cursorUrl={customCursorUrl} />
       <style>{`
         @font-face {
-          font-family: 'Minecraft';
-          src: url('/fonts/minecraft.ttf') format('truetype');
+          font-family: 'arcxnjo';
+          src: url('/fonts/bLcMbcn.ttf') format('truetype');
           font-weight: normal;
           font-style: normal;
           font-display: swap;
         }
 
         .profile-pro-scroll, .profile-pro-scroll * {
-          font-family: 'Minecraft', sans-serif !important;
+          font-family: 'arcxnjo', sans-serif !important;
         }
 
         .profile-pro-scroll::-webkit-scrollbar {
