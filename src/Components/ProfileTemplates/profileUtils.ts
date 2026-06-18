@@ -177,7 +177,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "neon-purple": {
     overlay: "bg-black/20",
     card: "bg-black/20 shadow-xl",
-    avatar: "shadow-lg",
+    avatar: "",
     username: "text-white",
     handle: "text-gray-300",
     bio: "text-gray-100",
@@ -196,7 +196,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "cyber-glass": {
     overlay: "bg-black/15",
     card: "bg-white/10 shadow-[0_0_45px_rgba(34,211,238,0.18)]",
-    avatar: "shadow-[0_0_25px_rgba(34,211,238,0.35)]",
+    avatar: "",
     username: "text-white",
     handle: "text-cyan-200/80",
     bio: "text-cyan-50",
@@ -215,7 +215,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "minimal-dark": {
     overlay: "bg-black/30",
     card: "bg-black/30 shadow-2xl",
-    avatar: "shadow-lg",
+    avatar: "",
     username: "text-white",
     handle: "text-gray-300",
     bio: "text-gray-200",
@@ -234,7 +234,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "red-glow": {
     overlay: "bg-black/20",
     card: "bg-black/20 shadow-xl",
-    avatar: "shadow-[0_0_25px_rgba(239,68,68,0.45)]",
+    avatar: "",
     username: "text-white",
     handle: "text-red-200/80",
     bio: "text-red-50",
@@ -253,7 +253,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "blue-ice": {
     overlay: "bg-black/20",
     card: "bg-black/20 shadow-xl",
-    avatar: "shadow-[0_0_25px_rgba(96,165,250,0.45)]",
+    avatar: "",
     username: "text-white",
     handle: "text-blue-200/80",
     bio: "text-blue-50",
@@ -272,7 +272,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "pro-scroll": {
     overlay: "bg-black/35",
     card: "bg-black/20 shadow-[0_25px_80px_rgba(0,0,0,0.45)]",
-    avatar: "shadow-[0_0_35px_rgba(255,255,255,0.22)]",
+    avatar: "",
     username: "text-white",
     handle: "text-white/70",
     bio: "text-white/85",
@@ -291,7 +291,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "sleek": {
     overlay: "bg-black/25",
     card: "bg-white/5 shadow-xl backdrop-blur-xl border border-white/10",
-    avatar: "shadow-lg",
+    avatar: "",
     username: "text-white",
     handle: "text-white/40",
     bio: "text-white/70",
@@ -310,7 +310,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "grid": {
     overlay: "bg-black/30",
     card: "bg-white/5 shadow-xl backdrop-blur-xl border border-white/10",
-    avatar: "shadow-lg",
+    avatar: "",
     username: "text-white",
     handle: "text-white/35",
     bio: "text-white/65",
@@ -326,7 +326,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "modern": {
     overlay: "bg-black/30",
     card: "bg-white/5 shadow-xl backdrop-blur-xl border border-white/10",
-    avatar: "shadow-lg",
+    avatar: "",
     username: "text-white",
     handle: "text-white/35",
     bio: "text-white/65",
@@ -342,7 +342,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "simplistic": {
     overlay: "bg-black/25",
     card: "bg-white/5 shadow-xl backdrop-blur-xl border border-white/10",
-    avatar: "shadow-lg",
+    avatar: "",
     username: "text-white",
     handle: "text-white/35",
     bio: "text-white/55",
@@ -358,7 +358,7 @@ export const profileTemplates: Record<string, TemplateStyle> = {
   "minimal": {
     overlay: "bg-black/20",
     card: "bg-transparent shadow-none border-none",
-    avatar: "shadow-lg",
+    avatar: "",
     username: "text-white",
     handle: "text-white/35",
     bio: "text-white/55",
