@@ -338,8 +338,8 @@ return (
           font-display: swap;
         }
 
-        .profile-pro-scroll {
-          font-family: 'Minecraft', sans-serif;
+        .profile-pro-scroll, .profile-pro-scroll * {
+          font-family: 'Minecraft', sans-serif !important;
         }
 
         .profile-pro-scroll::-webkit-scrollbar {
