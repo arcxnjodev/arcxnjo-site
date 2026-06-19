@@ -3,6 +3,10 @@
   margin: 0;
   box-sizing: border-box;
 }
+
+html {
+  zoom: 1.25;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
