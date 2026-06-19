@@ -1,4 +1,4 @@
-const axios = require('axios');
+﻿const axios = require('axios');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -1049,12 +1049,12 @@ app.put('/api/profile/display-name', authenticateToken, async (req, res) => {
 });
 
 app.put('/api/profile/music', authenticateToken, async (req, res) => {
-  const { musicUrl, musicTitle } = req.body;
+  const { musicUrl, musicTitle, musicArtist } = req.body;
 
   try {
     await pool.query(
-      'UPDATE user_profiles SET music_url = $1, music_title = $2 WHERE user_id = $3',
-      [musicUrl || '', musicTitle || '', req.userId]
+      'UPDATE user_profiles SET music_url = $1, music_title = $2, music_artist = $3 WHERE user_id = $4',
+      [musicUrl || '', musicTitle || '', musicArtist || '', req.userId]
     );
 
     return res.json({ message: 'Music updated successfully!' });
@@ -1113,7 +1113,7 @@ app.get('/api/lyrics', async (req, res) => {
   const duration = req.query.duration ? Number(req.query.duration) : null;
 
   if (!track || !artist) {
-    return res.status(400).json({ error: 'track e artist são obrigatórios' });
+    return res.status(400).json({ error: 'track e artist sÃ£o obrigatÃ³rios' });
   }
 
   const cacheKey = `${track.toLowerCase()}::${artist.toLowerCase()}::${album.toLowerCase()}::${duration || ''}`;
@@ -1166,7 +1166,7 @@ app.get('/api/lyrics', async (req, res) => {
     return res.json(payload);
   } catch (error) {
     console.error('Lyrics fetch error:', error.response?.data || error.message);
-    return res.status(500).json({ error: 'Falha ao buscar letra da música' });
+    return res.status(500).json({ error: 'Falha ao buscar letra da mÃºsica' });
   }
 });
 
