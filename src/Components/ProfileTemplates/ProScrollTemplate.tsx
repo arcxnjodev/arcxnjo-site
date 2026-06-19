@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { FaClock, FaHome, FaMapMarkerAlt, FaMusic } from "react-icons/fa";
 import { ParticleLayer } from "./ParticleLayer";
@@ -12,6 +13,7 @@ import {
   SocialLinks,
 } from "./ProfileParts";
 import { LyricsDisplay } from "./LyricsDisplay";
+import { ProfileMusicPlayer } from "./ProfileMusicPlayer";
 import { getTemplateStyle } from "./profileUtils";
 import { ProfileCursor } from "./ProfileCursor";
 import type { ProfileEffect, ProfileTemplateProps } from "./types";
@@ -507,17 +509,24 @@ return (
             id="pro-music"
             className="mx-auto flex min-h-screen max-w-4xl items-center px-4 py-16"
           >
-            <div className="w-full">
+            <div className="w-full flex flex-col gap-6">
+              {hasMusic && (
+                <ProfileMusicPlayer
+                  musicTitle={data.profile.music_title}
+                  musicArtist={data.profile.music_artist}
+                  audioRef={audioRef as React.RefObject<HTMLAudioElement>}
+                />
+              )}
               {discordData?.spotify ? (
                 <LyricsDisplay spotify={discordData.spotify} />
-              ) : (
+              ) : !hasMusic ? (
                 <div className="rounded-[2rem] border border-white/10 bg-black/45 p-8 text-center backdrop-blur-md">
                   <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-white">
                     <FaMusic className="text-xl" />
                   </div>
                   <p className="text-sm font-semibold text-white/35">No profile music</p>
                 </div>
-              )}
+              ) : null}
             </div>
           </section>
         </main>

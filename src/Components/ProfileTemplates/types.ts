@@ -38,6 +38,7 @@ export type ProfileData = {
     profile_badges?: string[];
     music_url?: string;
     music_title?: string;
+    music_artist?: string;
     location?: string;
     status_text?: string;
     discord_id?: string;

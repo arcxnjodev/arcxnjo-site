@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 type Props = {
   text: string;
   className?: string;
-  speed?: number; // ms por caractere
-  delay?: number; // delay inicial em ms
+  speed?: number; 
+  delay?: number; 
 };
 
 export const TypewriterBio = ({
   text,
   className = "",
-  speed = 35,
+  speed = 20,
   delay = 400,
 }: Props) => {
   const [displayed, setDisplayed] = useState("");
