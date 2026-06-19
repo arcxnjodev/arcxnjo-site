@@ -182,7 +182,7 @@ export const ProScrollTemplate = ({
 
     const startTop = container.scrollTop;
     const distance = targetTop - startTop;
-    const duration = 850;
+    const duration = 595;
     const startTime = performance.now();
 
     isAutoScrollingRef.current = true;
