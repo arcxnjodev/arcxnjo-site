@@ -190,7 +190,7 @@ const templates: TemplateDef[] = [
     description: {
       pt: "Cards em grade com banner interno e seções separadas.",
       en: "Grid cards with inner banner and separated sections.",
-      es: "Cards en grilla con banner interno y secciones separadas.",
+      es: "Grid cards with inner banner and separated sections.",
     },
     preview: "from-neutral-900 to-zinc-950",
   },
@@ -313,11 +313,15 @@ const copy = {
     error: "❌ Erro ao salvar: ",
     cursorTitle: "Cursor personalizado",
     cursorDescription:
-      "Coloque o link de uma imagem para usar como cursor personalizado no perfil.",
+      "Faça o upload de um arquivo ou coloque o link de uma imagem para usar como cursor no perfil.",
     cursorUrl: "URL da imagem do cursor",
     cursorHelp:
-      "Recomendado: PNG, WEBP, GIF ou CUR pequeno. Ideal: 32x32 ou 64x64.",
+      "Recomendado: PNG, WEBP, GIF ou CUR pequeno. Tamanho físico máximo obrigatório: 32x32 pixels.",
     clearCursor: "Limpar cursor",
+    uploadCursor: "Upload de arquivo",
+    uploadingCursor: "Enviando...",
+    cursorSizeError: "Erro: O cursor deve ter no máximo 32x32 pixels. Sua imagem tem {width}x{height}px.",
+    cursorUploadSuccess: "✅ Cursor enviado! Não se esqueça de salvar as alterações.",
     preview: "Preview",
     studioBadge: "Community Studio",
     studioTitle: "Editar template da comunidade",
@@ -409,11 +413,15 @@ const copy = {
     error: "❌ Error saving: ",
     cursorTitle: "Custom cursor",
     cursorDescription:
-      "Add an image link to use as a custom cursor on your profile.",
+      "Upload a file or add an image link to use as a custom cursor on your profile.",
     cursorUrl: "Cursor image URL",
     cursorHelp:
-      "Recommended: small PNG, WEBP, GIF or CUR. Ideal: 32x32 or 64x64.",
+      "Recommended: small PNG, WEBP, GIF or CUR. Mandatory maximum size: 32x32 pixels.",
     clearCursor: "Clear cursor",
+    uploadCursor: "Upload file",
+    uploadingCursor: "Uploading...",
+    cursorSizeError: "Error: Cursor must be at most 32x32 pixels. Your image is {width}x{height}px.",
+    cursorUploadSuccess: "✅ Cursor uploaded! Don't forget to save changes.",
     preview: "Preview",
     studioBadge: "Community Studio",
     studioTitle: "Edit community template",
@@ -504,11 +512,15 @@ const copy = {
     error: "❌ Error al guardar: ",
     cursorTitle: "Cursor personalizado",
     cursorDescription:
-      "Coloca el link de una imagen para usar como cursor personalizado en tu perfil.",
+      "Sube un archivo o coloca el link de una imagen para usar como cursor personalizado en tu perfil.",
     cursorUrl: "URL de imagen del cursor",
     cursorHelp:
-      "Recomendado: PNG, WEBP, GIF o CUR pequeño. Ideal: 32x32 o 64x64.",
+      "Recomendado: PNG, WEBP, GIF o CUR pequeño. Tamaño máximo obligatorio: 32x32 píxeles.",
     clearCursor: "Limpiar cursor",
+    uploadCursor: "Subir archivo",
+    uploadingCursor: "Subiendo...",
+    cursorSizeError: "Error: El cursor debe tener un máximo de 32x32 píxeles. Tu imagen es de {width}x{height}px.",
+    cursorUploadSuccess: "✅ ¡Cursor subido! No olvides guardar los cambios.",
     preview: "Preview",
     studioBadge: "Community Studio",
     studioTitle: "Editar template de la comunidad",
@@ -604,6 +616,7 @@ export const AppearanceSettings = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [customCursorUrl, setCustomCursorUrl] = useState("");
+  const [uploadingCursor, setUploadingCursor] = useState(false);
 
   const [studioLoading, setStudioLoading] = useState(false);
   const [studioSaving, setStudioSaving] = useState(false);
@@ -741,6 +754,50 @@ export const AppearanceSettings = () => {
     }
   };
 
+  const handleCursorUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Carrega e valida as dimensões da imagem antes de fazer o upload
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+
+    img.onload = async () => {
+      if (img.width > 32 || img.height > 32) {
+        const formattedError = text.cursorSizeError
+          .replace("{width}", String(img.width))
+          .replace("{height}", String(img.height));
+        alert(formattedError);
+        e.target.value = ""; // Limpa a seleção do arquivo
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file); // O backend de upload genérico espera a chave 'file'
+
+      try {
+        setUploadingCursor(true);
+        const token = localStorage.getItem("token");
+
+        const response = await axios.post(`${API_URL}/api/upload`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        setCustomCursorUrl(response.data.url);
+        alert(text.cursorUploadSuccess);
+      } catch (err: any) {
+        console.error("Error uploading cursor:", err);
+        alert(err.response?.data?.error || "Failed to upload cursor file.");
+      } finally {
+        setUploadingCursor(false);
+        e.target.value = ""; // Limpa a seleção do arquivo
+      }
+    };
+  };
+
   const handleSaveStudio = async () => {
     if (!hasActiveCommunityTemplate) return;
 
@@ -867,18 +924,38 @@ export const AppearanceSettings = () => {
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div>
+          <div className="w-full">
             <label className="mb-2 block text-sm font-semibold text-white/85">
               {text.cursorUrl}
             </label>
 
-            <input
-              type="text"
-              value={customCursorUrl}
-              onChange={(e) => setCustomCursorUrl(e.target.value)}
-              placeholder="https://site.com/cursor.png"
-              className={inputClass}
-            />
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                type="text"
+                value={customCursorUrl}
+                onChange={(e) => setCustomCursorUrl(e.target.value)}
+                placeholder="https://site.com/cursor.png"
+                className={inputClass}
+              />
+
+              <input
+                type="file"
+                id="cursor-file-upload-input"
+                accept="image/png, image/webp, image/gif, image/x-icon"
+                className="hidden"
+                onChange={handleCursorUpload}
+              />
+
+              <button
+                type="button"
+                onClick={() => document.getElementById("cursor-file-upload-input")?.click()}
+                disabled={uploadingCursor}
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-purple-600/20 border border-purple-500/30 px-5 py-3 text-sm font-bold text-purple-200 transition hover:bg-purple-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {uploadingCursor ? <FaSpinner className="animate-spin" /> : <FaImage />}
+                {uploadingCursor ? text.uploadingCursor : text.uploadCursor}
+              </button>
+            </div>
 
             <p className="mt-2 text-xs text-white/35">{text.cursorHelp}</p>
           </div>
@@ -886,7 +963,7 @@ export const AppearanceSettings = () => {
           <button
             type="button"
             onClick={() => setCustomCursorUrl("")}
-            className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-bold text-white/55 transition hover:border-red-400/25 hover:bg-red-500/10 hover:text-red-200"
+            className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-bold text-white/55 transition hover:border-red-400/25 hover:bg-red-500/10 hover:text-red-200 w-full lg:w-auto"
           >
             {text.clearCursor}
           </button>
