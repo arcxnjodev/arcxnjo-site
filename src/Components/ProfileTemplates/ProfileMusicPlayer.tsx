@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
@@ -43,7 +43,6 @@ export const ProfileMusicPlayer = ({
   const [duration, setDuration] = useState(0);
   const [lines, setLines] = useState<LyricLine[] | null>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const lyricsRef = useRef<HTMLDivElement>(null);
 
   // Busca letra
   useEffect(() => {
@@ -89,15 +88,6 @@ export const ProfileMusicPlayer = ({
       audio.removeEventListener("timeupdate", update);
     };
   }, [lines, audioRef]);
-
-  // Auto-scroll letras
-  useEffect(() => {
-    if (!lyricsRef.current || activeIndex < 0) return;
-    const container = lyricsRef.current;
-    const active = container.children[activeIndex] as HTMLElement;
-    if (!active) return;
-    container.scrollTop = active.offsetTop - container.clientHeight / 2 + active.clientHeight / 2;
-  }, [activeIndex]);
 
   const togglePlay = async () => {
     const audio = audioRef.current;
@@ -237,74 +227,79 @@ export const ProfileMusicPlayer = ({
           </div>
         </div>
 
-        {/* Lado direito: letras (desktop) */}
+        {/* Letras desktop - igual haunt.gg com translateY */}
         {lines && lines.length > 0 && (
           <div
             className="relative hidden w-72 shrink-0 self-stretch overflow-hidden sm:block"
-            style={{ maskImage: "linear-gradient(transparent 0%, black 25%, black 75%, transparent 100%)" }}
+            style={{ maskImage: "linear-gradient(transparent 0%, black 30%, black 70%, transparent 100%)" }}
           >
             <div
-              ref={lyricsRef}
-              className="absolute inset-x-0 top-0 h-full overflow-hidden"
-              style={{ scrollBehavior: "smooth" }}
+              className="absolute inset-x-0 flex flex-col items-start transition-transform duration-500 ease-out"
+              style={{
+                top: "50%",
+                transform: `translateY(${-(activeIndex * 28 + 14)}px)`,
+              }}
             >
-              <div className="flex h-full flex-col justify-start py-8">
-                {lines.map((line, i) => {
-                  const isActive = i === activeIndex;
-                  const diff = i - activeIndex;
-                  const opacity = isActive ? 1 : Math.max(0.1, 1 - Math.abs(diff) * 0.25);
-                  const blur = isActive ? 0 : Math.min(3, Math.abs(diff) * 1);
+              {lines.map((line, i) => {
+                const isActive = i === activeIndex;
+                const diff = Math.abs(i - activeIndex);
+                const opacity = isActive ? 1 : diff === 1 ? 0.6 : diff === 2 ? 0.3 : 0.15;
+                const blur = isActive ? 0 : diff === 1 ? 1 : diff === 2 ? 2 : 3;
 
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => { if (audioRef.current) audioRef.current.currentTime = line.time; }}
-                      className="block w-full cursor-pointer truncate px-3 text-left text-sm transition-all duration-300"
-                      style={{
-                        height: 28,
-                        lineHeight: "28px",
-                        color: isActive ? "white" : "rgba(255,255,255,0.7)",
-                        opacity,
-                        filter: `blur(${blur}px)`,
-                        fontWeight: isActive ? 600 : 400,
-                        transform: isActive ? "scale(1.04)" : "scale(1)",
-                        transformOrigin: "left center",
-                      }}
-                    >
-                      {line.text}
-                    </button>
-                  );
-                })}
-              </div>
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { if (audioRef.current) audioRef.current.currentTime = line.time; }}
+                    className={`block w-full cursor-pointer truncate px-2 text-left text-sm transition-all duration-300 ${isActive ? "scale-[1.04] font-semibold" : ""}`}
+                    style={{
+                      height: 28,
+                      lineHeight: "28px",
+                      color: isActive ? "rgb(255,255,255)" : "rgb(221,221,221)",
+                      opacity,
+                      filter: blur > 0 ? `blur(${blur}px)` : undefined,
+                    }}
+                  >
+                    {line.text}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
       </div>
 
-      {/* Letras mobile */}
+      {/* Letras mobile - igual haunt.gg */}
       {lines && lines.length > 0 && (
         <div
-          className="relative overflow-hidden sm:hidden"
-          style={{ height: 100, maskImage: "linear-gradient(transparent 0%, black 25%, black 75%, transparent 100%)" }}
+          className="relative mt-2 overflow-hidden sm:hidden"
+          style={{ height: 112, maskImage: "linear-gradient(transparent 0%, black 30%, black 70%, transparent 100%)" }}
         >
-          <div className="flex flex-col items-center py-4">
-            {lines.slice(Math.max(0, activeIndex - 1), activeIndex + 4).map((line, i) => {
-              const realI = Math.max(0, activeIndex - 1) + i;
-              const isActive = realI === activeIndex;
+          <div
+            className="absolute inset-x-0 flex flex-col items-center transition-transform duration-500 ease-out"
+            style={{
+              top: "50%",
+              transform: `translateY(${-(activeIndex * 28 + 14)}px)`,
+            }}
+          >
+            {lines.map((line, i) => {
+              const isActive = i === activeIndex;
+              const diff = Math.abs(i - activeIndex);
+              const opacity = isActive ? 1 : diff === 1 ? 0.6 : diff === 2 ? 0.3 : 0.15;
+              const blur = isActive ? 0 : diff === 1 ? 1 : diff === 2 ? 2 : 3;
+
               return (
                 <button
-                  key={realI}
+                  key={i}
                   type="button"
                   onClick={() => { if (audioRef.current) audioRef.current.currentTime = line.time; }}
-                  className="block w-full cursor-pointer truncate px-2 text-center text-sm transition-all duration-300"
+                  className={`block w-full cursor-pointer truncate px-2 text-center text-sm transition-all duration-300 ${isActive ? "scale-[1.04] font-semibold" : ""}`}
                   style={{
                     height: 28,
                     lineHeight: "28px",
-                    color: isActive ? "white" : "rgba(255,255,255,0.55)",
-                    opacity: isActive ? 1 : 0.5,
-                    fontWeight: isActive ? 600 : 400,
-                    transform: isActive ? "scale(1.04)" : "scale(1)",
+                    color: isActive ? "rgb(255,255,255)" : "rgb(221,221,221)",
+                    opacity,
+                    filter: blur > 0 ? `blur(${blur}px)` : undefined,
                   }}
                 >
                   {line.text}
