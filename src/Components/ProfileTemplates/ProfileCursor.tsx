@@ -12,19 +12,25 @@ export const ProfileCursor = ({ cursorUrl }: ProfileCursorProps) => {
   useEffect(() => {
     if (!cleanCursorUrl) return;
 
+    document.body.style.cursor = "none";
+
     const handleMouseMove = (event: MouseEvent) => {
       setPosition({ x: event.clientX, y: event.clientY });
       setVisible(true);
     };
 
     const handleMouseLeave = () => setVisible(false);
+    const handleMouseEnter = () => setVisible(true);
 
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mouseenter", handleMouseEnter);
 
     return () => {
+      document.body.style.cursor = "";
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("mouseenter", handleMouseEnter);
     };
   }, [cleanCursorUrl]);
 
