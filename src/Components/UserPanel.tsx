@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useI18n } from "../i18n/i18nProvider";
 import { CommunityProfileTemplate } from "./ProfileTemplates/CommunityProfileTemplate";
 import { DefaultProfileTemplate } from "./ProfileTemplates/DefaultProfileTemplate";
@@ -11,9 +11,27 @@ import { SimplisticTemplate } from "./ProfileTemplates/SimplisticTemplate";
 import { MinimalTemplate } from "./ProfileTemplates/MinimalTemplate";
 import type { ProfileData } from "./ProfileTemplates/types";
 
+// Dicionário de mapeamento para os templates que usam as mesmas propriedades padrão
+const TEMPLATE_MAP: Record<
+  string,
+  React.ComponentType<{
+    data: ProfileData;
+    username: string;
+    apiUrl: string;
+    discordData: any;
+  }>
+> = {
+  "pro-scroll": ProScrollTemplate,
+  "sleek": SleekTemplate,
+  "grid": GridTemplate,
+  "modern": ModernTemplate,
+  "simplistic": SimplisticTemplate,
+  "minimal": MinimalTemplate,
+};
+
 export const UserPanel = () => {
-  const locationPath = useLocation();
-  const username = locationPath.pathname.replace("/", "");
+  // Lê o parâmetro ':username' diretamente do React Router
+  const { username } = useParams<{ username: string }>();
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
   const { t } = useI18n();
 
@@ -21,7 +39,10 @@ export const UserPanel = () => {
   const [loading, setLoading] = useState(true);
   const [discordData, setDiscordData] = useState<any>(null);
 
+  // 1. Busca dos dados do perfil com prevenção de Race Condition
   useEffect(() => {
+    let ignore = false;
+
     const fetchProfile = async () => {
       try {
         const response = await fetch(`${API_URL}/api/profile/${username}`);
@@ -31,20 +52,32 @@ export const UserPanel = () => {
           throw new Error(result.error || t("profile.notFound"));
         }
 
-        setData(result);
+        if (!ignore) {
+          setData(result);
+        }
       } catch (error) {
         console.error(error);
-        setData(null);
+        if (!ignore) {
+          setData(null);
+        }
       } finally {
-        setLoading(false);
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     };
 
     if (username) {
+      setLoading(true);
       fetchProfile();
     }
+
+    return () => {
+      ignore = true; // Ignora o resultado se o usuário mudar de página antes da requisição terminar
+    };
   }, [username, API_URL, t]);
 
+  // 2. Monitoramento de status do Discord via polling
   useEffect(() => {
     if (!data?.profile?.discord_id) return;
 
@@ -53,7 +86,6 @@ export const UserPanel = () => {
         const response = await fetch(
           `${API_URL}/api/discord-presence/${data.profile.discord_id}`
         );
-
         const result = await response.json();
 
         if (result.success) {
@@ -81,7 +113,8 @@ export const UserPanel = () => {
     );
   }
 
-  if (!data) {
+  // Tratamento caso não existam dados ou o username não esteja preenchido
+  if (!data || !username) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
         {t("profile.notFound")}
@@ -91,6 +124,7 @@ export const UserPanel = () => {
 
   const templateId = data.profile.profile_template || "neon-purple";
 
+  // Caso especial do template "community" que possui validação adicional de dados
   if (templateId === "community" && data.communityTemplate) {
     return (
       <CommunityProfileTemplate
@@ -102,9 +136,12 @@ export const UserPanel = () => {
     );
   }
 
-  if (templateId === "pro-scroll") {
+  // Renderização dinâmica baseada no dicionário de templates mapeados
+  const SelectedTemplate = TEMPLATE_MAP[templateId];
+
+  if (SelectedTemplate) {
     return (
-      <ProScrollTemplate
+      <SelectedTemplate
         data={data}
         username={username}
         apiUrl={API_URL}
@@ -113,41 +150,7 @@ export const UserPanel = () => {
     );
   }
 
-  if (templateId === "sleek") {
-    return (
-      <SleekTemplate
-        data={data}
-        username={username}
-        apiUrl={API_URL}
-        discordData={discordData}
-      />
-    );
-  }
-
-  if (templateId === "grid") {
-    return (
-      <GridTemplate data={data} username={username} apiUrl={API_URL} discordData={discordData} />
-    );
-  }
-
-  if (templateId === "modern") {
-    return (
-      <ModernTemplate data={data} username={username} apiUrl={API_URL} discordData={discordData} />
-    );
-  }
-
-  if (templateId === "simplistic") {
-    return (
-      <SimplisticTemplate data={data} username={username} apiUrl={API_URL} discordData={discordData} />
-    );
-  }
-
-  if (templateId === "minimal") {
-    return (
-      <MinimalTemplate data={data} username={username} apiUrl={API_URL} discordData={discordData} />
-    );
-  }
-
+  // Template Fallback (Caso o templateId não bata com nenhum mapeado)
   return (
     <DefaultProfileTemplate
       data={data}

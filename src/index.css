@@ -5,8 +5,16 @@
 }
 
 html {
-  zoom: 0.8;
+  height: 100%;
 }
+
+#root {
+  width: 125%;
+  height: 125%;
+  transform: scale(0.8);
+  transform-origin: top left;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

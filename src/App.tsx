@@ -14,15 +14,20 @@ function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true }}>
       <Routes>
+        {/* Rotas Públicas Principais */}
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/panel" element={<AdminPanel />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="*" element={<UserPanel />} />
+
+        {/* Área Administrativa / Pagamentos */}
+        <Route path="/panel" element={<AdminPanel />} />
         <Route path="/checkout/:plan" element={<Checkout />} />
         <Route path="/success" element={<Success />} />
         <Route path="/cancel" element={<Cancel />} />
+
+        {/* Captura todos os outros caminhos (Biolinks dos Usuários) */}
+        <Route path="*" element={<UserPanel />} />
       </Routes>
     </BrowserRouter>
   );
