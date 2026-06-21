@@ -332,7 +332,7 @@ return (
       <style>{`
         @font-face {
           font-family: 'arcxnjo';
-          src: url('/fonts/bLcMbcn.ttf') format('truetype');
+          src: url('/fonts/simbiont.ttf') format('truetype');
           font-weight: normal;
           font-style: normal;
           font-display: swap;
