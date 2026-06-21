@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaClock, FaHome, FaMapMarkerAlt, FaMusic } from "react-icons/fa";
+import { FaHome, FaMapMarkerAlt, FaMusic } from "react-icons/fa";
 import { ParticleLayer } from "./ParticleLayer";
 import {
   BackgroundLayer,
@@ -83,7 +83,7 @@ export const ProScrollTemplate = ({
 }: ProfileTemplateProps) => {
   const [entered, setEntered] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(0.6);
+  const [volume, setVolume] = useState(0.4);
   const [now, setNow] = useState(new Date());
   const [activeSection, setActiveSection] = useState("profile");
 
@@ -123,6 +123,15 @@ export const ProScrollTemplate = ({
 
   const timeZoneLabel =
     Intl.DateTimeFormat().resolvedOptions().timeZone || "Local timezone";
+
+  // Cálculos matemáticos precisos de ângulo de rotação para cada ponteiro
+  const seconds = now.getSeconds();
+  const minutes = now.getMinutes();
+  const hours = now.getHours();
+
+  const secondsDegrees = seconds * 6; // 360 / 60
+  const minutesDegrees = (minutes + seconds / 60) * 6;
+  const hoursDegrees = ((hours % 12) + minutes / 60) * 30; // 360 / 12
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 1000);
@@ -332,7 +341,7 @@ return (
       <style>{`
         @font-face {
           font-family: 'arcxnjo';
-          src: url('/fonts/simbiont.ttf') format('truetype');
+          src: url('/fonts/bLcMbcn.ttf') format('truetype');
           font-weight: normal;
           font-style: normal;
           font-display: swap;
@@ -454,8 +463,37 @@ return (
           >
             <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-md [will-change:transform]">
               <div className="mb-4 flex items-center gap-3">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-white">
-                  <FaClock />
+                
+                {/* Micro relógio analógico mecânico funcional */}
+                <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white shadow-inner">
+                  <div className="relative h-9 w-9 rounded-full border border-white/20 bg-black/40">
+                    {/* Ponteiro das Horas */}
+                    <div
+                      className="absolute w-[2px] h-[8px] bg-white rounded-full left-[17px] top-[10px]"
+                      style={{
+                        transform: `rotate(${hoursDegrees}deg)`,
+                        transformOrigin: "bottom center",
+                      }}
+                    />
+                    {/* Ponteiro dos Minutos */}
+                    <div
+                      className="absolute w-[1.5px] h-[12px] bg-white/70 rounded-full left-[17.25px] top-[6px]"
+                      style={{
+                        transform: `rotate(${minutesDegrees}deg)`,
+                        transformOrigin: "bottom center",
+                      }}
+                    />
+                    {/* Ponteiro dos Segundos */}
+                    <div
+                      className="absolute w-[1px] h-[13px] bg-purple-400 rounded-full left-[17.5px] top-[5px]"
+                      style={{
+                        transform: `rotate(${secondsDegrees}deg)`,
+                        transformOrigin: "bottom center",
+                      }}
+                    />
+                    {/* Ponto Central (Pino) */}
+                    <div className="absolute h-1.5 w-1.5 bg-purple-400 rounded-full left-[15px] top-[15px] z-10 border border-white/20" />
+                  </div>
                 </div>
 
                 <div>
@@ -479,7 +517,6 @@ return (
 
                 <div>
                   <p className="text-sm font-bold text-white">Location</p>
-                  <p className="text-xs text-white/45">Profile info</p>
                 </div>
               </div>
 

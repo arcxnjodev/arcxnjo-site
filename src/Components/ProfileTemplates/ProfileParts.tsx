@@ -261,7 +261,6 @@ export const MediaControls = ({
 
             {hasMusic && (
               <div className="mt-4 rounded-xl bg-white/10 py-2.5 text-center text-sm font-medium text-white/65">
-                Music is playing for visitors after CLICK TO ENTER
               </div>
             )}
           </div>

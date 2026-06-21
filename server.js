@@ -2228,7 +2228,7 @@ app.put('/api/profile/display-name', authenticateToken, async (req, res) => {
   }
 });
 
-app.put('/api/profile/music', authenticateToken, async (req, res) => {
+app.put('/api/profile/', authenticateToken, async (req, res) => {
   const { musicUrl, musicTitle, musicArtist } = req.body;
 
   try {
