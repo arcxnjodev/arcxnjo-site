@@ -7,6 +7,7 @@ import {
   BadgesInline,
   DiscordProfileCard,
   EnterOverlay,
+  GuestbookWidget,
   MediaControls,
   SocialLinks,
 } from "./ProfileParts";
@@ -401,6 +402,11 @@ return (
           handleVolumeChange={handleVolumeChange}
           formatMusicFileName={formatMusicFileName}
         />
+      )}
+
+      {/* Recolocado o GuestbookWidget para ler as variáveis username e apiUrl */}
+      {entered && (
+        <GuestbookWidget username={username} apiUrl={apiUrl} template={template} />
       )}
 
       {entered && (
