@@ -1076,16 +1076,52 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
         ip = ip.split(',')[0].trim();
       }
 
-      // IPs locais (localhost) não possuem geolocalização. Criamos um fallback de desenvolvimento:
-      if (ip === '::1' || ip === '127.0.0.1' || ip.startsWith('127.') || ip.startsWith('192.168.')) {
-        location = 'Manaus, AM - BR'; // Seu fallback de desenvolvimento local
+      // LIMPEZA DO PREFIXO IPV6 (O maior vilão de testes no Localhost)
+      if (ip.startsWith('::ffff:')) {
+        ip = ip.replace('::ffff:', '');
+      }
+
+      // Função auxiliar robusta para verificar se o IP é local ou privado
+      const isLocalIp = (ipAddress) => {
+        if (ipAddress === '::1' || ipAddress === '127.0.0.1' || ipAddress.toLowerCase() === 'localhost') {
+          return true;
+        }
+        const parts = ipAddress.split('.');
+        if (parts.length === 4) {
+          const first = parseInt(parts[0], 10);
+          const second = parseInt(parts[1], 10);
+          if (first === 10) return true; // Classe A privada
+          if (first === 172 && (second >= 16 && second <= 31)) return true; // Classe B privada
+          if (first === 192 && second === 168) return true; // Classe C privada (Wi-Fi)
+          if (first === 127) return true; // Loopback
+        }
+        return false;
+      };
+
+      if (isLocalIp(ip)) {
+        location = 'Manaus, AM - BR'; // Seu fallback de desenvolvimento local (localhost)
       } else {
         // Consulta a API rápida e gratuita do ip-api
         const geoRes = await axios.get(`http://ip-api.com/json/${ip}`);
         const geo = geoRes.data;
 
-        if (geo && geo.status === 'success') {
-          location = `${geo.city}, ${geo.region} - ${geo.countryCode}`;
+        if (coverArt && data.results && data.results[0] && data.results[0].artworkUrl100) {
+          // Apenas segurança
+        }
+
+        if (geo.status === 'success' || (geo.lat && geo.lon)) {
+          // Monta a localização (Cidade, Estado/País)
+          const city = geo.city || '';
+          const region = geo.region || '';
+          const country = geo.countryCode || '';
+          
+          if (city && region) {
+            location = `${city}, ${region} - ${country}`;
+          } else if (city) {
+            location = `${city} - ${country}`;
+          } else {
+            location = geo.country || 'Unknown';
+          }
         } else {
           location = 'Unknown';
         }
