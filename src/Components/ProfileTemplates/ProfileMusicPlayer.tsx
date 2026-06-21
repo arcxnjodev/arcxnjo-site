@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
 type LyricLine = { time: number; text: string };
 
 type Props = {
+  musicUrl: string;
   musicTitle?: string;
   musicArtist?: string;
   albumArt?: string | null;
-  audioRef: React.RefObject<HTMLAudioElement>;
 };
 
 function parseLrc(lrc: string): LyricLine[] {
@@ -27,17 +27,19 @@ function parseLrc(lrc: string): LyricLine[] {
 }
 
 function fmt(s: number) {
+  if (!s || isNaN(s)) return "0:00";
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
 export const ProfileMusicPlayer = ({
+  musicUrl,
   musicTitle = "Profile music",
   musicArtist = "",
   albumArt,
-  audioRef,
 }: Props) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -47,6 +49,7 @@ export const ProfileMusicPlayer = ({
   // Busca letra
   useEffect(() => {
     setLines(null);
+    setActiveIndex(-1);
     if (!musicTitle) return;
 
     const params = new URLSearchParams({ track: musicTitle });
@@ -62,32 +65,46 @@ export const ProfileMusicPlayer = ({
       .catch(() => {});
   }, [musicTitle, musicArtist]);
 
-  // Sincroniza letra
+  // Eventos do áudio
   useEffect(() => {
-    if (!lines || !audioRef.current) return;
     const audio = audioRef.current;
+    if (!audio) return;
 
-    const update = () => {
+    const onTimeUpdate = () => {
       const t = audio.currentTime;
       setCurrentTime(t);
-      let idx = -1;
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].time <= t) idx = i;
-        else break;
+
+      if (lines) {
+        let idx = -1;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].time <= t) idx = i;
+          else break;
+        }
+        setActiveIndex(idx);
       }
-      setActiveIndex(idx);
     };
 
-    audio.addEventListener("timeupdate", update);
-    audio.addEventListener("durationchange", () => setDuration(audio.duration || 0));
-    audio.addEventListener("play", () => setPlaying(true));
-    audio.addEventListener("pause", () => setPlaying(false));
-    audio.addEventListener("ended", () => setPlaying(false));
+    const onDuration = () => setDuration(audio.duration || 0);
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onEnded = () => { setPlaying(false); setCurrentTime(0); };
+
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("durationchange", onDuration);
+    audio.addEventListener("loadedmetadata", onDuration);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("ended", onEnded);
 
     return () => {
-      audio.removeEventListener("timeupdate", update);
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("durationchange", onDuration);
+      audio.removeEventListener("loadedmetadata", onDuration);
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("ended", onEnded);
     };
-  }, [lines, audioRef]);
+  }, [lines]);
 
   const togglePlay = async () => {
     const audio = audioRef.current;
@@ -105,13 +122,13 @@ export const ProfileMusicPlayer = ({
     audio.currentTime = Number(e.target.value);
   };
 
-  const skipPrev = () => {
+  const skipBack = () => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.currentTime = Math.max(0, audio.currentTime - 10);
   };
 
-  const skipNext = () => {
+  const skipForward = () => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.currentTime = Math.min(duration, audio.currentTime + 10);
@@ -122,66 +139,65 @@ export const ProfileMusicPlayer = ({
   return (
     <div
       className="relative overflow-hidden rounded-3xl border border-white/10 backdrop-blur-xl"
-      style={{ background: "rgba(0,0,0,0.35)" }}
+      style={{ background: "rgba(0,0,0,0.2)" }}
     >
-      <div className="flex flex-col gap-0 sm:flex-row">
-        {/* Lado esquerdo: controles */}
+      <audio ref={audioRef} src={musicUrl} preload="metadata" />
+
+      <div className="flex flex-col sm:flex-row">
+        {/* Controles */}
         <div className="flex flex-col justify-center gap-3 p-4 sm:min-w-0 sm:flex-1">
           <div className="flex items-center gap-3">
             {/* Capa */}
-            <div className="relative h-[74px] w-[74px] shrink-0 overflow-hidden rounded-[10px] bg-white/10">
+            <div className="flex h-[74px] w-[74px] shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-white/10">
               {albumArt ? (
                 <img src={albumArt} alt={musicTitle} className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-white/20 text-2xl">♪</div>
+                <span className="text-3xl text-white/20">♪</span>
               )}
             </div>
 
-            {/* Info + controles */}
+            {/* Info + botões */}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex min-w-0 flex-col">
-                <div className="flex items-center gap-2">
-                  {/* Equalizador animado */}
+                <div className="flex min-w-0 items-center gap-2">
+                  {/* Equalizador */}
                   {playing && (
-                    <div className="flex h-3 shrink-0 items-end gap-0.5">
-                      {[1, 2, 3].map((i) => (
-                        <span
-                          key={i}
-                          className="w-[3px] rounded-full bg-white"
-                          style={{
-                            animation: `eq${i} ${0.5 + i * 0.1}s ease-in-out infinite alternate`,
-                            height: `${6 + i * 3}px`,
-                          }}
-                        />
-                      ))}
+                    <div className="flex h-3 shrink-0 items-end gap-0.5" aria-hidden>
+                      <span className="w-[3px] rounded-full bg-white" style={{ animation: "eq1 0.5s ease-in-out infinite alternate" }} />
+                      <span className="w-[3px] rounded-full bg-white" style={{ animation: "eq2 0.6s ease-in-out infinite alternate" }} />
+                      <span className="w-[3px] rounded-full bg-white" style={{ animation: "eq3 0.4s ease-in-out infinite alternate" }} />
                     </div>
                   )}
-                  <span className="min-w-0 truncate text-base font-semibold leading-tight text-white">
+                  <span className="min-w-0 truncate text-base font-medium leading-tight text-white">
                     {musicTitle}
                   </span>
                 </div>
                 {musicArtist && (
-                  <span className="truncate text-sm leading-tight text-white/60">{musicArtist}</span>
+                  <span className="truncate text-sm leading-tight" style={{ color: "rgb(221,221,221)" }}>
+                    {musicArtist}
+                  </span>
                 )}
               </div>
 
-              {/* Botões */}
+              {/* Botões + barra */}
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={skipPrev}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center text-white/80 transition hover:text-white"
-                  title="−10s"
+                  aria-label="Voltar 10s"
+                  onClick={skipBack}
+                  className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center text-white transition-opacity hover:opacity-80"
                 >
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                     <path d="M8.09 14.647c-1.787-1.154-1.787-4.14 0-5.294l10.79-6.968c1.736-1.121 3.87.339 3.87 2.648v13.934c0 2.31-2.134 3.769-3.87 2.648zM2 5a.75.75 0 0 1 1.5 0v14A.75.75 0 0 1 2 19z" />
                   </svg>
                 </button>
 
                 <button
                   type="button"
+                  aria-label={playing ? "Pausar" : "Tocar"}
                   onClick={togglePlay}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black transition hover:scale-105"
+                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-opacity hover:opacity-80"
+                  style={{ background: "rgb(255,255,255)", color: "rgb(0,0,0)" }}
                 >
                   {playing ? (
                     <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
@@ -196,18 +212,20 @@ export const ProfileMusicPlayer = ({
 
                 <button
                   type="button"
-                  onClick={skipNext}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center text-white/80 transition hover:text-white"
-                  title="+10s"
+                  aria-label="Avançar 10s"
+                  onClick={skipForward}
+                  className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center text-white transition-opacity hover:opacity-80"
                 >
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                     <path d="M16.66 14.647c1.787-1.154 1.787-4.14 0-5.294L5.87 2.385C4.135 1.264 2 2.724 2 5.033v13.934c0 2.31 2.134 3.769 3.87 2.648zM22.75 5a.75.75 0 0 0-1.5 0v14a.75.75 0 0 0 1.5 0z" />
                   </svg>
                 </button>
 
                 {/* Barra de progresso */}
                 <div className="flex flex-1 items-center gap-2">
-                  <span className="shrink-0 text-xs tabular-nums text-white/50">{fmt(currentTime)}</span>
+                  <span className="shrink-0 text-xs tabular-nums" style={{ color: "rgb(221,221,221)" }}>
+                    {fmt(currentTime)}
+                  </span>
                   <input
                     type="range"
                     min={0}
@@ -215,19 +233,22 @@ export const ProfileMusicPlayer = ({
                     step={0.1}
                     value={currentTime}
                     onChange={seek}
+                    aria-label="Seek"
                     className="h-1.5 w-full cursor-pointer appearance-none rounded-full outline-none"
                     style={{
-                      background: `linear-gradient(to right, white ${progress}%, rgba(255,255,255,0.15) ${progress}%)`,
+                      background: `linear-gradient(to right, rgb(255,255,255) ${progress}%, rgba(255,255,255,0.15) ${progress}%)`,
                     }}
                   />
-                  <span className="shrink-0 text-xs tabular-nums text-white/50">{fmt(duration)}</span>
+                  <span className="shrink-0 text-xs tabular-nums" style={{ color: "rgb(221,221,221)" }}>
+                    {fmt(duration)}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Letras desktop - igual haunt.gg com translateY */}
+        {/* Letras desktop */}
         {lines && lines.length > 0 && (
           <div
             className="relative hidden w-72 shrink-0 self-stretch overflow-hidden sm:block"
@@ -245,7 +266,6 @@ export const ProfileMusicPlayer = ({
                 const diff = Math.abs(i - activeIndex);
                 const opacity = isActive ? 1 : diff === 1 ? 0.6 : diff === 2 ? 0.3 : 0.15;
                 const blur = isActive ? 0 : diff === 1 ? 1 : diff === 2 ? 2 : 3;
-
                 return (
                   <button
                     key={i}
@@ -269,7 +289,7 @@ export const ProfileMusicPlayer = ({
         )}
       </div>
 
-      {/* Letras mobile - igual haunt.gg */}
+      {/* Letras mobile */}
       {lines && lines.length > 0 && (
         <div
           className="relative mt-2 overflow-hidden sm:hidden"
@@ -287,7 +307,6 @@ export const ProfileMusicPlayer = ({
               const diff = Math.abs(i - activeIndex);
               const opacity = isActive ? 1 : diff === 1 ? 0.6 : diff === 2 ? 0.3 : 0.15;
               const blur = isActive ? 0 : diff === 1 ? 1 : diff === 2 ? 2 : 3;
-
               return (
                 <button
                   key={i}
@@ -316,8 +335,7 @@ export const ProfileMusicPlayer = ({
         @keyframes eq3 { from { height: 6px } to { height: 12px } }
         input[type=range]::-webkit-slider-thumb {
           -webkit-appearance: none;
-          width: 12px;
-          height: 12px;
+          width: 12px; height: 12px;
           border-radius: 50%;
           background: white;
           cursor: pointer;

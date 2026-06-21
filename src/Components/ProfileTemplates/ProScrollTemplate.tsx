@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import React from "react";
 import { Link } from "react-router-dom";
 import { FaClock, FaHome, FaMapMarkerAlt, FaMusic } from "react-icons/fa";
 import { ParticleLayer } from "./ParticleLayer";
@@ -512,9 +511,9 @@ return (
             <div className="w-full flex flex-col gap-6">
               {hasMusic && (
                 <ProfileMusicPlayer
+                  musicUrl={data.profile.music_url!}
                   musicTitle={data.profile.music_title}
                   musicArtist={data.profile.music_artist}
-                  audioRef={audioRef as React.RefObject<HTMLAudioElement>}
                 />
               )}
               {discordData?.spotify ? (
