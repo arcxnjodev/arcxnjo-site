@@ -7,11 +7,9 @@ import {
   BadgesInline,
   DiscordProfileCard,
   EnterOverlay,
-  GuestbookWidget,
   MediaControls,
   SocialLinks,
 } from "./ProfileParts";
-import { LyricsDisplay } from "./LyricsDisplay";
 import { ProfileMusicPlayer } from "./ProfileMusicPlayer";
 import { getTemplateStyle } from "./profileUtils";
 import { ProfileCursor } from "./ProfileCursor";
@@ -88,7 +86,6 @@ export const ProScrollTemplate = ({
   const [now, setNow] = useState(new Date());
   const [activeSection, setActiveSection] = useState("profile");
 
-  // Removido o | null do HTMLAudioElement para bater com a tipagem do React Native Audio
   const audioRef = useRef<HTMLAudioElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const isAutoScrollingRef = useRef(false);
@@ -407,10 +404,6 @@ return (
       )}
 
       {entered && (
-        <GuestbookWidget username={username} apiUrl={apiUrl} template={template} />
-      )}
-
-      {entered && (
         <main className="relative z-10">
           <section
             id="pro-profile"
@@ -511,25 +504,21 @@ return (
             className="mx-auto flex min-h-screen max-w-4xl items-center px-4 py-16"
           >
             <div className="w-full flex flex-col gap-6">
-              {/* O comentário agora está pro lado de fora e seguro! */}
-              {hasMusic && (
+              {hasMusic ? (
                 <ProfileMusicPlayer
                   externalAudioRef={audioRef}
                   musicUrl={data.profile.music_url!}
                   musicTitle={data.profile.music_title}
                   musicArtist={data.profile.music_artist}
                 />
-              )}
-              {discordData?.spotify ? (
-                <LyricsDisplay spotify={discordData.spotify} />
-              ) : !hasMusic ? (
+              ) : (
                 <div className="rounded-[2rem] border border-white/10 bg-black/45 p-8 text-center backdrop-blur-md">
                   <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-white">
                     <FaMusic className="text-xl" />
                   </div>
                   <p className="text-sm font-semibold text-white/35">No profile music</p>
                 </div>
-              ) : null}
+              )}
             </div>
           </section>
         </main>

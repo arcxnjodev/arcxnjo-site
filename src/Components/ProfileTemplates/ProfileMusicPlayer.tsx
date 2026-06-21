@@ -64,7 +64,6 @@ export const ProfileMusicPlayer = ({
       .then((res) => res.json())
       .then((data) => {
         if (data.results && data.results[0] && data.results[0].artworkUrl100) {
-          // Troca a imagem pequena de 100x100 por uma de alta resolução 500x500
           setCoverArt(data.results[0].artworkUrl100.replace("100x100bb", "500x500bb"));
         }
       })
@@ -166,9 +165,7 @@ export const ProfileMusicPlayer = ({
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    // O container principal não possui mais fundo preto nem bordas! Fica 100% transparente.
     <div className="relative w-full py-4">
-      
       {/* Áudio Interno (Se não houver externo) */}
       {!externalAudioRef && (
         <audio ref={audioRef} src={musicUrl} preload="auto" loop playsInline />
@@ -237,22 +234,24 @@ export const ProfileMusicPlayer = ({
             </div>
           </div>
 
-          {/* Botões de Controle 100% Transparentes */}
+          {/* Controles de Div/Role Button para contornar a regra global do index.css */}
           <div className="mt-5 flex items-center justify-center gap-6">
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={skipBack}
-              className="group flex items-center justify-center text-white/60 transition-all hover:scale-110 hover:text-white"
+              className="group flex h-10 w-10 cursor-pointer items-center justify-center text-white/60 transition-all hover:scale-110 hover:text-white outline-none"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-7 w-7 transition-transform group-hover:-translate-x-1" fill="currentColor">
                 <path d="M8.09 14.647c-1.787-1.154-1.787-4.14 0-5.294l10.79-6.968c1.736-1.121 3.87.339 3.87 2.648v13.934c0 2.31-2.134 3.769-3.87 2.648zM2 5a.75.75 0 0 1 1.5 0v14A.75.75 0 0 1 2 19z" />
               </svg>
-            </button>
+            </div>
 
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={togglePlay}
-              className="flex items-center justify-center text-white/90 transition-all hover:scale-110 hover:text-white active:scale-95"
+              className="flex h-14 w-14 cursor-pointer items-center justify-center text-white/90 transition-all hover:scale-110 hover:text-white active:scale-95 outline-none"
             >
               {playing ? (
                 <svg viewBox="0 0 24 24" className="h-12 w-12 drop-shadow-lg" fill="currentColor">
@@ -263,27 +262,27 @@ export const ProfileMusicPlayer = ({
                   <path d="M6.906 4.537A.75.75 0 0 0 5.75 5.25v13.5a.75.75 0 0 0 1.156.637l10.5-6.75a.75.75 0 0 0 0-1.274z" />
                 </svg>
               )}
-            </button>
+            </div>
 
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={skipForward}
-              className="group flex items-center justify-center text-white/60 transition-all hover:scale-110 hover:text-white"
+              className="group flex h-10 w-10 cursor-pointer items-center justify-center text-white/60 transition-all hover:scale-110 hover:text-white outline-none"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-7 w-7 transition-transform group-hover:translate-x-1" fill="currentColor">
                 <path d="M16.66 14.647c1.787-1.154 1.787-4.14 0-5.294L5.87 2.385C4.135 1.264 2 2.724 2 5.033v13.934c0 2.31 2.134 3.769 3.87 2.648zM22.75 5a.75.75 0 0 0-1.5 0v14a.75.75 0 0 0 1.5 0z" />
               </svg>
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* Lado Direito: Letras da Música */}
+        {/* Lado Direito: Letras da Música flutuando em Div/Role Button */}
         {lines && lines.length > 0 && (
           <div
             className="relative mt-4 flex-1 overflow-hidden sm:mt-0"
             style={{
               height: "220px",
-              // O mask-image usa 'black' apenas como canal alfa. Não renderiza fundo preto!
               maskImage: "linear-gradient(transparent 0%, black 20%, black 80%, transparent 100%)",
               WebkitMaskImage: "linear-gradient(transparent 0%, black 20%, black 80%, transparent 100%)"
             }}
@@ -302,11 +301,12 @@ export const ProfileMusicPlayer = ({
                 const blur = isActive ? 0 : diff === 1 ? 1 : 2;
 
                 return (
-                  <button
+                  <div
                     key={i}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => { if (audioRef.current) audioRef.current.currentTime = line.time; }}
-                    className={`block w-full cursor-pointer truncate px-2 text-center text-base transition-all duration-500 sm:text-left sm:text-lg ${
+                    className={`block w-full cursor-pointer truncate px-2 text-center text-base transition-all duration-500 sm:text-left sm:text-lg outline-none ${
                       isActive ? "scale-[1.02] font-black text-white drop-shadow-lg" : "font-medium text-white/70"
                     }`}
                     style={{
@@ -315,10 +315,11 @@ export const ProfileMusicPlayer = ({
                       opacity,
                       filter: blur > 0 ? `blur(${blur}px)` : "none",
                       pointerEvents: opacity === 0 ? "none" : "auto",
+                      background: "transparent",
                     }}
                   >
                     {line.text}
-                  </button>
+                  </div>
                 );
               })}
             </div>
