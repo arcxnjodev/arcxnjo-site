@@ -83,7 +83,7 @@ export const ProScrollTemplate = ({
 }: ProfileTemplateProps) => {
   const [entered, setEntered] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(0.4);
+  const [volume, setVolume] = useState(0.6);
   const [now, setNow] = useState(new Date());
   const [activeSection, setActiveSection] = useState("profile");
 
@@ -124,14 +124,14 @@ export const ProScrollTemplate = ({
   const timeZoneLabel =
     Intl.DateTimeFormat().resolvedOptions().timeZone || "Local timezone";
 
-  // Cálculos matemáticos precisos de ângulo de rotação para cada ponteiro
+  // Sincronização dos ponteiros do relógio analógico
   const seconds = now.getSeconds();
   const minutes = now.getMinutes();
   const hours = now.getHours();
 
-  const secondsDegrees = seconds * 6; // 360 / 60
+  const secondsDegrees = seconds * 6;
   const minutesDegrees = (minutes + seconds / 60) * 6;
-  const hoursDegrees = ((hours % 12) + minutes / 60) * 30; // 360 / 12
+  const hoursDegrees = ((hours % 12) + minutes / 60) * 30;
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 1000);
@@ -281,6 +281,7 @@ export const ProScrollTemplate = ({
   const handleEnter = async () => {
     setEntered(true);
 
+    // O áudio e o vídeo agora iniciam juntos e de forma paralela (sem o return indevido)
     try {
       if (hasMusic && audioRef.current) {
         audioRef.current.currentTime = 0;
@@ -289,16 +290,19 @@ export const ProScrollTemplate = ({
         setMuted(false);
 
         await audioRef.current.play();
-        return;
       }
+    } catch (error) {
+      console.error("Audio play error:", error);
+    }
 
+    try {
       if (isVideoBackground && backgroundVideoRef.current) {
         backgroundVideoRef.current.volume = volume;
         backgroundVideoRef.current.muted = muted;
         await backgroundVideoRef.current.play();
       }
     } catch (error) {
-      console.error("Media play error:", error);
+      console.error("Video play error:", error);
     }
   };
 
@@ -333,7 +337,8 @@ export const ProScrollTemplate = ({
 return (
     <div
       ref={scrollContainerRef}
-      className={`profile-pro-scroll relative h-screen overflow-y-auto overflow-x-hidden overscroll-contain bg-black text-white [scrollbar-width:none] ${
+      // Mudado de bg-black para bg-transparent para o BackgroundLayer (fixed) não ser coberto!
+      className={`profile-pro-scroll relative h-screen overflow-y-auto overflow-x-hidden overscroll-contain bg-transparent text-white [scrollbar-width:none] ${
         hasCustomCursor ? "cursor-none [&_*]:cursor-none" : ""
       }`}
     >
@@ -392,7 +397,7 @@ return (
         {entered && <ParticleLayer effect={profileEffect} />}
       </div>
 
-      {/* Áudio principal que controla tudo (o Player interno vai se conectar a este) */}
+      {/* Áudio principal */}
       {hasMusic && (
         <audio ref={audioRef} src={data.profile.music_url} loop preload="auto" playsInline />
       )}
@@ -413,7 +418,7 @@ return (
         />
       )}
 
-      {/* Recolocado o GuestbookWidget para ler as variáveis username e apiUrl */}
+      {/* Livro de Visitas */}
       {entered && (
         <GuestbookWidget username={username} apiUrl={apiUrl} template={template} />
       )}
@@ -464,7 +469,7 @@ return (
             <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-md [will-change:transform]">
               <div className="mb-4 flex items-center gap-3">
                 
-                {/* Micro relógio analógico mecânico funcional */}
+                {/* Relógio analógico mecânico funcional */}
                 <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white shadow-inner">
                   <div className="relative h-9 w-9 rounded-full border border-white/20 bg-black/40">
                     {/* Ponteiro das Horas */}
@@ -517,6 +522,7 @@ return (
 
                 <div>
                   <p className="text-sm font-bold text-white">Location</p>
+                  <p className="text-xs text-white/45">Profile info</p>
                 </div>
               </div>
 
