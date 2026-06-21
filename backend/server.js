@@ -1065,7 +1065,36 @@ app.put('/api/profile/music', authenticateToken, async (req, res) => {
 });
 
 app.put('/api/profile/details', authenticateToken, async (req, res) => {
-  const { location, statusText } = req.body;
+  let { location, statusText } = req.body;
+
+  // Se o campo de localização vier vazio ou com o texto "auto", faremos a autodetecção por IP
+  if (!location || String(location).trim().toLowerCase() === 'auto') {
+    try {
+      // Captura o IP real (considerando proxies/Cloudflare)
+      let ip = req.headers['x-forwarded-for'] || req.ip || req.socket?.remoteAddress || '';
+      if (ip.includes(',')) {
+        ip = ip.split(',')[0].trim();
+      }
+
+      // IPs locais (localhost) não possuem geolocalização. Criamos um fallback de desenvolvimento:
+      if (ip === '::1' || ip === '127.0.0.1' || ip.startsWith('127.') || ip.startsWith('192.168.')) {
+        location = 'Manaus, AM - BR'; // Seu fallback de desenvolvimento local
+      } else {
+        // Consulta a API rápida e gratuita do ip-api
+        const geoRes = await axios.get(`http://ip-api.com/json/${ip}`);
+        const geo = geoRes.data;
+
+        if (geo && geo.status === 'success') {
+          location = `${geo.city}, ${geo.region} - ${geo.countryCode}`;
+        } else {
+          location = 'Unknown';
+        }
+      }
+    } catch (error) {
+      console.error('IP Geolocation error:', error.message);
+      location = 'Unknown';
+    }
+  }
 
   try {
     await pool.query(
@@ -1073,7 +1102,11 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
       [location || '', statusText || '', req.userId]
     );
 
-    return res.json({ message: 'Profile details updated successfully!' });
+    // Retorna a localização autodetectada para que o Front-end possa exibir ao usuário
+    return res.json({ 
+      message: 'Profile details updated successfully!',
+      location: location 
+    });
   } catch (error) {
     console.error('Profile details update error:', error);
     return res.status(500).json({ error: error.message });

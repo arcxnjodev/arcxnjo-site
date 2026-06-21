@@ -163,13 +163,18 @@ export const AdminPanel = () => {
     try {
       const token = localStorage.getItem("token");
 
-      await axios.put(
+      const response = await axios.put(
         `${API_URL}/api/profile/details`,
         { location, statusText },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
+      // Se o servidor autodetectou a localização pelo IP, atualizamos a caixinha na tela!
+      if (response.data.location) {
+        setLocation(response.data.location);
+      }
 
       alert("Profile details updated successfully!");
     } catch (error) {
