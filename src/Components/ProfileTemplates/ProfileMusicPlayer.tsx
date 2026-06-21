@@ -166,21 +166,9 @@ export const ProfileMusicPlayer = ({
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-black/40 p-6 shadow-2xl backdrop-blur-2xl">
+    // O container principal não possui mais fundo preto nem bordas! Fica 100% transparente.
+    <div className="relative w-full py-4">
       
-      {/* Luz de fundo dinâmica baseada na capa do álbum */}
-      {coverArt && (
-        <div
-          className="pointer-events-none absolute inset-0 z-0 opacity-20 mix-blend-screen transition-all duration-1000"
-          style={{
-            backgroundImage: `url(${coverArt})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            filter: "blur(70px)",
-          }}
-        />
-      )}
-
       {/* Áudio Interno (Se não houver externo) */}
       {!externalAudioRef && (
         <audio ref={audioRef} src={musicUrl} preload="auto" loop playsInline />
@@ -197,11 +185,10 @@ export const ProfileMusicPlayer = ({
               {coverArt ? (
                 <img src={coverArt} alt={musicTitle} className="h-full w-full rounded-2xl object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                <div className="flex h-full w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
                   <span className="text-4xl text-white/20">♪</span>
                 </div>
               )}
-              <div className="absolute inset-0 rounded-2xl border border-white/10" />
             </div>
 
             {/* Info */}
@@ -214,12 +201,12 @@ export const ProfileMusicPlayer = ({
                     <span className="w-1 rounded-full bg-purple-400" style={{ animation: "eq3 0.7s ease-in-out infinite alternate" }} />
                   </div>
                 )}
-                <h3 className="truncate text-xl font-black tracking-tight text-white">
+                <h3 className="truncate text-xl font-black tracking-tight text-white drop-shadow-md">
                   {musicTitle}
                 </h3>
               </div>
               {musicArtist && (
-                <p className="mt-0.5 truncate text-sm font-semibold text-white/50">
+                <p className="mt-0.5 truncate text-sm font-semibold text-white/70 drop-shadow-md">
                   {musicArtist}
                 </p>
               )}
@@ -237,27 +224,27 @@ export const ProfileMusicPlayer = ({
               onChange={seek}
               className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 outline-none transition-all hover:h-2"
               style={{
-                background: `linear-gradient(to right, #a855f7 ${progress}%, rgba(255,255,255,0.1) ${progress}%)`,
+                background: `linear-gradient(to right, #a855f7 ${progress}%, rgba(255,255,255,0.15) ${progress}%)`,
               }}
             />
             <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] font-bold tracking-wider text-white/40 tabular-nums">
+              <span className="text-[11px] font-bold tracking-wider text-white/60 tabular-nums drop-shadow-sm">
                 {fmt(currentTime)}
               </span>
-              <span className="text-[11px] font-bold tracking-wider text-white/40 tabular-nums">
+              <span className="text-[11px] font-bold tracking-wider text-white/60 tabular-nums drop-shadow-sm">
                 {fmt(duration)}
               </span>
             </div>
           </div>
 
-          {/* Botões de Controle */}
+          {/* Botões de Controle 100% Transparentes */}
           <div className="mt-5 flex items-center justify-center gap-6">
             <button
               type="button"
               onClick={skipBack}
-              className="group flex h-10 w-10 items-center justify-center text-white/50 transition-all hover:text-white"
+              className="group flex items-center justify-center text-white/60 transition-all hover:scale-110 hover:text-white"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6 transition-transform group-hover:-translate-x-1" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-7 w-7 transition-transform group-hover:-translate-x-1" fill="currentColor">
                 <path d="M8.09 14.647c-1.787-1.154-1.787-4.14 0-5.294l10.79-6.968c1.736-1.121 3.87.339 3.87 2.648v13.934c0 2.31-2.134 3.769-3.87 2.648zM2 5a.75.75 0 0 1 1.5 0v14A.75.75 0 0 1 2 19z" />
               </svg>
             </button>
@@ -265,14 +252,14 @@ export const ProfileMusicPlayer = ({
             <button
               type="button"
               onClick={togglePlay}
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all hover:scale-105 hover:bg-purple-100 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] active:scale-95"
+              className="flex items-center justify-center text-white/90 transition-all hover:scale-110 hover:text-white active:scale-95"
             >
               {playing ? (
-                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
+                <svg viewBox="0 0 24 24" className="h-12 w-12 drop-shadow-lg" fill="currentColor">
                   <path d="M2 6c0-1.886 0-2.828.586-3.414S4.114 2 6 2s2.828 0 3.414.586S10 4.114 10 6v12c0 1.886 0 2.828-.586 3.414S7.886 22 6 22s-2.828 0-3.414-.586S2 19.886 2 18zm12 0c0-1.886 0-2.828.586-3.414S16.114 2 18 2s2.828 0 3.414.586S22 4.114 22 6v12c0 1.886 0 2.828-.586 3.414S19.886 22 18 22s-2.828 0-3.414-.586S14 19.886 14 18z" />
                 </svg>
               ) : (
-                <svg viewBox="0 0 24 24" className="h-7 w-7 translate-x-[2px]" fill="currentColor">
+                <svg viewBox="0 0 24 24" className="h-12 w-12 drop-shadow-lg" fill="currentColor">
                   <path d="M6.906 4.537A.75.75 0 0 0 5.75 5.25v13.5a.75.75 0 0 0 1.156.637l10.5-6.75a.75.75 0 0 0 0-1.274z" />
                 </svg>
               )}
@@ -281,9 +268,9 @@ export const ProfileMusicPlayer = ({
             <button
               type="button"
               onClick={skipForward}
-              className="group flex h-10 w-10 items-center justify-center text-white/50 transition-all hover:text-white"
+              className="group flex items-center justify-center text-white/60 transition-all hover:scale-110 hover:text-white"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6 transition-transform group-hover:translate-x-1" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-7 w-7 transition-transform group-hover:translate-x-1" fill="currentColor">
                 <path d="M16.66 14.647c1.787-1.154 1.787-4.14 0-5.294L5.87 2.385C4.135 1.264 2 2.724 2 5.033v13.934c0 2.31 2.134 3.769 3.87 2.648zM22.75 5a.75.75 0 0 0-1.5 0v14a.75.75 0 0 0 1.5 0z" />
               </svg>
             </button>
@@ -295,7 +282,8 @@ export const ProfileMusicPlayer = ({
           <div
             className="relative mt-4 flex-1 overflow-hidden sm:mt-0"
             style={{
-              height: "200px",
+              height: "220px",
+              // O mask-image usa 'black' apenas como canal alfa. Não renderiza fundo preto!
               maskImage: "linear-gradient(transparent 0%, black 20%, black 80%, transparent 100%)",
               WebkitMaskImage: "linear-gradient(transparent 0%, black 20%, black 80%, transparent 100%)"
             }}
@@ -319,7 +307,7 @@ export const ProfileMusicPlayer = ({
                     type="button"
                     onClick={() => { if (audioRef.current) audioRef.current.currentTime = line.time; }}
                     className={`block w-full cursor-pointer truncate px-2 text-center text-base transition-all duration-500 sm:text-left sm:text-lg ${
-                      isActive ? "scale-[1.02] font-black text-white" : "font-medium text-white/70"
+                      isActive ? "scale-[1.02] font-black text-white drop-shadow-lg" : "font-medium text-white/70"
                     }`}
                     style={{
                       height: 36,
