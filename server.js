@@ -2256,12 +2256,12 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
         ip = ip.split(',')[0].trim();
       }
 
-      // LIMPEZA DO PREFIXO IPV6 (O maior vilão de testes no Localhost)
+      // LIMPEZA DO PREFIXO IPV6 (Para testes no Localhost)
       if (ip.startsWith('::ffff:')) {
         ip = ip.replace('::ffff:', '');
       }
 
-      // Função auxiliar robusta para verificar se o IP é local ou privado
+      // Função auxiliar para verificar se o IP é local ou privado
       const isLocalIp = (ipAddress) => {
         if (ipAddress === '::1' || ipAddress === '127.0.0.1' || ipAddress.toLowerCase() === 'localhost') {
           return true;
@@ -2285,23 +2285,8 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
         const geoRes = await axios.get(`http://ip-api.com/json/${ip}`);
         const geo = geoRes.data;
 
-        if (coverArt && data.results && data.results[0] && data.results[0].artworkUrl100) {
-          // Apenas segurança
-        }
-
-        if (geo.status === 'success' || (geo.lat && geo.lon)) {
-          // Monta a localização (Cidade, Estado/País)
-          const city = geo.city || '';
-          const region = geo.region || '';
-          const country = geo.countryCode || '';
-          
-          if (city && region) {
-            location = `${city}, ${region} - ${country}`;
-          } else if (city) {
-            location = `${city} - ${country}`;
-          } else {
-            location = geo.country || 'Unknown';
-          }
+        if (geo && geo.status === 'success') {
+          location = `${geo.city}, ${geo.region} - ${geo.countryCode}`;
         } else {
           location = 'Unknown';
         }
@@ -2318,7 +2303,6 @@ app.put('/api/profile/details', authenticateToken, async (req, res) => {
       [location || '', statusText || '', req.userId]
     );
 
-    // Retorna a localização autodetectada para que o Front-end possa exibir ao usuário
     return res.json({ 
       message: 'Profile details updated successfully!',
       location: location 
