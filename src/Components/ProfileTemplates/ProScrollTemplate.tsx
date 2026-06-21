@@ -88,7 +88,8 @@ export const ProScrollTemplate = ({
   const [now, setNow] = useState(new Date());
   const [activeSection, setActiveSection] = useState("profile");
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Removido o | null do HTMLAudioElement para bater com a tipagem do React Native Audio
+  const audioRef = useRef<HTMLAudioElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const isAutoScrollingRef = useRef(false);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -384,6 +385,7 @@ return (
         {entered && <ParticleLayer effect={profileEffect} />}
       </div>
 
+      {/* Áudio principal que controla tudo (o Player interno vai se conectar a este) */}
       {hasMusic && (
         <audio ref={audioRef} src={data.profile.music_url} loop preload="auto" playsInline />
       )}
@@ -509,8 +511,10 @@ return (
             className="mx-auto flex min-h-screen max-w-4xl items-center px-4 py-16"
           >
             <div className="w-full flex flex-col gap-6">
+              {/* O comentário agora está pro lado de fora e seguro! */}
               {hasMusic && (
                 <ProfileMusicPlayer
+                  externalAudioRef={audioRef}
                   musicUrl={data.profile.music_url!}
                   musicTitle={data.profile.music_title}
                   musicArtist={data.profile.music_artist}

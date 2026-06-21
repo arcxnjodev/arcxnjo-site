@@ -9,6 +9,8 @@ type Props = {
   musicTitle?: string;
   musicArtist?: string;
   albumArt?: string | null;
+  // Correção de tipagem do RefObject
+  externalAudioRef?: React.RefObject<HTMLAudioElement>;
 };
 
 function parseLrc(lrc: string): LyricLine[] {
@@ -38,8 +40,12 @@ export const ProfileMusicPlayer = ({
   musicTitle = "Profile music",
   musicArtist = "",
   albumArt,
+  externalAudioRef,
 }: Props) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const internalAudioRef = useRef<HTMLAudioElement>(null);
+  // Usa o áudio externo se existir, senão usa o interno
+  const audioRef = externalAudioRef || internalAudioRef;
+  
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -65,10 +71,15 @@ export const ProfileMusicPlayer = ({
       .catch(() => {});
   }, [musicTitle, musicArtist]);
 
-  // Eventos do áudio
+  // Eventos do áudio (Sincroniza com áudio já tocando)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    // Sincroniza o estado inicial caso a música já tenha começado no EnterOverlay
+    setPlaying(!audio.paused);
+    setCurrentTime(audio.currentTime);
+    setDuration(audio.duration || 0);
 
     const onTimeUpdate = () => {
       const t = audio.currentTime;
@@ -104,7 +115,7 @@ export const ProfileMusicPlayer = ({
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("ended", onEnded);
     };
-  }, [lines]);
+  }, [lines, audioRef]);
 
   const togglePlay = async () => {
     const audio = audioRef.current;
@@ -141,7 +152,10 @@ export const ProfileMusicPlayer = ({
       className="relative overflow-hidden rounded-3xl border border-white/10 backdrop-blur-xl"
       style={{ background: "rgba(0,0,0,0.2)" }}
     >
-      <audio ref={audioRef} src={musicUrl} preload="metadata" />
+      {/* O Player só renderiza sua própria tag se não estiver atrelado a um template principal */}
+      {!externalAudioRef && (
+        <audio ref={audioRef} src={musicUrl} preload="auto" loop playsInline />
+      )}
 
       <div className="flex flex-col sm:flex-row">
         {/* Controles */}
