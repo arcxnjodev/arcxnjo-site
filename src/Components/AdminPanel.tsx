@@ -13,12 +13,10 @@ import {
   FaLink,
   FaImage,
   FaSignOutAlt,
-  FaTachometerAlt,
   FaPalette,
   FaMusic,
   FaCertificate,
   FaExternalLinkAlt,
-  FaCrown,
   FaMagic,
   FaSave,
   FaUsers,
@@ -171,7 +169,6 @@ export const AdminPanel = () => {
         }
       );
 
-      // Se o servidor autodetectou a localização pelo IP, atualizamos a caixinha na tela!
       if (response.data.location) {
         setLocation(response.data.location);
       }
@@ -260,12 +257,12 @@ export const AdminPanel = () => {
   const profileUrl = `https://arcxnjo.com.br/${username || ""}`;
 
   const glassCard =
-    "rounded-3xl border border-white/10 bg-white/[0.055] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.38)]";
+    "rounded-3xl border border-white/[0.06] bg-white/[0.025] backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.4)]";
 
   const inputClass =
-    "w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white placeholder-white/35 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]";
+    "w-full rounded-xl border border-white/5 bg-black/40 px-3.5 py-2.5 text-xs text-white placeholder-white/20 outline-none transition focus:border-purple-500/40 focus:bg-black/55 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.08)]";
 
-  const labelClass = "block text-sm font-semibold text-white/85 mb-2";
+  const labelClass = "block text-xs font-semibold text-white/70 mb-1.5";
 
   const SaveButton = ({
   onClick,
@@ -277,565 +274,344 @@ export const AdminPanel = () => {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-2xl bg-purple-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0"
+      className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3 py-2 text-xs font-bold text-white shadow-[0_0_16px_rgba(147,51,234,0.18)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_24px_rgba(147,51,234,0.26)] active:translate-y-0"
     >
-      <FaSave className="text-xs" />
+      <FaSave className="text-[10px]" />
       {children}
     </button>
   );
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white">
+      {/* Estilos e animações sutis de interface mantidos */}
       <style>{`
-  @keyframes adminFloat {
-    0%, 100% { transform: translate3d(0,0,0) rotate(var(--rotate, 0deg)); }
-    50% { transform: translate3d(0,-14px,0) rotate(var(--rotate, 0deg)); }
-  }
+        @keyframes adminPulse {
+          0%, 100% { opacity: 0.15; transform: scaleX(0.92); }
+          50% { opacity: 0.35; transform: scaleX(1); }
+        }
 
-  @keyframes adminPulse {
-    0%, 100% { opacity: 0.12; transform: scaleX(0.88); }
-    50% { opacity: 0.42; transform: scaleX(1); }
-  }
+        @keyframes adminGlowSweep {
+          0% { transform: translateX(-120%); opacity: 0; }
+          40% { opacity: 0.12; }
+          100% { transform: translateX(120%); opacity: 0; }
+        }
 
-  @keyframes adminCodeGrid {
-    from { background-position: 0 0; }
-    to { background-position: 56px 56px; }
-  }
+        @keyframes liveIndicator {
+          0%, 100% { opacity: 0.4; transform: scale(0.9); }
+          50% { opacity: 1; transform: scale(1.15); }
+        }
+      `}</style>
 
-  @keyframes adminGlowSweep {
-    0% { transform: translateX(-120%); opacity: 0; }
-    40% { opacity: 0.34; }
-    100% { transform: translateX(120%); opacity: 0; }
-  }
-
-  @keyframes adminScan {
-    0%, 100% { transform: translateY(-18%); opacity: 0.08; }
-    50% { transform: translateY(42%); opacity: 0.18; }
-  }
-
-  @keyframes adminTerminalBlink {
-    0%, 48% { opacity: 1; }
-    49%, 100% { opacity: 0; }
-  }
-`}</style>
-
+      {/* Fundo Minimalista e Premium */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-  <div className="absolute inset-0 bg-[#050508]" />
+        <div className="absolute inset-0 bg-[#060608]" />
 
-  <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(168,85,247,0.14),transparent_30%),radial-gradient(circle_at_50%_110%,rgba(16,185,129,0.08),transparent_34%)]" />
+        <div
+          className="absolute inset-0 opacity-[0.035]"
+          style={{
+            backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
 
-  <div
-    className="absolute inset-0 opacity-[0.08]"
-    style={{
-      backgroundImage:
-        "linear-gradient(rgba(255,255,255,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px)",
-      backgroundSize: "56px 56px",
-      animation: "adminCodeGrid 26s linear infinite",
-    }}
-  />
+        <div className="absolute inset-x-0 top-0 h-[300px] bg-gradient-to-b from-white/[0.015] to-transparent" />
 
-  <div
-    className="absolute inset-x-0 top-[-20%] h-1/2 bg-gradient-to-b from-cyan-300/[0.08] via-white/[0.025] to-transparent blur-sm"
-    style={{ animation: "adminScan 9s ease-in-out infinite" }}
-  />
-
-  <div className="absolute left-[-240px] top-[-180px] h-[520px] w-[520px] rounded-full border border-cyan-300/10 bg-cyan-300/[0.025] blur-3xl" />
-  <div className="absolute bottom-[-260px] right-[-220px] h-[620px] w-[620px] rounded-full border border-purple-400/10 bg-purple-500/[0.035] blur-3xl" />
-
-  <div
-    className="absolute right-[7%] top-[13%] hidden w-[360px] overflow-hidden rounded-3xl border border-white/10 bg-black/35 shadow-[0_24px_90px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:block"
-    style={{ "--rotate": "-2deg", animation: "adminFloat 9s ease-in-out infinite" } as React.CSSProperties}
-  >
-    <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-      <div className="flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
-        <span className="h-2.5 w-2.5 rounded-full bg-yellow-300/70" />
-        <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
+        <div className="absolute -right-[15%] -top-[10%] h-[500px] w-[500px] rounded-full bg-purple-500/[0.025] blur-[100px]" />
+        <div className="absolute -left-[10%] top-[15%] h-[400px] w-[400px] rounded-full bg-cyan-500/[0.015] blur-[80px]" />
+        <div className="absolute -bottom-[20%] left-[30%] h-[700px] w-[700px] rounded-full bg-emerald-500/[0.015] blur-[120px]" />
       </div>
 
-      <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/25">
-        deploy.log
-      </span>
-    </div>
-
-    <div className="space-y-2 px-4 py-4 font-mono text-xs leading-relaxed text-white/45">
-      <p>
-        <span className="text-cyan-300/70">~/arcxnjo</span> git status
-      </p>
-      <p className="text-emerald-300/70">✓ working tree clean</p>
-      <p>
-        <span className="text-cyan-300/70">~/arcxnjo</span> npm run build
-      </p>
-      <p className="text-purple-300/70">compiled successfully</p>
-      <p>
-        <span className="text-cyan-300/70">~/arcxnjo</span>{" "}
-        <span className="text-white/70">deploy</span>
-        <span style={{ animation: "adminTerminalBlink 1s step-end infinite" }}>
-          _
-        </span>
-      </p>
-    </div>
-  </div>
-
-  <div
-    className="absolute bottom-[10%] left-[5%] hidden w-[320px] rounded-3xl border border-white/10 bg-black/25 p-5 font-mono text-xs leading-relaxed text-white/35 shadow-[0_24px_80px_rgba(0,0,0,0.38)] backdrop-blur-xl xl:block"
-    style={{ "--rotate": "2deg", animation: "adminFloat 11s ease-in-out infinite reverse" } as React.CSSProperties}
-  >
-    <p>
-      <span className="text-purple-300/70">const</span>{" "}
-      <span className="text-cyan-200/70">profile</span> = await arcxnjo.build();
-    </p>
-    <p>
-      <span className="text-purple-300/70">if</span> (profile.isPro) unlock();
-    </p>
-    <p className="text-emerald-300/65">return cleanExperience;</p>
-  </div>
-
-  <div className="absolute right-[28%] top-[32%] hidden font-mono text-7xl font-black text-white/[0.025] lg:block">
-    {"</>"}
-  </div>
-
-  <div className="absolute left-[18%] top-[20%] hidden font-mono text-sm text-cyan-200/[0.12] md:block">
-    api.arcxnjo.com.br/status · 200 OK
-  </div>
-
-  <div className="absolute bottom-[24%] right-[18%] hidden font-mono text-sm text-purple-200/[0.12] md:block">
-    profile.render(template) · ready
-  </div>
-
-  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent" />
-</div>
-
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-black/45 backdrop-blur-2xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <a href="/" className="group flex items-center gap-4">
-            <div className="relative grid h-11 w-11 place-items-center rounded-2xl bg-white/10 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/50 to-pink-500/20 opacity-70 transition group-hover:opacity-100" />
-              <FaMagic className="relative text-white" />
+      {/* Header Compacto */}
+      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-black/40 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+          <a href="/" className="group flex items-center gap-3">
+            <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-white/5 shadow-[0_0_20px_rgba(168,85,247,0.12)] border border-white/10">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-purple-500/30 to-pink-500/10 opacity-70 transition group-hover:opacity-100" />
+              <FaMagic className="relative z-10 text-xs text-white" />
             </div>
-
-            <div>
-              <span
-                className="block text-xl font-bold tracking-[0.25em] text-white md:text-2xl"
-                style={{ fontFamily: "Orbitron, sans-serif" }}
-              >
-                ARC<span className="text-purple-400">X</span>NJO
-              </span>
-              <span className="text-xs text-white/45">{t("admin.controlCenter")}</span>
+            <div className="flex flex-col">
+              <span className="text-sm font-black tracking-widest text-white" style={{ fontFamily: "Orbitron, sans-serif" }}>ARCXNJO</span>
+              <span className="text-[9px] font-bold text-white/35 tracking-widest uppercase">{t("admin.controlCenter")}</span>
             </div>
           </a>
 
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 md:flex">
-              <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-black text-white">
-                {username?.charAt(0).toUpperCase() ||
-                  safeEmail?.charAt(0).toUpperCase() ||
-                  "U"}
-              </div>
-
-              <div className="leading-tight">
-                <p className="max-w-[160px] truncate text-sm font-semibold text-white">
-                  {displayName || username || safeEmail?.split("@")[0] || "User"}
-                </p>
-                <p className="text-[11px] uppercase tracking-wider text-white/40">
-                  {plan} / {role}
-                </p>
-              </div>
+            <div className="hidden items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.02] px-2.5 py-1 text-[10px] font-mono text-white/40 sm:flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" style={{ animation: "liveIndicator 1.8s infinite" }} />
+              api.arcxnjo.com.br · 200
             </div>
 
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:border-red-400/30 hover:bg-red-500/10 hover:text-white"
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 text-xs font-bold text-white/60 transition hover:border-red-400/20 hover:bg-red-500/5 hover:text-white"
             >
-              <FaSignOutAlt />
-              <span className="hidden sm:inline">{t("admin.logout")}</span>
+              <FaSignOutAlt className="text-xs" />
+              <span>{t("admin.logout")}</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-5 py-8 lg:px-8">
-        <section className={`${glassCard} relative mb-8 overflow-hidden p-6 md:p-8`}>
-          <div
-            className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-purple-500/15 via-white/5 to-transparent"
-            style={{ animation: "adminGlowSweep 5s ease-in-out infinite" }}
-          />
-
-          <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-purple-200">
-                <FaCrown className="text-purple-300" />
-                {t("admin.creatorDashboard")}
-              </div>
-
-              <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">
-                {t("admin.dashboard")}
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">
-                {t("admin.dashboardSubtitle")}
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
-              <div className="rounded-3xl border border-white/10 bg-black/30 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/35">
-                  Username
-                </p>
-                <p className="mt-1 truncate text-lg font-bold text-white">
-                  @{username || t("admin.loading")}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-black/30 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/35">
-                  Plan
-                </p>
-                <p className="mt-1 flex items-center gap-2 text-lg font-bold text-white">
-                  <span className="h-2 w-2 rounded-full bg-purple-400 shadow-[0_0_16px_rgba(168,85,247,0.8)]" />
-                  {plan || "free"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-          <aside className={`${glassCard} h-fit p-4 lg:sticky lg:top-24`}>
-            <div className="mb-4 rounded-3xl border border-white/10 bg-black/35 p-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 text-xl font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.28)]">
-                  {username?.charAt(0).toUpperCase() ||
-                    safeEmail?.charAt(0).toUpperCase() ||
-                    "U"}
+      {/* Main Layout de Alta Densidade (Zoom 90%) */}
+      {activeTabData && (
+        <main className="relative z-10 mx-auto max-w-6xl px-4 py-6">
+          <div className="grid gap-6 lg:grid-cols-[230px_1fr]">
+            
+            {/* Sidebar de navegação */}
+            <aside className="flex flex-col gap-4">
+              <div className="flex items-center gap-4 p-3 rounded-2xl border border-white/[0.06] bg-white/[0.015]">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 text-lg font-black text-white border border-white/10 shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+                  {username?.charAt(0).toUpperCase() || safeEmail?.charAt(0).toUpperCase() || "U"}
                 </div>
-
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-white">
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate text-xs font-black text-white">
                     {displayName || username || "User"}
-                  </p>
-                  <p className="truncate text-xs text-white/45">{safeEmail}</p>
+                  </span>
+                  <span className="truncate text-[10px] text-white/40 mt-0.5">
+                    {safeEmail} <span className="text-white/20">·</span> <span className="uppercase text-purple-400 font-bold tracking-wider">{plan}</span>
+                  </span>
                 </div>
               </div>
 
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full w-2/3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
-                  style={{ animation: "adminPulse 2.4s ease-in-out infinite" }}
-                />
-              </div>
-            </div>
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-1.5">
+                <nav className="flex flex-col gap-0.5">
+                  {tabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
 
-            <nav className="space-y-2">
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`group relative w-full overflow-hidden rounded-2xl border px-4 py-4 text-left transition ${
-                      isActive
-                        ? "border-purple-400/30 bg-purple-500/15 text-white shadow-[0_0_28px_rgba(168,85,247,0.18)]"
-                        : "border-white/5 bg-white/[0.03] text-white/55 hover:border-white/10 hover:bg-white/[0.07] hover:text-white"
-                    }`}
-                  >
-                    {isActive && (
-                      <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-purple-400 to-pink-400" />
-                    )}
-
-                    <span className="flex items-center gap-3">
-                      <span
-                        className={`grid h-10 w-10 place-items-center rounded-2xl transition ${
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold rounded-xl transition-all ${
                           isActive
-                            ? "bg-purple-500 text-white"
-                            : "bg-black/30 text-white/45 group-hover:text-white"
+                            ? "bg-purple-600 text-white shadow-[0_0_16px_rgba(147,51,234,0.24)]"
+                            : "text-white/50 hover:bg-white/[0.03] hover:text-white"
                         }`}
                       >
-                        {tab.icon}
-                      </span>
+                        <span className="text-sm shrink-0">{tab.icon}</span>
+                        <span className="truncate">{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
 
-                      <span className="min-w-0">
-                        <span className="block text-sm font-bold">
-                          {tab.label}
-                        </span>
-                        <span className="mt-0.5 block truncate text-xs text-white/35">
-                          {tab.description}
-                        </span>
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-
-            <div className="mt-4 border-t border-white/10 pt-4">
               <button
                 type="button"
                 onClick={() => {
-                  if (!username) {
-                    alert("Username is still loading. Please wait a moment.");
-                    return;
-                  }
-
+                  if (!username) return;
                   window.open(profileUrl, "_blank");
                 }}
-                className="group flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-4 text-left text-white/60 transition hover:border-purple-400/25 hover:bg-purple-500/10 hover:text-white"
+                className="flex items-center justify-center gap-1.5 w-full px-3 py-2.5 text-xs font-bold rounded-xl border border-purple-500/15 bg-purple-500/5 text-purple-300 transition hover:bg-purple-500/10"
               >
-                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 group-hover:bg-purple-500/20">
-                  <FaTachometerAlt />
-                </span>
-
-                <span className="min-w-0">
-                  <span className="flex items-center gap-2 text-sm font-bold">
-                    {t("admin.viewProfile")}
-                    <FaExternalLinkAlt className="text-[10px] opacity-60" />
-                  </span>
-                  <span className="block truncate text-xs text-white/35">
-                    arcxnjo.com.br/{username || t("admin.loading")}
-                  </span>
-                </span>
+                <span>{t("admin.viewProfile")}</span>
+                <FaExternalLinkAlt className="text-[10px]" />
               </button>
-            </div>
-          </aside>
+            </aside>
 
-          <main className="min-w-0 space-y-6">
-            <div className={`${glassCard} overflow-hidden`}>
-              <div className="border-b border-white/10 bg-black/25 px-5 py-4 md:px-6">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-purple-500/20 text-purple-200">
-                    {activeTabData?.icon}
-                  </div>
-
-                  <div>
-                    <h2 className="text-lg font-black text-white">
-                      {activeTabData?.label}
-                    </h2>
-                    <p className="text-sm text-white/40">
-                      {activeTabData?.description}
-                    </p>
+            {/* Conteúdo Principal */}
+            <main className="min-w-0">
+              <div className={`${glassCard} overflow-hidden`}>
+                
+                {/* Cabeçalho da Seção Ativa */}
+                <div className="border-b border-white/[0.06] bg-black/15 px-5 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-9 w-9 place-items-center rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/10">
+                      {activeTabData?.icon}
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-black text-white">
+                        {activeTabData?.label}
+                      </h2>
+                      <p className="text-[11px] text-white/40">
+                        {activeTabData?.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="p-5 md:p-6">
-                {activeTab === "profile" && (
-                  <div className="space-y-6">
-                    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-purple-600/25 via-black/35 to-pink-600/20 p-5 md:p-6">
-                      <div className="absolute right-[-70px] top-[-70px] h-44 w-44 rounded-full bg-purple-500/20 blur-3xl" />
+                {/* Formulários e Componentes Internos */}
+                <div className="p-5 md:p-6">
+                  {activeTab === "profile" ? (
+                    <div className="space-y-5">
+                      
+                      {/* Resumo da Identidade */}
+                      <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-br from-purple-600/15 via-black/25 to-pink-600/10 p-4 md:p-5">
+                        <div className="absolute right-[-60px] top-[-60px] h-32 w-32 rounded-full bg-purple-500/10 blur-2xl" />
 
-                      <div className="relative flex flex-col gap-5 md:flex-row md:items-start">
-                        <div className="grid h-20 w-20 shrink-0 place-items-center rounded-3xl bg-white/10 text-3xl font-black text-white shadow-[0_0_30px_rgba(255,255,255,0.08)]">
-                          {username.charAt(0).toUpperCase() || "U"}
-                        </div>
+                        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
+                          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-white/5 text-xl font-black text-white border border-white/5 shadow-md">
+                            {username.charAt(0).toUpperCase() || "U"}
+                          </div>
 
-                        <div className="min-w-0 flex-1">
-                          <h3 className="truncate text-2xl font-black text-white">
-                            {displayName || username || "User"}
-                          </h3>
-
-                          <p className="mt-1 truncate text-sm text-white/50">
-                            {safeEmail}
-                          </p>
-
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-semibold text-white/60">
-                              @{username || t("admin.loading")}
-                            </span>
-
-                            <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-100">
-                              {plan} plan
-                            </span>
-
-                            <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-semibold text-pink-100">
-                              {role}
-                            </span>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate text-lg font-black text-white leading-tight">
+                              {displayName || username || "User"}
+                            </h3>
+                            <p className="truncate text-xs text-white/40 mt-0.5">
+                              {safeEmail}
+                            </p>
+                            <div className="mt-2.5 flex flex-wrap gap-1.5">
+                              <span className="rounded-full border border-white/5 bg-black/35 px-2.5 py-0.5 text-[10px] font-bold text-white/50">
+                                @{username || "..."}
+                              </span>
+                              <span className="rounded-full border border-purple-400/10 bg-purple-500/5 px-2.5 py-0.5 text-[10px] font-bold text-purple-200">
+                                {plan} plan
+                              </span>
+                              <span className="rounded-full border border-pink-400/10 bg-pink-500/5 px-2.5 py-0.5 text-[10px] font-bold text-pink-200">
+                                {role}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="grid gap-5 xl:grid-cols-2">
-                      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
-                        <div className="mb-5">
-                          <h3 className="text-lg font-black text-white">
-                            {t("admin.identity")}
-                          </h3>
-                          <p className="text-sm text-white/40">
-                            {t("admin.identityDescription")}
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>{t("admin.username")}</label>
-
-                          <input
-                            type="text"
-                            value={newUsername}
-                            onChange={(e) => setNewUsername(e.target.value)}
-                            placeholder="your-username"
-                            className={inputClass}
-                            maxLength={20}
-                          />
-
-                          <p className="mt-2 text-xs text-white/35">
-                            3-20 characters. Letters, numbers, dots,
-                            underscores and hyphens only.
-                          </p>
-
-                          <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="text-xs text-white/45">
-                              {newUsername.length}/20
-                            </span>
-
-                            <SaveButton onClick={handleSaveUsername}>
-                              {t("admin.saveUsername")}
-                            </SaveButton>
+                      {/* Inputs de Configuração */}
+                      <div className="grid gap-5 xl:grid-cols-2">
+                        <section className="rounded-2xl border border-white/[0.06] bg-black/15 p-4">
+                          <div className="mb-4">
+                            <h3 className="text-sm font-black text-white">
+                              {t("admin.identity")}
+                            </h3>
+                            <p className="text-[11px] text-white/40">
+                              {t("admin.identityDescription")}
+                            </p>
                           </div>
+
+                          <div className="space-y-4">
+                            <div>
+                              <label className={labelClass}>{t("admin.username")}</label>
+                              <input
+                                type="text"
+                                value={newUsername}
+                                onChange={(e) => setNewUsername(e.target.value)}
+                                placeholder="your-username"
+                                className={inputClass}
+                                maxLength={20}
+                              />
+                              <div className="mt-2 flex items-center justify-between gap-3">
+                                <span className="text-[10px] text-white/30">
+                                  {newUsername.length}/20
+                               </span>
+                                <SaveButton onClick={handleSaveUsername}>
+                                  {t("admin.saveUsername")}
+                                </SaveButton>
+                              </div>
+                            </div>
+
+                            <div className="border-t border-white/5 pt-4">
+                              <label className={labelClass}>{t("admin.displayName")}</label>
+                              <input
+                                type="text"
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
+                                placeholder="Your display name"
+                                className={inputClass}
+                                maxLength={32}
+                              />
+                              <div className="mt-2 flex items-center justify-between gap-3">
+                                <span className="text-[10px] text-white/30">
+                                  {displayName.length}/32
+                                </span>
+                                <SaveButton onClick={handleSaveDisplayName}>
+                                  {t("admin.saveDisplayName")}
+                                </SaveButton>
+                              </div>
+                            </div>
+                          </div>
+                        </section>
+
+                        <section className="rounded-2xl border border-white/[0.06] bg-black/15 p-4">
+                          <div className="mb-4">
+                            <h3 className="text-sm font-black text-white">
+                              {t("admin.profileText")}
+                            </h3>
+                            <p className="text-[11px] text-white/40">
+                              {t("admin.profileTextDescription")}
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className={labelClass}>Bio</label>
+                            <textarea
+                              value={bio}
+                              onChange={(e) => setBio(e.target.value)}
+                              placeholder="Write a short bio..."
+                              className={`${inputClass} min-h-[110px] resize-none`}
+                              rows={3}
+                              maxLength={160}
+                            />
+
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                              <span className="text-[10px] text-white/30">
+                                {bio.length}/160
+                              </span>
+                              <SaveButton onClick={handleSaveBio}>
+                                {t("admin.saveBio")}
+                              </SaveButton>
+                            </div>
+                          </div>
+                        </section>
+                      </div>
+
+                      {/* Detalhes de Localização e Status */}
+                      <section className="rounded-2xl border border-white/[0.06] bg-black/15 p-4">
+                        <div className="mb-4">
+                          <h3 className="text-sm font-black text-white">
+                            {t("admin.extraDetails")}
+                          </h3>
+                          <p className="text-[11px] text-white/40">
+                            {t("admin.extraDetailsDescription")}
+                          </p>
                         </div>
 
-                        <div className="mt-6">
-                          <label className={labelClass}>{t("admin.displayName")}</label>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div>
+                            <label className={labelClass}>{t("admin.location")}</label>
+                            <input
+                              type="text"
+                              value={location}
+                              onChange={(e) => setLocation(e.target.value)}
+                              placeholder="Your location (leave empty for auto-IP)"
+                              className={inputClass}
+                              maxLength={40}
+                            />
+                          </div>
 
-                          <input
-                            type="text"
-                            value={displayName}
-                            onChange={(e) => setDisplayName(e.target.value)}
-                            placeholder="Your display name"
-                            className={inputClass}
-                            maxLength={32}
-                          />
-
-                          <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="text-xs text-white/45">
-                              {displayName.length}/32
-                            </span>
-
-                            <SaveButton onClick={handleSaveDisplayName}>
-                              Save {t("admin.displayName")}
-                            </SaveButton>
+                          <div>
+                            <label className={labelClass}>{t("admin.status")}</label>
+                            <input
+                              type="text"
+                              value={statusText}
+                              onChange={(e) => setStatusText(e.target.value)}
+                              placeholder="What are you doing now?"
+                              className={inputClass}
+                              maxLength={80}
+                            />
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                              <span className="text-[10px] text-white/30">
+                                {statusText.length}/80
+                              </span>
+                              <SaveButton onClick={handleSaveDetails}>
+                                {t("admin.saveDetails")}
+                              </SaveButton>
+                            </div>
                           </div>
                         </div>
                       </section>
-
-                      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
-                        <div className="mb-5">
-                          <h3 className="text-lg font-black text-white">
-                            {t("admin.profileText")}
-                          </h3>
-                          <p className="text-sm text-white/40">
-                            {t("admin.profileTextDescription")}
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>Bio</label>
-
-                          <textarea
-                            value={bio}
-                            onChange={(e) => setBio(e.target.value)}
-                            placeholder="Write a short bio..."
-                            className={`${inputClass} min-h-[118px] resize-none`}
-                            rows={3}
-                            maxLength={160}
-                          />
-
-                          <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="text-xs text-white/45">
-                              {bio.length}/160
-                            </span>
-
-                            <SaveButton onClick={handleSaveBio}>
-                              {t("admin.saveBio")}
-                            </SaveButton>
-                          </div>
-                        </div>
-                      </section>
                     </div>
+                  ) : (
+                    activeTabData?.component
+                  )}
+                </div>
 
-                    <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
-                      <div className="mb-5">
-                        <h3 className="text-lg font-black text-white">
-                          {t("admin.extraDetails")}
-                        </h3>
-                        <p className="text-sm text-white/40">
-                          {t("admin.extraDetailsDescription")}
-                        </p>
-                      </div>
-
-                      <div className="grid gap-5 md:grid-cols-2">
-                        <div>
-                          <label className={labelClass}>{t("admin.location")}</label>
-
-                          <input
-                            type="text"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="Your location"
-                            className={inputClass}
-                            maxLength={40}
-                          />
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>{t("admin.status")}</label>
-
-                          <input
-                            type="text"
-                            value={statusText}
-                            onChange={(e) => setStatusText(e.target.value)}
-                            placeholder="What are you doing now?"
-                            className={inputClass}
-                            maxLength={80}
-                          />
-
-                          <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="text-xs text-white/45">
-                              {statusText.length}/80
-                            </span>
-
-                            <SaveButton onClick={handleSaveDetails}>
-                              {t("admin.saveDetails")}
-                            </SaveButton>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
-                      <p className="text-sm font-semibold text-white/70">
-                        {t("admin.publicUrl")}
-                      </p>
-
-                      <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/35 p-4 md:flex-row md:items-center md:justify-between">
-                        <code className="break-all text-sm text-purple-100">
-                          https://arcxnjo.com.br/{username || t("admin.loading")}
-                        </code>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!username) return;
-                            window.open(profileUrl, "_blank");
-                          }}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/15"
-                        >
-                          Open
-                          <FaExternalLinkAlt className="text-xs" />
-                        </button>
-                      </div>
-                    </section>
-                  </div>
-                )}
-
-                {activeTab !== "profile" && activeTabData?.component}
               </div>
-            </div>
-          </main>
-        </div>
-      </div>
+            </main>
+          </div>
+        </main>
+      )}
     </div>
   );
 };
