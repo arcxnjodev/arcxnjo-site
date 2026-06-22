@@ -13,6 +13,7 @@ import {
   FaLink,
   FaImage,
   FaSignOutAlt,
+  FaTachometerAlt,
   FaPalette,
   FaMusic,
   FaCertificate,
@@ -39,7 +40,7 @@ export const AdminPanel = () => {
   const [statusText, setStatusText] = useState<string>("");
   const [plan, setPlan] = useState<string>("free");
   const [role, setRole] = useState<string>("user");
-  const [ownerBypass, setOwnerBypass] = useState(false);
+  const [ownerBypass = false, setOwnerBypass] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
@@ -316,8 +317,11 @@ export const AdminPanel = () => {
         <div className="absolute inset-x-0 top-0 h-[400px] bg-gradient-to-b from-white/[0.015] to-transparent" />
 
         {/* Luz ambiente estática e ultra-suave nos cantos da tela */}
+        {/* Luz roxa superior direita */}
         <div className="absolute -right-[15%] -top-[10%] h-[600px] w-[600px] rounded-full bg-purple-500/[0.03] blur-[120px]" />
+        {/* Luz ciano superior esquerda */}
         <div className="absolute -left-[10%] top-[15%] h-[500px] w-[500px] rounded-full bg-cyan-500/[0.02] blur-[100px]" />
+        {/* Luz esmeralda inferior central */}
         <div className="absolute -bottom-[20%] left-[30%] h-[700px] w-[700px] rounded-full bg-emerald-500/[0.02] blur-[140px]" />
       </div>
 
@@ -353,19 +357,17 @@ export const AdminPanel = () => {
             {/* Sidebar de navegação */}
             <aside className="flex flex-col gap-4">
               <div className="flex items-center gap-4 p-4 rounded-3xl border border-white/10 bg-white/[0.03]">
-                {/* Substituída a dependência do objeto 'data' inexistente pelo avatar de letras nativo */}
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 text-lg font-black text-white border border-white/10 shadow-[0_0_20px_rgba(168,85,247,0.15)]">
-                  {username?.charAt(0).toUpperCase() ||
-                    safeEmail?.charAt(0).toUpperCase() ||
-                    "U"}
-                </div>
+                <img
+                  src={data.profile?.profile_image || "/favicon.png"}
+                  alt={username}
+                  className="h-12 w-12 rounded-full object-cover border border-white/10"
+                />
                 <div className="flex flex-col min-w-0">
                   <span className="truncate text-sm font-bold text-white">
                     {displayName || username || "User"}
                   </span>
-                  {/* Exibindo a variável 'plan' útil para resolver o warning do TypeScript */}
                   <span className="truncate text-xs text-white/40">
-                    {safeEmail} <span className="text-white/20">·</span> <span className="uppercase text-purple-400 font-bold text-[10px] tracking-wider">{plan}</span>
+                    {safeEmail}
                   </span>
                 </div>
               </div>
