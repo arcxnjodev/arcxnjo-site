@@ -41,6 +41,7 @@ export const AdminPanel = () => {
   const [plan, setPlan] = useState<string>("free");
   const [role, setRole] = useState<string>("user");
   const [ownerBypass, setOwnerBypass] = useState(false);
+  const [discordAvatar, setDiscordAvatar] = useState<string | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
 
@@ -72,8 +73,34 @@ export const AdminPanel = () => {
         setPlan(response.data.plan || "free");
         setRole(response.data.role || "user");
         setOwnerBypass(Boolean(response.data.owner_bypass));
-      } catch (error) {
+
+        // Se o usuário conectou o Discord, busca a foto de perfil dele
+        const discordId = response.data.discord_id;
+        if (discordId) {
+          axios
+            .get(`${API_URL}/api/discord-presence/${discordId}`)
+            .then((res) => {
+              const dUser = res.data?.discord_user;
+              if (dUser && dUser.avatar) {
+                const ext = dUser.avatar.startsWith("a_") ? "gif" : "png";
+                setDiscordAvatar(
+                  `https://cdn.discordapp.com/avatars/${dUser.id}/${dUser.avatar}.${ext}?size=128`
+                );
+              }
+            })
+            .catch((err) => console.error("Error fetching Discord avatar:", err));
+        }
+
+      } catch (error: any) {
         console.error("Error fetching user data:", error);
+
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("email");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+          return;
+        }
 
         const token = localStorage.getItem("token");
 
@@ -171,7 +198,6 @@ export const AdminPanel = () => {
         }
       );
 
-      // Se o servidor autodetectou a localização pelo IP, atualizamos a caixinha na tela!
       if (response.data.location) {
         setLocation(response.data.location);
       }
@@ -287,37 +313,37 @@ export const AdminPanel = () => {
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white">
       <style>{`
-  @keyframes adminFloat {
-    0%, 100% { transform: translate3d(0,0,0) rotate(var(--rotate, 0deg)); }
-    50% { transform: translate3d(0,-14px,0) rotate(var(--rotate, 0deg)); }
-  }
+        @keyframes adminFloat {
+          0%, 100% { transform: translate3d(0,0,0) rotate(var(--rotate, 0deg)); }
+          50% { transform: translate3d(0,-14px,0) rotate(var(--rotate, 0deg)); }
+        }
 
-  @keyframes adminPulse {
-    0%, 100% { opacity: 0.12; transform: scaleX(0.88); }
-    50% { opacity: 0.42; transform: scaleX(1); }
-  }
+        @keyframes adminPulse {
+          0%, 100% { opacity: 0.12; transform: scaleX(0.88); }
+          50% { opacity: 0.42; transform: scaleX(1); }
+        }
 
-  @keyframes adminCodeGrid {
-    from { background-position: 0 0; }
-    to { background-position: 56px 56px; }
-  }
+        @keyframes adminCodeGrid {
+          from { background-position: 0 0; }
+          to { background-position: 56px 56px; }
+        }
 
-  @keyframes adminGlowSweep {
-    0% { transform: translateX(-120%); opacity: 0; }
-    40% { opacity: 0.25; }
-    100% { transform: translateX(120%); opacity: 0; }
-  }
+        @keyframes adminGlowSweep {
+          0% { transform: translateX(-120%); opacity: 0; }
+          40% { opacity: 0.25; }
+          100% { transform: translateX(120%); opacity: 0; }
+        }
 
-  @keyframes adminScan {
-    0%, 100% { transform: translateY(-18%); opacity: 0.04; }
-    50% { transform: translateY(42%); opacity: 0.12; }
-  }
+        @keyframes adminScan {
+          0%, 100% { transform: translateY(-18%); opacity: 0.04; }
+          50% { transform: translateY(42%); opacity: 0.12; }
+        }
 
-  @keyframes adminTerminalBlink {
-    0%, 48% { opacity: 1; }
-    49%, 100% { opacity: 0; }
-  }
-`}</style>
+        @keyframes adminTerminalBlink {
+          0%, 48% { opacity: 1; }
+          49%, 100% { opacity: 0; }
+        }
+      `}</style>
 
       {/* Universo Cyberpunk Refinado e Premium */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -348,7 +374,7 @@ export const AdminPanel = () => {
         <div className="absolute left-[-240px] top-[-180px] h-[520px] w-[520px] rounded-full border border-cyan-300/5 bg-cyan-300/[0.015] blur-3xl" />
         <div className="absolute bottom-[-260px] right-[-220px] h-[620px] w-[620px] rounded-full border border-purple-400/5 bg-purple-500/[0.025] blur-3xl" />
 
-        {/* Painel Terminal deploy.log (Visual Frosted Glass Premium com Glow Ciano) */}
+        {/* Painel Terminal deploy.log */}
         <div
           className="absolute right-[7%] top-[13%] hidden w-[360px] overflow-hidden rounded-3xl border border-white/10 bg-black/45 shadow-[0_25px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(34,211,238,0.06)] backdrop-blur-md lg:block"
           style={{ "--rotate": "-2deg", animation: "adminFloat 9s ease-in-out infinite" } as React.CSSProperties}
@@ -384,7 +410,7 @@ export const AdminPanel = () => {
           </div>
         </div>
 
-        {/* Bloco de Código (Visual Frosted Glass Premium com Glow Roxo) */}
+        {/* Bloco de Código */}
         <div
           className="absolute bottom-[10%] left-[5%] hidden w-[320px] rounded-3xl border border-white/10 bg-black/45 p-5 font-mono text-xs leading-relaxed text-white/35 shadow-[0_25px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(168,85,247,0.06)] backdrop-blur-md xl:block"
           style={{ "--rotate": "2deg", animation: "adminFloat 11s ease-in-out infinite reverse" } as React.CSSProperties}
@@ -399,12 +425,10 @@ export const AdminPanel = () => {
           <p className="text-emerald-400/55">return cleanExperience;</p>
         </div>
 
-        {/* Símbolo </ > discreto de fundo */}
         <div className="absolute right-[28%] top-[32%] hidden font-mono text-7xl font-black text-white/[0.015] lg:block">
           {"</>"}
         </div>
 
-        {/* Status bar sutil */}
         <div className="absolute left-[18%] top-[20%] hidden font-mono text-xs text-cyan-200/[0.08] md:block">
           api.arcxnjo.com.br/status · 200 OK
         </div>
@@ -515,10 +539,12 @@ export const AdminPanel = () => {
           <aside className={`${glassCard} h-fit p-4 lg:sticky lg:top-24`}>
             <div className="mb-4 rounded-3xl border border-white/10 bg-black/35 p-4">
               <div className="flex items-center gap-3">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 text-xl font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.28)]">
-                  {username?.charAt(0).toUpperCase() ||
-                    safeEmail?.charAt(0).toUpperCase() ||
-                    "U"}
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 text-xl font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.28)] overflow-hidden">
+                  {discordAvatar ? (
+                    <img src={discordAvatar} alt="Discord Avatar" className="h-full w-full object-cover" draggable={false} />
+                  ) : (
+                    username?.charAt(0).toUpperCase() || safeEmail?.charAt(0).toUpperCase() || "U"
+                  )}
                 </div>
 
                 <div className="min-w-0">
@@ -637,8 +663,12 @@ export const AdminPanel = () => {
                       <div className="absolute right-[-70px] top-[-70px] h-44 w-44 rounded-full bg-purple-500/20 blur-3xl" />
 
                       <div className="relative flex flex-col gap-5 md:flex-row md:items-start">
-                        <div className="grid h-20 w-20 shrink-0 place-items-center rounded-3xl bg-white/10 text-3xl font-black text-white shadow-[0_0_30px_rgba(255,255,255,0.08)]">
-                          {username.charAt(0).toUpperCase() || "U"}
+                        <div className="grid h-20 w-20 shrink-0 place-items-center rounded-3xl bg-white/10 text-3xl font-black text-white shadow-[0_0_30px_rgba(255,255,255,0.08)] overflow-hidden">
+                          {discordAvatar ? (
+                            <img src={discordAvatar} alt="Discord Avatar" className="h-full w-full object-cover" draggable={false} />
+                          ) : (
+                            username.charAt(0).toUpperCase() || "U"
+                          )}
                         </div>
 
                         <div className="min-w-0 flex-1">
@@ -651,7 +681,7 @@ export const AdminPanel = () => {
                           </p>
 
                           <div className="mt-4 flex flex-wrap gap-2">
-                            <span className="rounded-full border border-white/10 bg-black/35 px-3 py-1 text-xs font-semibold text-white/60">
+                            <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-semibold text-white/60">
                               @{username || t("admin.loading")}
                             </span>
 
