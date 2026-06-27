@@ -1,4 +1,4 @@
-*{
+*, *::before, *::after {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
@@ -9,58 +9,79 @@ html, body, #root {
   min-height: 100vh;
 }
 
+html {
+  scroll-behavior: smooth;
+  /* Garante fonte base legível no mobile */
+  font-size: 16px;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Tema escuro global - FORÇA CORES ESCURAS */
+/* ── Tema escuro global ──────────────────────────────────────── */
 body, html, #root {
   background-color: #000000 !important;
   color: #e0e0e0 !important;
 }
 
-/* Remove gradientes claros */
-.bg-gradient-to-r, .bg-gradient-to-br, .bg-gradient-to-tl {
+/* Remove gradientes claros do tema padrão */
+.bg-gradient-to-r,
+.bg-gradient-to-br,
+.bg-gradient-to-tl {
   background-image: none !important;
   background-color: #0a0a0a !important;
 }
 
-/* Cards e containers escuros */
-.bg-gray-800, .bg-gray-900, .bg-slate-800, .bg-slate-900 {
+/* Cards e containers */
+.bg-gray-800, .bg-gray-900,
+.bg-slate-800, .bg-slate-900 {
   background-color: #0a0a0a !important;
 }
 
-/* Fundo do menu/navbar */
 .bg-menu, .bg-gray-700, .bg-gray-600 {
   background-color: #0a0a0a !important;
 }
 
-/* Inputs escuros */
+/* Inputs */
 input, textarea, select {
   background-color: #1a1a1a !important;
   color: #ffffff !important;
   border-color: #333333 !important;
-}
-
-/* Botões escuros */
-button {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
+  /* Mobile: evita zoom automático ao focar input (iOS) */
+  font-size: max(16px, 1em) !important;
 }
 
 /* Links */
 a {
-  color: #a855f7 !important; /* roxo suave */
+  color: #a855f7 !important;
 }
-
 a:hover {
   color: #c084fc !important;
 }
 
-html {
-  scroll-behavior: smooth;
+/* ── Mobile ──────────────────────────────────────────────────── */
+
+/* Área de toque mínima para ícones e botões (acessibilidade mobile) */
+@media (max-width: 768px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Ícones nas listas de links ficam maiores */
+  svg {
+    min-width: 20px;
+    min-height: 20px;
+  }
+
+  /* Fonte um pouco maior nas telas pequenas */
+  body {
+    font-size: 15px;
+  }
 }
 
+/* ── Profile scroll ──────────────────────────────────────────── */
 .profile-pro-scroll {
   scroll-behavior: smooth;
   scrollbar-width: none;
