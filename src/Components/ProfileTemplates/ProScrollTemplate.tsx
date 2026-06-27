@@ -456,8 +456,15 @@ return (
 
               <SocialLinks socialEntries={socialEntries} className="mt-7" />
 
-              <p className="mt-6 text-xs uppercase tracking-[0.35em] text-white/35">
-                scroll
+              <p className="mt-6 text-xs uppercase tracking-[0.35em] text-white/10">
+                
+                
+                
+                
+                
+                
+               scroll for more 
+              
               </p>
             </div>
           </section>
