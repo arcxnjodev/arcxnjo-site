@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useSelector } from "react-redux";
 import { userSliceType } from "../Store/userSlice";
 import { SocialMediaSettings } from "./Ui/SocialMediaSettings";
@@ -9,61 +9,146 @@ import { MusicSettings } from "./Ui/MusicSettings";
 import { CommunityTemplatesSettings } from "./Ui/CommunityTemplatesSettings";
 import { AdminCommunityTemplates } from "./Ui/AdminCommunityTemplates";
 import {
-  FaUser,
-  FaLink,
-  FaImage,
-  FaSignOutAlt,
-  FaTachometerAlt,
-  FaPalette,
-  FaMusic,
-  FaCertificate,
-  FaExternalLinkAlt,
-  FaCrown,
-  FaMagic,
-  FaSave,
-  FaUsers,
-  FaShieldAlt,
-} from "react-icons/fa";
+  FaUser, FaLink, FaImage, FaRightFromBracket,
+  FaPalette, FaMusic, FaCertificate, FaArrowUpRightFromSquare,
+ FaUsers, FaShield, FaCopy, FaCheck,
+  FaChevronLeft, FaChevronRight, FaCircle,
+} from "react-icons/fa6";
 import axios from "axios";
 import { useI18n } from "../i18n/i18nProvider";
+
+// Tab accent colors
+const TAB_ACCENTS: Record<string, { bg: string; border: string; text: string; glow: string; dot: string }> = {
+  profile:          { bg: "bg-violet-500/15",  border: "border-violet-400/30",  text: "text-violet-200",  glow: "shadow-[0_0_24px_rgba(139,92,246,0.2)]",  dot: "bg-violet-400" },
+  social:           { bg: "bg-sky-500/15",     border: "border-sky-400/30",     text: "text-sky-200",     glow: "shadow-[0_0_24px_rgba(56,189,248,0.2)]",  dot: "bg-sky-400" },
+  images:           { bg: "bg-emerald-500/15", border: "border-emerald-400/30", text: "text-emerald-200", glow: "shadow-[0_0_24px_rgba(52,211,153,0.2)]",  dot: "bg-emerald-400" },
+  appearance:       { bg: "bg-pink-500/15",    border: "border-pink-400/30",    text: "text-pink-200",    glow: "shadow-[0_0_24px_rgba(244,114,182,0.2)]", dot: "bg-pink-400" },
+  music:            { bg: "bg-amber-500/15",   border: "border-amber-400/30",   text: "text-amber-200",   glow: "shadow-[0_0_24px_rgba(251,191,36,0.2)]",  dot: "bg-amber-400" },
+  badges:           { bg: "bg-orange-500/15",  border: "border-orange-400/30",  text: "text-orange-200",  glow: "shadow-[0_0_24px_rgba(251,146,60,0.2)]",  dot: "bg-orange-400" },
+  community:        { bg: "bg-teal-500/15",    border: "border-teal-400/30",    text: "text-teal-200",    glow: "shadow-[0_0_24px_rgba(45,212,191,0.2)]",  dot: "bg-teal-400" },
+  "community-admin":{ bg: "bg-red-500/15",     border: "border-red-400/30",     text: "text-red-200",     glow: "shadow-[0_0_24px_rgba(248,113,113,0.2)]", dot: "bg-red-400" },
+};
+
+// Auto-save hook
+function useAutoSave<T>(
+  value: T,
+  onSave: (val: T) => Promise<void>,
+  delay = 1200
+): "idle" | "saving" | "saved" | "error" {
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setStatus("idle");
+    timerRef.current = setTimeout(async () => {
+      setStatus("saving");
+      try {
+        await onSave(value);
+        setStatus("saved");
+        setTimeout(() => setStatus("idle"), 2000);
+      } catch {
+        setStatus("error");
+        setTimeout(() => setStatus("idle"), 3000);
+      }
+    }, delay);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return status;
+}
+
+// Inline status indicator
+const SaveStatus = ({ status }: { status: "idle" | "saving" | "saved" | "error" }) => {
+  if (status === "idle") return null;
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold transition-all ${
+      status === "saving" ? "text-white/40" :
+      status === "saved"  ? "text-emerald-400" : "text-red-400"
+    }`}>
+      {status === "saving" && <span className="h-1.5 w-1.5 animate-ping rounded-full bg-white/40" />}
+      {status === "saved"  && <FaCheck className="text-[10px]" />}
+      {status === "saving" ? "salvando..." : status === "saved" ? "salvo" : "erro ao salvar"}
+    </span>
+  );
+};
+
+// Copy button
+const CopyButton = ({ text }: { text: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
+        copied ? "bg-emerald-500/20 text-emerald-300" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+      }`}
+    >
+      {copied ? <FaCheck /> : <FaCopy />}
+      {copied ? "Copiado!" : "Copiar"}
+    </button>
+  );
+};
 
 export const AdminPanel = () => {
   const { email } = useSelector((store: { user: userSliceType }) => store.user);
   const { t } = useI18n();
 
   const [activeTab, setActiveTab] = useState("profile");
-  const [username, setUsername] = useState<string>("");
-  const [newUsername, setNewUsername] = useState<string>("");
-  const [displayName, setDisplayName] = useState<string>("");
-  const [bio, setBio] = useState<string>("");
-  const [location, setLocation] = useState<string>("");
-  const [statusText, setStatusText] = useState<string>("");
-  const [plan, setPlan] = useState<string>("free");
-  const [role, setRole] = useState<string>("user");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [username, setUsername] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
+  const [statusText, setStatusText] = useState("");
+  const [plan, setPlan] = useState("free");
+  const [role, setRole] = useState("user");
   const [ownerBypass, setOwnerBypass] = useState(false);
   const [discordAvatar, setDiscordAvatar] = useState<string | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.arcxnjo.com.br";
+
+  // Auto-save hooks
+  const saveDisplayName = useCallback(async (val: string) => {
+    const token = localStorage.getItem("token");
+    await axios.put(`${API_URL}/api/profile/display-name`, { displayName: val }, { headers: { Authorization: `Bearer ${token}` } });
+  }, [API_URL]);
+
+  const saveBio = useCallback(async (val: string) => {
+    const token = localStorage.getItem("token");
+    await axios.put(`${API_URL}/api/profile/bio`, { bio: val }, { headers: { Authorization: `Bearer ${token}` } });
+  }, [API_URL]);
+
+  const saveLocation = useCallback(async (val: string) => {
+    const token = localStorage.getItem("token");
+    await axios.put(`${API_URL}/api/profile/details`, { location: val, statusText }, { headers: { Authorization: `Bearer ${token}` } });
+  }, [API_URL, statusText]);
+
+  const saveStatus = useCallback(async (val: string) => {
+    const token = localStorage.getItem("token");
+    await axios.put(`${API_URL}/api/profile/details`, { location, statusText: val }, { headers: { Authorization: `Bearer ${token}` } });
+  }, [API_URL, location]);
+
+  const displayNameStatus = useAutoSave(displayName, saveDisplayName);
+  const bioStatus = useAutoSave(bio, saveBio);
+  const locationStatus = useAutoSave(location, saveLocation);
+  const statusTextStatus = useAutoSave(statusText, saveStatus);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
-
-        if (!token) {
-          window.location.href = "/login";
-          return;
-        }
+        if (!token) { window.location.href = "/login"; return; }
 
         const tokenPayload = JSON.parse(atob(token.split(".")[1]));
-        const usernameFromToken = tokenPayload.username || "";
+        const response = await axios.get(`${API_URL}/api/profile/me`, { headers: { Authorization: `Bearer ${token}` } });
 
-        const response = await axios.get(`${API_URL}/api/profile/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const currentUsername = response.data.username || usernameFromToken;
-
+        const currentUsername = response.data.username || tokenPayload.username || "";
         setUsername(currentUsername);
         setNewUsername(currentUsername);
         setDisplayName(response.data.display_name || "");
@@ -74,138 +159,35 @@ export const AdminPanel = () => {
         setRole(response.data.role || "user");
         setOwnerBypass(Boolean(response.data.owner_bypass));
 
-        // Se o usuário conectou o Discord, busca a foto de perfil dele
         const discordId = response.data.discord_id;
         if (discordId) {
-          axios
-            .get(`${API_URL}/api/discord-presence/${discordId}`)
-            .then((res) => {
-              const dUser = res.data?.discord_user;
-              if (dUser && dUser.avatar) {
-                const ext = dUser.avatar.startsWith("a_") ? "gif" : "png";
-                setDiscordAvatar(
-                  `https://cdn.discordapp.com/avatars/${dUser.id}/${dUser.avatar}.${ext}?size=128`
-                );
-              }
-            })
-            .catch((err) => console.error("Error fetching Discord avatar:", err));
+          axios.get(`${API_URL}/api/discord-presence/${discordId}`).then((res) => {
+            const dUser = res.data?.discord_user;
+            if (dUser?.avatar) {
+              const ext = dUser.avatar.startsWith("a_") ? "gif" : "png";
+              setDiscordAvatar(`https://cdn.discordapp.com/avatars/${dUser.id}/${dUser.avatar}.${ext}?size=128`);
+            }
+          }).catch(() => {});
         }
-
       } catch (error: any) {
-        console.error("Error fetching user data:", error);
-
         if (error.response?.status === 401 || error.response?.status === 403) {
           localStorage.removeItem("token");
-          localStorage.removeItem("email");
-          localStorage.removeItem("user");
           window.location.href = "/login";
-          return;
-        }
-
-        const token = localStorage.getItem("token");
-
-        if (token) {
-          try {
-            const tokenPayload = JSON.parse(atob(token.split(".")[1]));
-            const usernameFromToken = tokenPayload.username || "";
-
-            setUsername(usernameFromToken);
-            setNewUsername(usernameFromToken);
-          } catch {
-            setUsername("");
-            setNewUsername("");
-          }
         }
       }
     };
-
     fetchUserData();
   }, [API_URL]);
 
   const handleSaveUsername = async () => {
     try {
       const token = localStorage.getItem("token");
-
-      const response = await axios.put(
-        `${API_URL}/api/profile/username`,
-        { username: newUsername },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
+      const response = await axios.put(`${API_URL}/api/profile/username`, { username: newUsername }, { headers: { Authorization: `Bearer ${token}` } });
       setUsername(response.data.username);
       setNewUsername(response.data.username);
-
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
-      }
-
-      alert("Username updated successfully!");
+      if (response.data.token) localStorage.setItem("token", response.data.token);
     } catch (error: any) {
-      console.error("Error updating username:", error);
       alert(error.response?.data?.error || "Failed to update username.");
-    }
-  };
-
-  const handleSaveDisplayName = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      await axios.put(
-        `${API_URL}/api/profile/display-name`,
-        { displayName },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      alert("Display name updated successfully!");
-    } catch (error) {
-      console.error("Error updating display name:", error);
-      alert("Failed to update display name. Please try again.");
-    }
-  };
-
-  const handleSaveBio = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      await axios.put(
-        `${API_URL}/api/profile/bio`,
-        { bio },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      alert("Bio updated successfully!");
-    } catch (error) {
-      console.error("Error updating bio:", error);
-      alert("Failed to update bio. Please try again.");
-    }
-  };
-
-  const handleSaveDetails = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.put(
-        `${API_URL}/api/profile/details`,
-        { location, statusText },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data.location) {
-        setLocation(response.data.location);
-      }
-
-      alert("Profile details updated successfully!");
-    } catch (error) {
-      console.error("Error updating profile details:", error);
-      alert("Failed to update profile details. Please try again.");
     }
   };
 
@@ -217,664 +199,369 @@ export const AdminPanel = () => {
   };
 
   const isAdminUser = ["admin", "owner", "staff"].includes(role.toLowerCase()) || ownerBypass;
+  const safeEmail = email || localStorage.getItem("email") || "discord user";
+  const profileUrl = `https://arcxnjo.com.br/${username || ""}`;
+  const accent = TAB_ACCENTS[activeTab] || TAB_ACCENTS.profile;
 
   const tabs = [
-    {
-      id: "profile",
-      label: t("admin.publicProfile"),
-      description: t("admin.publicProfileDescription"),
-      icon: <FaUser />,
-      component: null,
-    },
-    {
-      id: "social",
-      label: t("admin.socialMedia"),
-      description: t("admin.socialMediaDescription"),
-      icon: <FaLink />,
-      component: <SocialMediaSettings />,
-    },
-    {
-      id: "images",
-      label: t("admin.images"),
-      description: t("admin.imagesDescription"),
-      icon: <FaImage />,
-      component: <ProfileImagesSettings />,
-    },
-    {
-      id: "appearance",
-      label: t("admin.appearance"),
-      description: t("admin.appearanceDescription"),
-      icon: <FaPalette />,
-      component: <AppearanceSettings />,
-    },
-    {
-      id: "music",
-      label: t("admin.music"),
-      description: t("admin.musicDescription"),
-      icon: <FaMusic />,
-      component: <MusicSettings />,
-    },
-    {
-      id: "badges",
-      label: t("admin.badges"),
-      description: t("admin.badgesDescription"),
-      icon: <FaCertificate />,
-      component: <BadgeSettings />,
-    },
-    {
-      id: "community",
-      label: t("admin.community"),
-      description: t("admin.communityDescription"),
-      icon: <FaUsers />,
-      component: <CommunityTemplatesSettings />,
-    },
-    ...(isAdminUser
-      ? [
-          {
-            id: "community-admin",
-            label: t("admin.communityApproval"),
-            description: t("admin.communityApprovalDescription"),
-            icon: <FaShieldAlt />,
-            component: <AdminCommunityTemplates />,
-          },
-        ]
-      : []),
+    { id: "profile",   label: t("admin.publicProfile"),   icon: <FaUser />,        short: "Perfil" },
+    { id: "social",    label: t("admin.socialMedia"),      icon: <FaLink />,        short: "Links" },
+    { id: "images",    label: t("admin.images"),           icon: <FaImage />,       short: "Mídia" },
+    { id: "appearance",label: t("admin.appearance"),       icon: <FaPalette />,     short: "Visual" },
+    { id: "music",     label: t("admin.music"),            icon: <FaMusic />,       short: "Música" },
+    { id: "badges",    label: t("admin.badges"),           icon: <FaCertificate />, short: "Badges" },
+    { id: "community", label: t("admin.community"),        icon: <FaUsers />,       short: "Comunidade" },
+    ...(isAdminUser ? [{ id: "community-admin", label: t("admin.communityApproval"), icon: <FaShield />, short: "Admin" }] : []),
   ];
 
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
-  const safeEmail = email || localStorage.getItem("email") || "discord user";
-  const profileUrl = `https://arcxnjo.com.br/${username || ""}`;
 
-  const glassCard =
-    "rounded-3xl border border-white/10 bg-white/[0.055] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.38)]";
+  const inputClass = "w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-white/25 focus:bg-black/40";
 
-  const inputClass =
-    "w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white placeholder-white/35 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]";
-
-  const labelClass = "block text-sm font-semibold text-white/85 mb-2";
-
-  const SaveButton = ({
-  onClick,
-  children,
-}: {
-  onClick: () => void | Promise<void>;
-  children: ReactNode;
-}) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-2xl bg-purple-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_0_28px_rgba(147,51,234,0.22)] transition hover:-translate-y-0.5 hover:bg-purple-500 hover:shadow-[0_0_38px_rgba(147,51,234,0.34)] active:translate-y-0"
-    >
-      <FaSave className="text-xs" />
-      {children}
-    </button>
-  );
+  const componentMap: Record<string, ReactNode> = {
+    social: <SocialMediaSettings />,
+    images: <ProfileImagesSettings />,
+    appearance: <AppearanceSettings />,
+    music: <MusicSettings />,
+    badges: <BadgeSettings />,
+    community: <CommunityTemplatesSettings />,
+    "community-admin": <AdminCommunityTemplates />,
+  };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-black text-white">
+    <div className="relative min-h-screen bg-[#06060a] text-white">
       <style>{`
-        @keyframes adminFloat {
-          0%, 100% { transform: translate3d(0,0,0) rotate(var(--rotate, 0deg)); }
-          50% { transform: translate3d(0,-14px,0) rotate(var(--rotate, 0deg)); }
-        }
-
-        @keyframes adminPulse {
-          0%, 100% { opacity: 0.12; transform: scaleX(0.88); }
-          50% { opacity: 0.42; transform: scaleX(1); }
-        }
-
-        @keyframes adminCodeGrid {
-          from { background-position: 0 0; }
-          to { background-position: 56px 56px; }
-        }
-
-        @keyframes adminGlowSweep {
-          0% { transform: translateX(-120%); opacity: 0; }
-          40% { opacity: 0.25; }
-          100% { transform: translateX(120%); opacity: 0; }
-        }
-
-        @keyframes adminScan {
-          0%, 100% { transform: translateY(-18%); opacity: 0.04; }
-          50% { transform: translateY(42%); opacity: 0.12; }
-        }
-
-        @keyframes adminTerminalBlink {
-          0%, 48% { opacity: 1; }
-          49%, 100% { opacity: 0; }
-        }
+        @keyframes scanline { 0%,100%{transform:translateY(-100%)} 50%{transform:translateY(100vh)} }
+        @keyframes gridMove { from{background-position:0 0} to{background-position:40px 40px} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
-      {/* Universo Cyberpunk Refinado e Premium */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Fundo escuro profundo */}
-        <div className="absolute inset-0 bg-[#040407]" />
+      {/* Background */}
+      <div className="pointer-events-none fixed inset-0">
+        <div className="absolute inset-0" style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px)",
+          backgroundSize: "40px 40px",
+          animation: "gridMove 20s linear infinite",
+        }} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(139,92,246,0.08),transparent_50%),radial-gradient(ellipse_at_80%_100%,rgba(56,189,248,0.06),transparent_50%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      </div>
 
-        {/* Orbes de brilho sutil com cores ricas */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(34,211,238,0.1),transparent_35%),radial-gradient(circle_at_82%_18%,rgba(168,85,247,0.11),transparent_35%),radial-gradient(circle_at_50%_110%,rgba(16,185,129,0.06),transparent_40%)]" />
+      {/* Mobile nav overlay */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setMobileNavOpen(false)} />
+      )}
 
-        {/* Grid de código de alta tecnologia sutil (Roxo Neon em vez de branco) */}
-        <div
-          className="absolute inset-0 opacity-[0.035]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(168,85,247,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.15) 1px, transparent 1px)",
-            backgroundSize: "56px 56px",
-            animation: "adminCodeGrid 30s linear infinite",
-          }}
-        />
+      {/* Header */}
+      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#06060a]/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/50 hover:text-white lg:hidden"
+            >
+              <span className="flex flex-col gap-1">
+                <span className="h-px w-4 bg-current" />
+                <span className="h-px w-3 bg-current" />
+                <span className="h-px w-4 bg-current" />
+              </span>
+            </button>
 
-        {/* Laser de Varredura Suave de dupla cor (Ciano/Roxo) */}
-        <div
-          className="absolute inset-x-0 top-[-20%] h-1/2 bg-gradient-to-b from-cyan-400/[0.04] via-purple-500/[0.02] to-transparent blur-md"
-          style={{ animation: "adminScan 12s ease-in-out infinite" }}
-        />
-
-        {/* Luzes de névoa difusas nos cantos */}
-        <div className="absolute left-[-240px] top-[-180px] h-[520px] w-[520px] rounded-full border border-cyan-300/5 bg-cyan-300/[0.015] blur-3xl" />
-        <div className="absolute bottom-[-260px] right-[-220px] h-[620px] w-[620px] rounded-full border border-purple-400/5 bg-purple-500/[0.025] blur-3xl" />
-
-        {/* Painel Terminal deploy.log */}
-        <div
-          className="absolute right-[7%] top-[13%] hidden w-[360px] overflow-hidden rounded-3xl border border-white/10 bg-black/45 shadow-[0_25px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(34,211,238,0.06)] backdrop-blur-md lg:block"
-          style={{ "--rotate": "-2deg", animation: "adminFloat 9s ease-in-out infinite" } as React.CSSProperties}
-        >
-          <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-red-400/50" />
-              <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/50" />
-              <span className="h-2.5 w-2.5 rounded-full bg-green-400/50" />
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 overflow-hidden rounded-full">
+                {discordAvatar
+                  ? <img src={discordAvatar} alt="" className="h-full w-full object-cover" />
+                  : <div className="flex h-full w-full items-center justify-center bg-violet-600 text-[10px] font-black">{username?.[0]?.toUpperCase()}</div>
+                }
+              </div>
+              <span className="hidden text-sm font-semibold text-white/70 sm:block">{displayName || username}</span>
             </div>
 
-            <span className="font-mono text-[9px] uppercase tracking-[0.28em] text-white/20">
-              deploy.log
+            <span className={`hidden rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider sm:inline-flex ${
+              plan === "pro" ? "border-violet-400/30 bg-violet-500/15 text-violet-300" : "border-white/10 bg-white/5 text-white/40"
+            }`}>
+              {plan}
             </span>
           </div>
 
-          <div className="space-y-2 px-5 py-4 font-mono text-xs leading-relaxed text-white/40">
-            <p>
-              <span className="text-cyan-400/60">~/arcxnjo</span> git status
-            </p>
-            <p className="text-emerald-400/60">✓ working tree clean</p>
-            <p>
-              <span className="text-cyan-400/60">~/arcxnjo</span> npm run build
-            </p>
-            <p className="text-purple-400/60">compiled successfully</p>
-            <p>
-              <span className="text-cyan-400/60">~/arcxnjo</span>{" "}
-              <span className="text-white/60">deploy</span>
-              <span className="text-cyan-400 font-bold" style={{ animation: "adminTerminalBlink 1s step-end infinite" }}>
-                _
-              </span>
-            </p>
-          </div>
-        </div>
-
-        {/* Bloco de Código */}
-        <div
-          className="absolute bottom-[10%] left-[5%] hidden w-[320px] rounded-3xl border border-white/10 bg-black/45 p-5 font-mono text-xs leading-relaxed text-white/35 shadow-[0_25px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(168,85,247,0.06)] backdrop-blur-md xl:block"
-          style={{ "--rotate": "2deg", animation: "adminFloat 11s ease-in-out infinite reverse" } as React.CSSProperties}
-        >
-          <p>
-            <span className="text-purple-400/60">const</span>{" "}
-            <span className="text-cyan-200/60">profile</span> = await arcxnjo.build();
-          </p>
-          <p>
-            <span className="text-purple-400/60">if</span> (profile.isPro) unlock();
-          </p>
-          <p className="text-emerald-400/55">return cleanExperience;</p>
-        </div>
-
-        <div className="absolute right-[28%] top-[32%] hidden font-mono text-7xl font-black text-white/[0.015] lg:block">
-          {"</>"}
-        </div>
-
-        <div className="absolute left-[18%] top-[20%] hidden font-mono text-xs text-cyan-200/[0.08] md:block">
-          api.arcxnjo.com.br/status · 200 OK
-        </div>
-
-        <div className="absolute bottom-[24%] right-[18%] hidden font-mono text-xs text-purple-200/[0.08] md:block">
-          profile.render(template) · ready
-        </div>
-
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
-      </div>
-
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-black/45 backdrop-blur-2xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <a href="/" className="group flex items-center gap-4">
-            <div className="relative grid h-11 w-11 place-items-center rounded-2xl bg-white/10 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/50 to-pink-500/20 opacity-70 transition group-hover:opacity-100" />
-              <FaMagic className="relative text-white" />
-            </div>
-
-            <div>
-              <span
-                className="block text-xl font-bold tracking-[0.25em] text-white md:text-2xl"
-                style={{ fontFamily: "Orbitron, sans-serif" }}
-              >
-                ARC<span className="text-purple-400">X</span>NJO
-              </span>
-              <span className="text-xs text-white/45">{t("admin.controlCenter")}</span>
-            </div>
-          </a>
-
-          <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 md:flex">
-              <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-black text-white">
-                {username?.charAt(0).toUpperCase() ||
-                  safeEmail?.charAt(0).toUpperCase() ||
-                  "U"}
-              </div>
-
-              <div className="leading-tight">
-                <p className="max-w-[160px] truncate text-sm font-semibold text-white">
-                  {displayName || username || safeEmail?.split("@")[0] || "User"}
-                </p>
-                <p className="text-[11px] uppercase tracking-wider text-white/40">
-                  {plan} / {role}
-                </p>
-              </div>
-            </div>
+          <div className="flex items-center gap-2">
+            <a
+              href={profileUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/60 transition hover:bg-white/10 hover:text-white"
+            >
+              <FaArrowUpRightFromSquare className="text-[10px]" />
+              <span className="hidden sm:inline">Ver perfil</span>
+            </a>
 
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:border-red-400/30 hover:bg-red-500/10 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-xl border border-red-500/15 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300/70 transition hover:bg-red-500/20 hover:text-red-200"
             >
-              <FaSignOutAlt />
+              <FaRightFromBracket className="text-[10px]" />
               <span className="hidden sm:inline">{t("admin.logout")}</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-5 py-8 lg:px-8">
-        <section className={`${glassCard} relative mb-8 overflow-hidden p-6 md:p-8`}>
-          <div
-            className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-purple-500/15 via-white/5 to-transparent"
-            style={{ animation: "adminGlowSweep 5s ease-in-out infinite" }}
-          />
-
-          <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-purple-200">
-                <FaCrown className="text-purple-300" />
-                {t("admin.creatorDashboard")}
-              </div>
-
-              <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">
-                {t("admin.dashboard")}
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">
-                {t("admin.dashboardSubtitle")}
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
-              <div className="rounded-3xl border border-white/10 bg-black/30 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/35">
-                  Username
-                </p>
-                <p className="mt-1 truncate text-lg font-bold text-white">
-                  @{username || t("admin.loading")}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-black/30 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/35">
-                  Plan
-                </p>
-                <p className="mt-1 flex items-center gap-2 text-lg font-bold text-white">
-                  <span className="h-2 w-2 rounded-full bg-purple-400 shadow-[0_0_16px_rgba(168,85,247,0.8)]" />
-                  {plan || "free"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-          <aside className={`${glassCard} h-fit p-4 lg:sticky lg:top-24`}>
-            <div className="mb-4 rounded-3xl border border-white/10 bg-black/35 p-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 text-xl font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.28)] overflow-hidden">
-                  {discordAvatar ? (
-                    <img src={discordAvatar} alt="Discord Avatar" className="h-full w-full object-cover" draggable={false} />
-                  ) : (
-                    username?.charAt(0).toUpperCase() || safeEmail?.charAt(0).toUpperCase() || "U"
-                  )}
-                </div>
-
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-white">
-                    {displayName || username || "User"}
-                  </p>
-                  <p className="truncate text-xs text-white/45">{safeEmail}</p>
+      <div className="relative mx-auto flex max-w-7xl gap-0 lg:gap-6 lg:px-6 lg:py-8">
+        {/* Sidebar desktop */}
+        <aside className={`relative hidden flex-col lg:flex transition-all duration-300 ${sidebarCollapsed ? "w-16" : "w-64"}`}>
+          <div className="sticky top-20 flex flex-col gap-2">
+            {/* User card */}
+            {!sidebarCollapsed && (
+              <div className="mb-2 overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
+                <div className="flex items-center gap-3">
+                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl">
+                    {discordAvatar
+                      ? <img src={discordAvatar} alt="" className="h-full w-full object-cover" />
+                      : <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-600 to-pink-500 text-sm font-black">{username?.[0]?.toUpperCase()}</div>
+                    }
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-white">{displayName || username || "User"}</p>
+                    <p className="truncate text-xs text-white/35">{safeEmail}</p>
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full w-2/3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
-                  style={{ animation: "adminPulse 2.4s ease-in-out infinite" }}
-                />
-              </div>
-            </div>
-
-            <nav className="space-y-2">
+            {/* Nav */}
+            <nav className="flex flex-col gap-1">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
-
+                const a = TAB_ACCENTS[tab.id] || TAB_ACCENTS.profile;
                 return (
                   <button
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`group relative w-full overflow-hidden rounded-2xl border px-4 py-4 text-left transition ${
+                    title={sidebarCollapsed ? tab.label : undefined}
+                    className={`group relative flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all ${
                       isActive
-                        ? "border-purple-400/30 bg-purple-500/15 text-white shadow-[0_0_28px_rgba(168,85,247,0.18)]"
-                        : "border-white/5 bg-white/[0.03] text-white/55 hover:border-white/10 hover:bg-white/[0.07] hover:text-white"
-                    }`}
+                        ? `${a.bg} ${a.border} ${a.text} ${a.glow}`
+                        : "border-transparent text-white/40 hover:bg-white/[0.04] hover:text-white/70"
+                    } ${sidebarCollapsed ? "justify-center" : ""}`}
                   >
-                    {isActive && (
-                      <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-purple-400 to-pink-400" />
-                    )}
-
-                    <span className="flex items-center gap-3">
-                      <span
-                        className={`grid h-10 w-10 place-items-center rounded-2xl transition ${
-                          isActive
-                            ? "bg-purple-500 text-white"
-                            : "bg-black/30 text-white/45 group-hover:text-white"
-                        }`}
-                      >
-                        {tab.icon}
-                      </span>
-
-                      <span className="min-w-0">
-                        <span className="block text-sm font-bold">
-                          {tab.label}
-                        </span>
-                        <span className="mt-0.5 block truncate text-xs text-white/35">
-                          {tab.description}
-                        </span>
-                      </span>
-                    </span>
+                    {isActive && <span className={`absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full ${a.dot}`} />}
+                    <span className={`shrink-0 text-sm ${isActive ? "" : "opacity-60 group-hover:opacity-100"}`}>{tab.icon}</span>
+                    {!sidebarCollapsed && <span className="truncate text-sm font-semibold">{tab.label}</span>}
                   </button>
                 );
               })}
             </nav>
 
-            <div className="mt-4 border-t border-white/10 pt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  if (!username) {
-                    alert("Username is still loading. Please wait a moment.");
-                    return;
-                  }
+            {/* Collapse toggle */}
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed((p) => !p)}
+              className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] py-2 text-xs text-white/25 transition hover:bg-white/[0.05] hover:text-white/50"
+            >
+              {sidebarCollapsed ? <FaChevronRight /> : <><FaChevronLeft /><span>Recolher</span></>}
+            </button>
+          </div>
+        </aside>
 
-                  window.open(profileUrl, "_blank");
-                }}
-                className="group flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-4 text-left text-white/60 transition hover:border-purple-400/25 hover:bg-purple-500/10 hover:text-white"
-              >
-                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 group-hover:bg-purple-500/20">
-                  <FaTachometerAlt />
-                </span>
-
-                <span className="min-w-0">
-                  <span className="flex items-center gap-2 text-sm font-bold">
-                    {t("admin.viewProfile")}
-                    <FaExternalLinkAlt className="text-[10px] opacity-60" />
-                  </span>
-                  <span className="block truncate text-xs text-white/35">
-                    arcxnjo.com.br/{username || t("admin.loading")}
-                  </span>
-                </span>
-              </button>
+        {/* Mobile sidebar */}
+        <aside className={`fixed inset-y-0 left-0 z-50 w-72 flex-col gap-2 overflow-y-auto border-r border-white/[0.06] bg-[#06060a] p-4 transition-transform duration-300 lg:hidden ${mobileNavOpen ? "flex translate-x-0" : "-translate-x-full"}`}>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 overflow-hidden rounded-xl">
+                {discordAvatar
+                  ? <img src={discordAvatar} alt="" className="h-full w-full object-cover" />
+                  : <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-600 to-pink-500 text-sm font-black">{username?.[0]?.toUpperCase()}</div>
+                }
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">{displayName || username}</p>
+                <p className="text-xs text-white/35">{plan}</p>
+              </div>
             </div>
-          </aside>
+            <button type="button" onClick={() => setMobileNavOpen(false)} className="text-white/30 hover:text-white">✕</button>
+          </div>
 
-          <main className="min-w-0 space-y-6">
-            <div className={`${glassCard} overflow-hidden`}>
-              <div className="border-b border-white/10 bg-black/25 px-5 py-4 md:px-6">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-purple-500/20 text-purple-200">
-                    {activeTabData?.icon}
-                  </div>
+          <nav className="flex flex-col gap-1">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const a = TAB_ACCENTS[tab.id] || TAB_ACCENTS.profile;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => { setActiveTab(tab.id); setMobileNavOpen(false); }}
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${
+                    isActive ? `${a.bg} ${a.border} ${a.text}` : "border-transparent text-white/40 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <span className="text-sm">{tab.icon}</span>
+                  <span className="text-sm font-semibold">{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
+        {/* Main content */}
+        <main className="min-w-0 flex-1 px-4 py-6 md:px-6 lg:px-0 lg:py-0">
+          {/* Tab header */}
+          <div className="mb-6 flex items-center gap-3" style={{ animation: "fadeUp 0.25s ease-out" }}>
+            <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-sm ${accent.bg} ${accent.border} ${accent.text}`}>
+              {activeTabData?.icon}
+            </div>
+            <div>
+              <h1 className="text-lg font-black text-white">{activeTabData?.label}</h1>
+            </div>
+
+            {activeTab === "profile" && (
+              <div className="ml-auto flex items-center gap-2">
+                <FaCircle className={`text-[6px] ${accent.dot}`} />
+                <span className="text-xs text-white/30">arcxnjo.com.br/{username}</span>
+                <CopyButton text={profileUrl} />
+              </div>
+            )}
+          </div>
+
+          {/* Profile tab */}
+          {activeTab === "profile" && (
+            <div className="space-y-4" style={{ animation: "fadeUp 0.3s ease-out" }}>
+              {/* Username */}
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+                <div className="mb-4 flex items-center justify-between gap-2">
                   <div>
-                    <h2 className="text-lg font-black text-white">
-                      {activeTabData?.label}
-                    </h2>
-                    <p className="text-sm text-white/40">
-                      {activeTabData?.description}
-                    </p>
+                    <p className="text-sm font-bold text-white">{t("admin.username")}</p>
+                    <p className="text-xs text-white/35">Visível na URL do seu perfil.</p>
                   </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex flex-1 items-center rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm">
+                    <span className="mr-1 text-white/25">@</span>
+                    <input
+                      type="text"
+                      value={newUsername}
+                      onChange={(e) => setNewUsername(e.target.value)}
+                      placeholder="seu-username"
+                      className="flex-1 bg-transparent text-white outline-none placeholder-white/20"
+                      maxLength={20}
+                    />
+                    <span className="text-xs text-white/20">{newUsername.length}/20</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSaveUsername}
+                    className={`shrink-0 rounded-2xl border px-4 py-3 text-sm font-bold transition ${accent.bg} ${accent.border} ${accent.text} hover:brightness-110`}
+                  >
+                    Salvar
+                  </button>
                 </div>
               </div>
 
-              <div className="p-5 md:p-6">
-                {activeTab === "profile" && (
-                  <div className="space-y-6">
-                    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-purple-600/25 via-black/35 to-pink-600/20 p-5 md:p-6">
-                      <div className="absolute right-[-70px] top-[-70px] h-44 w-44 rounded-full bg-purple-500/20 blur-3xl" />
-
-                      <div className="relative flex flex-col gap-5 md:flex-row md:items-start">
-                        <div className="grid h-20 w-20 shrink-0 place-items-center rounded-3xl bg-white/10 text-3xl font-black text-white shadow-[0_0_30px_rgba(255,255,255,0.08)] overflow-hidden">
-                          {discordAvatar ? (
-                            <img src={discordAvatar} alt="Discord Avatar" className="h-full w-full object-cover" draggable={false} />
-                          ) : (
-                            username.charAt(0).toUpperCase() || "U"
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <h3 className="truncate text-2xl font-black text-white">
-                            {displayName || username || "User"}
-                          </h3>
-
-                          <p className="mt-1 truncate text-sm text-white/50">
-                            {safeEmail}
-                          </p>
-
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs font-semibold text-white/60">
-                              @{username || t("admin.loading")}
-                            </span>
-
-                            <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-100">
-                              {plan} plan
-                            </span>
-
-                            <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-semibold text-pink-100">
-                              {role}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-5 xl:grid-cols-2">
-                      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
-                        <div className="mb-5">
-                          <h3 className="text-lg font-black text-white">
-                            {t("admin.identity")}
-                          </h3>
-                          <p className="text-sm text-white/40">
-                            {t("admin.identityDescription")}
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>{t("admin.username")}</label>
-
-                          <input
-                            type="text"
-                            value={newUsername}
-                            onChange={(e) => setNewUsername(e.target.value)}
-                            placeholder="your-username"
-                            className={inputClass}
-                            maxLength={20}
-                          />
-
-                          <p className="mt-2 text-xs text-white/35">
-                            3-20 characters. Letters, numbers, dots,
-                            underscores and hyphens only.
-                          </p>
-
-                          <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="text-xs text-white/45">
-                              {newUsername.length}/20
-                            </span>
-
-                            <SaveButton onClick={handleSaveUsername}>
-                              {t("admin.saveUsername")}
-                            </SaveButton>
-                          </div>
-                        </div>
-
-                        <div className="mt-6">
-                          <label className={labelClass}>{t("admin.displayName")}</label>
-
-                          <input
-                            type="text"
-                            value={displayName}
-                            onChange={(e) => setDisplayName(e.target.value)}
-                            placeholder="Your display name"
-                            className={inputClass}
-                            maxLength={32}
-                          />
-
-                          <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="text-xs text-white/45">
-                              {displayName.length}/32
-                            </span>
-
-                            <SaveButton onClick={handleSaveDisplayName}>
-                              Save {t("admin.displayName")}
-                            </SaveButton>
-                          </div>
-                        </div>
-                      </section>
-
-                      <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
-                        <div className="mb-5">
-                          <h3 className="text-lg font-black text-white">
-                            {t("admin.profileText")}
-                          </h3>
-                          <p className="text-sm text-white/40">
-                            {t("admin.profileTextDescription")}
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>Bio</label>
-
-                          <textarea
-                            value={bio}
-                            onChange={(e) => setBio(e.target.value)}
-                            placeholder="Write a short bio..."
-                            className={`${inputClass} min-h-[118px] resize-none`}
-                            rows={3}
-                            maxLength={160}
-                          />
-
-                          <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="text-xs text-white/45">
-                              {bio.length}/160
-                            </span>
-
-                            <SaveButton onClick={handleSaveBio}>
-                              {t("admin.saveBio")}
-                            </SaveButton>
-                          </div>
-                        </div>
-                      </section>
-                    </div>
-
-                    <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
-                      <div className="mb-5">
-                        <h3 className="text-lg font-black text-white">
-                          {t("admin.extraDetails")}
-                        </h3>
-                        <p className="text-sm text-white/40">
-                          {t("admin.extraDetailsDescription")}
-                        </p>
-                      </div>
-
-                      <div className="grid gap-5 md:grid-cols-2">
-                        <div>
-                          <label className={labelClass}>{t("admin.location")}</label>
-
-                          <input
-                            type="text"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="Your location"
-                            className={inputClass}
-                            maxLength={40}
-                          />
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>{t("admin.status")}</label>
-
-                          <input
-                            type="text"
-                            value={statusText}
-                            onChange={(e) => setStatusText(e.target.value)}
-                            placeholder="What are you doing now?"
-                            className={inputClass}
-                            maxLength={80}
-                          />
-
-                          <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="text-xs text-white/45">
-                              {statusText.length}/80
-                            </span>
-
-                            <SaveButton onClick={handleSaveDetails}>
-                              {t("admin.saveDetails")}
-                            </SaveButton>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
-                      <p className="text-sm font-semibold text-white/70">
-                        {t("admin.publicUrl")}
-                      </p>
-
-                      <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/35 p-4 md:flex-row md:items-center md:justify-between">
-                        <code className="break-all text-sm text-purple-100">
-                          https://arcxnjo.com.br/{username || t("admin.loading")}
-                        </code>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!username) return;
-                            window.open(profileUrl, "_blank");
-                          }}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/15"
-                        >
-                          Open
-                          <FaExternalLinkAlt className="text-xs" />
-                        </button>
-                      </div>
-                    </section>
+              {/* Display name */}
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-white">{t("admin.displayName")}</p>
+                    <p className="text-xs text-white/35">Nome exibido no seu perfil público.</p>
                   </div>
-                )}
+                  <SaveStatus status={displayNameStatus} />
+                </div>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Seu nome"
+                  className={inputClass}
+                  maxLength={32}
+                />
+                <p className="mt-2 text-right text-xs text-white/20">{displayName.length}/32</p>
+              </div>
 
-                {activeTab !== "profile" && activeTabData?.component}
+              {/* Bio */}
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-white">Bio</p>
+                    <p className="text-xs text-white/35">Conte um pouco sobre você.</p>
+                  </div>
+                  <SaveStatus status={bioStatus} />
+                </div>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Uma bio curta..."
+                  className={`${inputClass} min-h-[100px] resize-none`}
+                  rows={3}
+                  maxLength={160}
+                />
+                <p className="mt-2 text-right text-xs text-white/20">{bio.length}/160</p>
+              </div>
+
+              {/* Location + status */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <p className="text-sm font-bold text-white">{t("admin.location")}</p>
+                    <SaveStatus status={locationStatus} />
+                  </div>
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Sua cidade"
+                    className={inputClass}
+                    maxLength={40}
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <p className="text-sm font-bold text-white">{t("admin.status")}</p>
+                    <SaveStatus status={statusTextStatus} />
+                  </div>
+                  <input
+                    type="text"
+                    value={statusText}
+                    onChange={(e) => setStatusText(e.target.value)}
+                    placeholder="O que você está fazendo?"
+                    className={inputClass}
+                    maxLength={80}
+                  />
+                  <p className="mt-2 text-right text-xs text-white/20">{statusText.length}/80</p>
+                </div>
+              </div>
+
+              {/* Profile URL */}
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-5 py-4">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FaCircle className={`shrink-0 text-[6px] ${accent.dot}`} />
+                  <code className="truncate text-sm text-white/50">{profileUrl}</code>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <CopyButton text={profileUrl} />
+                  <a
+                    href={profileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
+                  >
+                    <FaArrowUpRightFromSquare className="text-[10px]" />
+                    Abrir
+                  </a>
+                </div>
               </div>
             </div>
-          </main>
-        </div>
+          )}
+
+          {/* Other tabs */}
+          {activeTab !== "profile" && (
+            <div style={{ animation: "fadeUp 0.3s ease-out" }}>
+              {componentMap[activeTab]}
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );
