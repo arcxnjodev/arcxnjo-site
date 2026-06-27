@@ -231,19 +231,12 @@ export const AdminPanel = () => {
   return (
     <div className="relative min-h-screen bg-[#06060a] text-white">
       <style>{`
-        @keyframes scanline { 0%,100%{transform:translateY(-100%)} 50%{transform:translateY(100vh)} }
-        @keyframes gridMove { from{background-position:0 0} to{background-position:40px 40px} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
       {/* Background */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute inset-0" style={{
-          backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px)",
-          backgroundSize: "40px 40px",
-          animation: "gridMove 20s linear infinite",
-        }} />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(139,92,246,0.08),transparent_50%),radial-gradient(ellipse_at_80%_100%,rgba(56,189,248,0.06),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(139,92,246,0.07),transparent_55%),radial-gradient(ellipse_at_80%_100%,rgba(56,189,248,0.05),transparent_55%)]" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
