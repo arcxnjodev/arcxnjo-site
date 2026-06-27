@@ -346,7 +346,7 @@ return (
       <style>{`
         @font-face {
           font-family: 'arcxnjo';
-          src: url('/fonts/simbiont.ttf') format('truetype');
+          src: url('/fonts/dream.ttf') format('truetype');
           font-weight: normal;
           font-style: normal;
           font-display: swap;
