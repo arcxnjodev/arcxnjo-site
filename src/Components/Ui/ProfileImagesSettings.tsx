@@ -267,23 +267,6 @@ if (file.size > maxSizeMb * 1024 * 1024) {
               </div>
             </div>
 
-            <label className="mb-2 block text-sm font-semibold text-white/85">
-              Profile Picture URL
-            </label>
-
-            <div className="relative">
-              <FaLink className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-
-              <input
-                type="text"
-                name="profileImage"
-                placeholder="https://..."
-                className={inputClass}
-                value={values.profileImage}
-                onChange={handleChange}
-              />
-            </div>
-
             <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 bg-white/[0.035] px-4 py-4 text-sm font-semibold text-white/60 transition hover:border-purple-400/35 hover:bg-purple-500/10 hover:text-white">
               <FaUpload />
               {uploadingProfile ? "Uploading..." : "Upload avatar"}
@@ -395,46 +378,6 @@ if (file.size > maxSizeMb * 1024 * 1024) {
             <p className="mt-3 text-xs text-white/35">
               Allowed formats: JPG, PNG, WEBP, GIF, MP4, WEBM. Videos up to 50MB on Pro.
             </p>
-
-            {values.bannerType === "image" ? (
-              <div className="mt-4">
-                <label className="mb-2 block text-sm font-semibold text-white/85">
-                  Background Image / GIF URL
-                </label>
-
-                <div className="relative">
-                  <FaLink className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-
-                  <input
-                    type="text"
-                    name="bannerImage"
-                    placeholder="https://..."
-                    className={inputClass}
-                    value={values.bannerImage}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4">
-                <label className="mb-2 block text-sm font-semibold text-white/85">
-                  Background Video URL
-                </label>
-
-                <div className="relative">
-                  <FaLink className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-
-                  <input
-                    type="text"
-                    name="bannerVideo"
-                    placeholder="https://..."
-                    className={inputClass}
-                    value={values.bannerVideo}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-            )}
           </section>
         </div>
 

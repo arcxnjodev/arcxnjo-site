@@ -182,19 +182,6 @@ export const MusicSettings = () => {
             </div>
 
             <div className="xl:col-span-2">
-              <label className="mb-2 block text-sm font-semibold text-white/85">Music URL</label>
-              <div className="relative">
-                <FaLink className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-                <input
-                  type="text"
-                  name="musicUrl"
-                  placeholder="https://..."
-                  className={inputClass}
-                  value={values.musicUrl}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
           </div>
         </section>
 
