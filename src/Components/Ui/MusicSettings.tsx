@@ -3,7 +3,6 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import {
   FaCircleCheck,
-  FaLink,
   FaMusic,
   FaFloppyDisk,
   FaXmark,
@@ -180,8 +179,6 @@ export const MusicSettings = () => {
               </div>
               <p className="mt-2 text-xs text-white/35">{values.musicArtist.length}/60</p>
             </div>
-
-            <div className="xl:col-span-2">
           </div>
         </section>
 
