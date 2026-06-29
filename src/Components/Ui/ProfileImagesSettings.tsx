@@ -5,7 +5,6 @@ import {
   FaCheckCircle,
   FaImage,
   FaLayerGroup,
-  FaLink,
   FaSave,
   FaUpload,
   FaUserCircle,
