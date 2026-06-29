@@ -590,7 +590,20 @@ export const SocialMediaSettings = () => {
                   />
 
                   {hasValue && (
-                    <span className="absolute right-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-green-400 text-[8px] text-black">
+                    <span
+                      className="absolute right-1 top-1 grid h-4 w-4 place-items-center rounded-full bg-red-500 text-[8px] text-white opacity-0 transition group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setValues((prev: Record<string, string>) => ({ ...prev, [platform.id]: "" }));
+                      }}
+                      title={`Remover ${platform.label}`}
+                    >
+                      ✕
+                    </span>
+                  )}
+
+                  {hasValue && (
+                    <span className="absolute bottom-1 right-1 grid h-3 w-3 place-items-center rounded-full bg-green-400 text-[6px] text-black group-hover:opacity-0 transition">
                       <FaCircleCheck />
                     </span>
                   )}
