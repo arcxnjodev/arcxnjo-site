@@ -68,7 +68,7 @@ if (file.size > maxSizeMb * 1024 * 1024) {
     return response.data;
   };
 
-  const { values, handleSubmit, handleChange, setValues } =
+  const { values, handleSubmit, setValues } =
     useFormik<ProfileMediaValues>({
       initialValues: {
         profileImage: "",
@@ -196,7 +196,6 @@ if (file.size > maxSizeMb * 1024 * 1024) {
   const currentBackground =
     values.bannerType === "video" ? values.bannerVideo : values.bannerImage;
 
-  const inputClass =
     "w-full rounded-2xl border border-white/10 bg-black/35 px-11 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-purple-400/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.12)]";
 
   return (
