@@ -612,26 +612,46 @@ export const SocialMediaSettings = () => {
             })}
         </div>
 
-        <button
-          type="button"
+        <div
           onClick={() => setSelectedPlatform("website")}
-          className={`mt-6 flex w-full items-center gap-4 rounded-3xl border bg-black/25 p-4 text-left transition hover:border-white/15 hover:bg-black/40 ${
-            selectedPlatform === "website" ? "border-white/25" : "border-white/10"
+          className={`mt-4 flex w-full cursor-pointer items-center justify-between gap-4 rounded-2xl border p-4 text-left transition hover:bg-white/[0.04] ${
+            selectedPlatform === "website"
+              ? "border-white/20 bg-white/[0.04]"
+              : "border-white/[0.07] bg-black/20"
           }`}
         >
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/8 text-white/75">
-            <FaGlobe className="text-2xl" />
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/8 text-white/60">
+              <FaGlobe className="text-lg" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">URL personalizada</p>
+              <p className="mt-0.5 text-xs text-white/35">
+                {values["website"]?.trim()
+                  ? <span className="font-mono text-white/50">{values["website"]}</span>
+                  : "Cole seu próprio link aqui"}
+              </p>
+            </div>
           </div>
-
-          <div>
-            <p className="text-sm font-bold text-white">
-              Adicionar URL personalizada
-            </p>
-            <p className="mt-1 text-xs text-white/40">
-              Use sua própria URL e escolha um ícone que combine.
-            </p>
+          <div className="flex items-center gap-2">
+            {values["website"]?.trim() && (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setValues((prev: Record<string, string>) => ({ ...prev, website: "" }));
+                  }}
+                  className="grid h-7 w-7 place-items-center rounded-lg bg-red-500/15 text-red-300 transition hover:bg-red-500/25"
+                  title="Remover URL"
+                >
+                  <FaTrash className="text-[10px]" />
+                </button>
+              </>
+            )}
           </div>
-        </button>
+        </div>
       </section>
 
       <section className="rounded-3xl border border-white/10 bg-black/25 p-5">
@@ -709,22 +729,34 @@ export const SocialMediaSettings = () => {
         </div>
 
         {filledLinks.length > 0 ? (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {filledLinks.map((platform) => {
               const Icon = platform.icon;
               const url = buildPreviewUrl(platform.id, values[platform.id]);
 
               return (
-                <a
+                <div
                   key={platform.id}
-                  href={url.startsWith("http") || url.startsWith("mailto:") ? url : undefined}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/70 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  className="group relative inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/70"
                 >
                   <Icon className={platform.color} />
-                  {platform.label}
-                </a>
+                  <a
+                    href={url.startsWith("http") || url.startsWith("mailto:") ? url : undefined}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="transition hover:text-white"
+                  >
+                    {platform.label}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setValues((prev: Record<string, string>) => ({ ...prev, [platform.id]: "" }))}
+                    className="ml-1 grid h-4 w-4 place-items-center rounded-full bg-white/0 text-white/30 transition hover:bg-red-500/20 hover:text-red-300"
+                    title={`Remover ${platform.label}`}
+                  >
+                    ✕
+                  </button>
+                </div>
               );
             })}
           </div>
